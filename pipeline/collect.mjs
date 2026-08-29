@@ -87,6 +87,10 @@ const DROP_IDS = new Set([
   'oviedo-wd-santa-maria-del-naranjo',           // = oviedo-santa-maria-del-naranco
   'oviedo-wd-metropolitan-cathedral-basilica-of-the-holy-savi', // = oviedo-cathedral-of-san-salvador
   'oviedo-wd-fine-arts-museum-of-asturias',      // = oviedo-museum-of-fine-arts
+  'palma-wd-basilica-of-st-francis',            // = palma-basilica-de-sant-francesc
+  'palma-wd-arab-baths-of-palma-de-mallorca',   // = palma-banys-arabs
+  'palma-wd-poble-espanyol-de-palma',           // = palma-pueblo-espanol
+  'palma-wd-museu-fundacio-juan-march',         // = palma-fundacion-juan-march-palma
 ]);
 const isSight = (it) => it.theme !== 'food' && it.theme !== 'nightlife';
 
