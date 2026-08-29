@@ -1,157 +1,122 @@
 {
   "la-orotava-dabeke": {
-    "name": "다베케",
     "summary": "지역 재료로 만든 요리를 내는 식당",
     "why": "스페인어권 요리를 이 지역 재료로 만들어 냅니다. 저녁에만 엽니다."
   },
   "la-orotava-bar-restaurante-la-duquesa": {
-    "name": "라 두케사",
     "summary": "가족이 운영하는 인기 식당",
     "why": "가족이 운영하는 인기 식당입니다. 아침 7시부터 열어 이른 일정에도 맞습니다.",
     "caution": "오후 4시면 닫습니다. 저녁에는 갈 수 없습니다."
   },
   "la-orotava-cafeteria-dulceria-los-jardines": {
-    "name": "로스 하르디네스",
-    "bestSlots": [
-      "morning"
-    ],
     "summary": "작은 공원 옆의 카페 겸 제과점",
     "why": "작은 공원 옆의 카페 겸 제과점입니다. 언덕 마을을 오르내리다 쉬기 좋습니다."
   },
   "la-orotava-restaurante-sabor-canario": {
-    "name": "사보르 카나리오",
     "summary": "호텔 안뜰의 카나리아 요리 식당",
     "why": "옛 저택을 개조한 호텔 안뜰에 자리한 카나리아 요리 식당입니다. 목조 발코니에 둘러싸여 먹게 됩니다."
   },
   "la-orotava-iglesia-de-san-agustin": {
-    "name": "산 아구스틴 성당",
     "summary": "옛 수도원의 일부였던 17세기 성당",
     "why": "옛 수도원의 일부였던 17세기 성당입니다. 언덕 위 구시가를 걷다 지나갑니다."
   },
   "la-orotava-museo-de-artesania-iberoamerica": {
-    "name": "이베로아메리카 공예 박물관",
     "summary": "17세기 수녀원 건물의 공예 박물관. 무료",
     "why": "17세기 수녀원 건물에서 이베로아메리카 공예를 다룹니다. 카나리아가 아메리카로 가는 중간 기착지였다는 사실이 소장품에 그대로 드러납니다."
   },
   "la-orotava-telesforo-bravo-visitor-centre": {
-    "name": "텔레스포로 브라보 방문자 센터",
     "summary": "테이데 국립공원 방문자 센터. 무료",
     "why": "테이데 국립공원의 방문자 센터입니다. 화산과 국립공원 정보를 얻을 수 있어, 정상에 오르기 전에 들르면 좋습니다."
   },
   "la-orotava-casa-de-los-balcones": {
-    "name": "발코니의 집",
     "summary": "카나리아 소나무 목조 발코니의 16세기 저택",
     "why": "카나리아 소나무로 짠 목조 발코니가 안뜰을 층층이 두른 16세기 저택입니다. 이 지역 건축의 대표작이고, 안에서 자수와 수공예를 만들어 팝니다."
   },
   "la-orotava-hijuela-del-botanico": {
-    "name": "이후엘라 델 보타니코",
     "summary": "옛 수녀원 터의 작은 식물원. 무료",
     "why": "옛 수녀원 터에 만든 작은 식물원입니다. 무료이고 구시가 한복판이라 지나며 들릅니다.",
     "caution": "평일 오전에만 엽니다."
   },
   "la-orotava-liceo-de-taoro": {
-    "name": "리세오 데 타오로",
     "summary": "1925년 저택. 테라스 전망이 좋다",
     "why": "1925년에 개인 저택으로 지었다가 지금은 문화 회관으로 씁니다. 테라스에서 오로타바 계곡과 바다가 함께 보입니다."
   },
   "la-orotava-jardines-del-marquesado-de-la-quinta-roja": {
-    "name": "킨타 로하 정원",
     "summary": "계단식 정원과 흰 대리석 영묘",
     "why": "빅토리아 시대풍 계단식 정원으로, 맨 위에 흰 대리석 영묘가 서 있습니다. 정원을 오르며 돌아보면 계곡이 점점 넓게 열립니다."
   },
   "la-orotava-mirador-de-humboldt": {
-    "name": "훔볼트 전망대",
     "summary": "훔볼트가 '세상에서 가장 아름다운 계곡'이라 한 자리",
     "why": "훔볼트가 이 계곡을 보고 '세상에서 가장 아름다운 계곡'이라 했다고 전해집니다. 그 자리에 전망대를 만들어, 계곡과 테이데 산이 한 화면에 들어옵니다."
   },
   "la-orotava-hiking": {
-    "name": "테이데 국립공원 트레킹",
-    "energy": 5,
-    "durationMin": 300,
     "summary": "테이데 정상까지 이어지는 국립공원 트레킹",
     "why": "라 오로타바 행정구역이 스페인 최고봉 테이데(3715m) 정상까지 이어집니다. 케이블카로 3555m까지 오른 뒤 마지막 구간을 걷게 됩니다.",
     "booking": "정상 구간은 사전 허가가 필요하고 몇 달 전에 마감됩니다",
     "caution": "고산이라 기온이 낮고 산소가 옅습니다. 방한복이 필요합니다."
   },
   "la-orotava-la-villa-centro-comercial": {
-    "name": "라 비야 쇼핑센터",
     "summary": "슈퍼마켓과 상점이 있는 쇼핑센터",
     "why": "슈퍼마켓과 작은 상점이 있는 쇼핑센터입니다. 필요한 것을 살 때 씁니다."
   },
   "la-orotava-plaza-de-la-constitucion": {
-    "name": "콘스티투시온 광장",
     "summary": "계곡과 테이데 산이 내려다보이는 광장",
     "why": "카페가 있는 광장으로, 난간 너머로 오로타바 계곡과 테이데 산이 내려다보입니다. 마을 산책의 기준점이 됩니다."
   },
   "la-orotava-wd-loro-parque": {
-    "name": "로로 파르케",
-    "theme": "activity",
     "summary": "앵무새로 시작한 대형 동물원. 이웃 마을에 있다",
     "why": "앵무새 공원으로 시작해 세계적 규모가 된 동물원입니다. 범고래와 돌고래 쇼가 대표이고, 그 때문에 동물권 논란이 함께 따라다닙니다.",
     "caution": "이웃 마을 푸에르토 데 라 크루스에 있습니다."
   },
   "la-orotava-wd-castillo-de-san-felipe": {
-    "name": "산 펠리페 성",
     "summary": "이웃 마을의 17세기 해안 요새",
     "why": "해적을 막으려고 지은 17세기 해안 요새입니다. 지금은 전시·공연장으로 씁니다.",
     "caution": "이웃 마을 푸에르토 데 라 크루스에 있습니다."
   },
   "la-orotava-wd-archaeological-museum-of-puerto-de-la-cruz": {
-    "name": "푸에르토 고고학 박물관",
     "summary": "관체족 유물을 모은 고고학 박물관",
     "why": "정복 이전 원주민 관체족의 유물을 모은 박물관입니다. 무료이고 컬렉션이 큽니다.",
     "caution": "이웃 마을 푸에르토 데 라 크루스에 있습니다."
   },
   "la-orotava-wd-lago-martianez": {
-    "name": "라고 마르티아네스",
-    "theme": "activity",
     "summary": "세사르 만리케가 만든 해수 수영장 단지",
     "why": "예술가 세사르 만리케가 화산암과 바닷물로 만든 야외 수영장 단지입니다. 그 자체가 작품으로 대접받습니다.",
     "caution": "이웃 마을 푸에르토 데 라 크루스에 있습니다."
   },
   "la-orotava-wd-jardin-de-aclimatacion-de-la-orotava": {
-    "name": "라 오로타바 순화 식물원",
     "summary": "1788년에 만든 열대 식물원",
     "why": "아메리카에서 온 열대 식물을 유럽 기후에 적응시키려고 1788년에 만든 식물원입니다. 이름은 라 오로타바인데 실제 위치는 푸에르토 데 라 크루스입니다.",
     "caution": "이름과 달리 푸에르토 데 라 크루스에 있습니다."
   },
   "la-orotava-wd-puerto-de-la-cruz-lighthouse": {
-    "name": "푸에르토 데 라 크루스 등대",
     "summary": "해안의 등대",
     "why": "해안에 선 등대입니다. 해변 산책로에서 보게 됩니다."
   },
   "la-orotava-wd-all-saints-church-puerto-de-la-cruz": {
-    "name": "모든 성인 성당",
     "summary": "19세기 영국인 공동체가 세운 성공회 성당",
     "why": "19세기 이 지역에 살던 영국인 공동체가 세운 성공회 성당입니다. 테네리페가 일찍부터 영국인 휴양지였다는 흔적입니다."
   },
   "la-orotava-wd-immaculate-conception-church": {
-    "name": "라 콘셉시온 성당",
     "summary": "카나리아 바로크의 대표작으로 꼽히는 성당",
     "why": "카나리아 바로크의 대표작으로 꼽히는 성당입니다. 돔과 쌍둥이 종탑이 계곡 어디서나 보이고, 이 마을의 표지가 됩니다."
   },
   "la-orotava-wd-church-of-nuestra-senora-de-la-pena-de-francia-p": {
-    "name": "페냐 데 프란시아 성당",
     "summary": "이웃 마을의 주 성당",
     "why": "이웃 마을 푸에르토 데 라 크루스의 주 성당입니다. 차르코 광장 근처에 있습니다."
   },
   "la-orotava-wd-pueblo-chico": {
-    "name": "푸에블로 치코",
     "summary": "카나리아 제도를 축소 모형으로 재현한 공원",
     "why": "카나리아 제도의 건축과 풍경을 축소 모형으로 재현한 공원입니다. 섬 전체를 다 돌 수 없는 일정이라면 감을 얻습니다."
   },
   "la-orotava-wd-ermita-de-san-telmo": {
-    "name": "산 텔모 예배당",
     "summary": "바닷가에 선 작은 예배당",
     "why": "어부들이 수호성인에게 바친 바닷가 예배당입니다. 흰 벽과 검은 화산암 해안의 대비가 사진에 잘 나옵니다."
   },
   "la-orotava-wd-jardin-sitio-litre": {
-    "name": "시티오 리트레 정원",
     "summary": "난초와 오래된 용혈수가 있는 영국식 정원",
     "why": "18세기 영국인 저택의 정원으로, 난초 컬렉션과 섬에서 가장 오래된 용혈수가 있습니다."
   },
   "la-orotava-wd-casa-amarilla-puerto-de-la-cruz": {
-    "name": "카사 아마리야",
     "summary": "옛 세관 건물. 노란 외벽이 눈에 띈다",
     "why": "옛 세관 건물로 노란 외벽 때문에 '노란 집'이라 불립니다. 이 항구가 무역항이던 시절의 흔적입니다."
   }

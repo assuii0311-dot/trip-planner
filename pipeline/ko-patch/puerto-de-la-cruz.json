@@ -1,123 +1,93 @@
 {
   "puerto-de-la-cruz-meson-los-gemelos": {
-    "name": "메손 로스 헤멜로스",
     "summary": "현지인과 여행자 모두에게 인기 있는 식당",
     "why": "현지 손님과 여행자가 반씩 섞이는 인기 식당입니다. 값이 눅고 양이 넉넉합니다."
   },
   "puerto-de-la-cruz-el-taller-de-seve-diaz": {
-    "name": "엘 타예르 데 세베 디아스",
     "summary": "세베 디아스 셰프의 창작 요리",
     "why": "세베 디아스 셰프가 카나리아 재료로 창작 요리를 냅니다. 이 도시에서 한 끼를 제대로 쓸 때 갑니다.",
     "booking": "예약을 권합니다"
   },
   "puerto-de-la-cruz-restaurante-mil-sabores": {
-    "name": "밀 사보레스",
     "summary": "창작 지중해 요리. 예약을 권한다",
     "why": "창작 지중해 요리를 내는 식당입니다. 자리가 많지 않습니다.",
     "booking": "예약을 권합니다"
   },
   "puerto-de-la-cruz-supercor-expres": {
-    "name": "수페르코르 익스프레스",
-    "theme": "shopping",
     "summary": "늦게까지 여는 편의형 슈퍼마켓",
     "why": "자정까지 여는 편의형 슈퍼마켓입니다. 값은 조금 비싸지만 시간을 가리지 않습니다."
   },
   "puerto-de-la-cruz-mercadona": {
-    "name": "메르카도나",
-    "theme": "shopping",
     "summary": "스페인 대표 슈퍼마켓",
     "why": "스페인 대표 슈퍼마켓입니다. 숙소에서 해 먹거나 간식을 살 때 씁니다."
   },
   "puerto-de-la-cruz-castillo-de-san-felipe": {
-    "name": "산 펠리페 성",
     "summary": "17세기 해안 요새. 지금은 전시·공연장",
     "why": "17세기 초에 해적을 막으려고 지은 작은 해안 요새입니다. 지금은 전시와 공연장으로 씁니다."
   },
   "puerto-de-la-cruz-ermita-de-san-telmo": {
-    "name": "산 텔모 예배당",
     "summary": "1780년 어부들이 수호성인에게 바친 바닷가 예배당",
     "why": "1780년에 어부들이 수호성인에게 바친 바닷가 예배당입니다. 흰 벽이 검은 화산암 해안과 대비돼, 이 도시의 대표 사진에 자주 나옵니다.",
     "caution": "개방 시간이 일정하지 않습니다."
   },
   "puerto-de-la-cruz-meson-el-monasterio": {
-    "name": "메손 엘 모나스테리오",
-    "theme": "food",
     "summary": "옛 수도원을 되살린 식당. 건물과 정원이 볼거리",
     "why": "옛 수도원을 되살려 만든 식당입니다. 음식보다 건물과 정원, 안에 있는 작은 동물 우리가 볼거리입니다."
   },
   "puerto-de-la-cruz-iglesia-de-san-francisco": {
-    "name": "산 프란시스코 성당",
     "summary": "이 도시에서 가장 오래된 건물로 여겨진다",
     "why": "이 도시에서 가장 오래된 건물로 여겨지는 성당입니다. 소박하고 규모가 작습니다."
   },
   "puerto-de-la-cruz-museo-arqueologico": {
-    "name": "고고학 박물관",
     "summary": "원주민 관체족 유물 컬렉션이 크다. 무료",
     "why": "정복 이전 원주민 관체족의 토기와 도구를 모았습니다. 작은 도시 박물관치고 컬렉션이 크고 무료입니다."
   },
   "puerto-de-la-cruz-museo-de-arte-contemporaneo-eduardo-westerdahl": {
-    "name": "에두아르도 베스테르달 현대미술관",
     "summary": "카나리아 초현실주의를 다룬 현대미술관. 무료",
     "why": "1930년대 카나리아 제도에서 일어난 초현실주의 운동을 다룹니다. 이 섬이 한때 유럽 전위 미술의 변방 거점이었다는 사실을 보여 주고, 무료입니다."
   },
   "puerto-de-la-cruz-museum-of-fishery": {
-    "name": "어업 박물관",
     "summary": "선박 모형을 모은 작은 박물관",
     "why": "선박 모형을 모은 작은 박물관입니다. 어항이었던 이 도시의 내력을 보여 줍니다."
   },
   "puerto-de-la-cruz-plaza-charco": {
-    "name": "차르코 광장",
     "summary": "인도 월계수가 그늘을 만드는 중심 광장",
     "why": "커다란 인도 월계수가 그늘을 만드는 중심 광장입니다. 저녁이면 사람이 모여, 이 도시의 하루가 여기서 마무리됩니다."
   },
   "puerto-de-la-cruz-bateria-de-santa-barbara": {
-    "name": "산타 바르바라 포대",
     "summary": "항구를 지키던 옛 포대",
     "why": "항구를 지키던 옛 포대입니다. 해안 산책로에서 지나며 봅니다."
   },
   "puerto-de-la-cruz-loro-parque": {
-    "name": "로로 파르케",
-    "durationMin": 300,
     "summary": "앵무새 공원으로 시작해 세계적 규모가 된 동물원",
     "why": "앵무새 공원으로 시작해 지금은 세계적 규모의 동물원이 됐습니다. 범고래와 돌고래 쇼가 대표인데, 그 때문에 동물권 논란도 함께 따라다닙니다.",
     "caution": "고래류 사육에 대한 비판이 있습니다. 마지막 입장이 16시입니다."
   },
   "puerto-de-la-cruz-jardin-de-aclimatacion-de-la-orotava": {
-    "name": "라 오로타바 순화 식물원",
     "summary": "1788년, 열대 식물을 유럽에 들이려 만든 식물원",
     "why": "아메리카에서 가져온 열대 식물을 유럽 기후에 적응시키려고 1788년에 만든 식물원입니다. 200년 넘은 나무들이 그대로 자라, 스페인에서 두 번째로 오래된 식물원이 됐습니다."
   },
   "puerto-de-la-cruz-lago-martianez": {
-    "name": "라고 마르티아네스",
-    "durationMin": 150,
     "summary": "세사르 만리케가 화산암과 바닷물로 만든 수영장",
     "why": "예술가 세사르 만리케가 화산암과 바닷물로 설계한 야외 수영장 단지입니다. 파도가 거친 이 해안에서 안전하게 헤엄치도록 만든 것인데, 그 자체가 작품으로 대접받습니다."
   },
   "puerto-de-la-cruz-vinoteca-con-pasion": {
-    "name": "비노테카 콘 파시온",
     "summary": "수준 높은 안주와 와인을 내는 가스트로 바",
     "why": "수준 높은 안주와 카나리아 와인을 내는 가스트로 바입니다. 화산 토양 포도라 본토 와인과 성격이 다릅니다."
   },
   "puerto-de-la-cruz-centro-comercial-las-piramides-de-martianez": {
-    "name": "라스 피라미데스 쇼핑센터",
     "summary": "해안가 쇼핑센터",
     "why": "해안가에 있는 쇼핑센터입니다. 비 오는 날이나 필요한 것을 살 때 씁니다."
   },
   "puerto-de-la-cruz-mercado-municipal": {
-    "name": "시립 시장",
-    "bestSlots": [
-      "morning"
-    ],
     "summary": "노점 서른 곳이 있는 시장. 응대가 친절하다",
     "why": "노점 서른 곳쯤이 있는 시립 시장입니다. 열대 과일과 카나리아 치즈가 좌판에 놓여 있고 응대가 친절합니다."
   },
   "puerto-de-la-cruz-jardin-de-orquideas-sitio-litre": {
-    "name": "시티오 리트레 정원",
     "summary": "18세기 영국식 저택의 난초 정원",
     "why": "18세기 영국인이 지은 저택의 정원입니다. 난초 컬렉션과 섬에서 가장 오래된 용혈수가 있고, 훔볼트와 크리스티가 다녀갔습니다."
   },
   "puerto-de-la-cruz-parque-taoro": {
-    "name": "타오로 공원",
     "summary": "언덕 공원. 항구와 테이데 산이 함께 보인다",
     "why": "분수와 폭포가 있는 언덕 공원입니다. 항구와 테이데 산이 한 화면에 들어와, 이 도시에서 가장 좋은 전망 지점입니다."
   },
@@ -153,6 +123,11 @@
     "summary": "카나리아 제도를 축소 모형으로 재현한 공원",
     "why": "카나리아 제도의 건축과 풍경을 축소 모형으로 재현한 공원입니다. 섬 전체를 다 돌 수 없는 일정이라면 감을 얻습니다."
   },
+  "puerto-de-la-cruz-wd-hijuela-del-botanico": {
+    "summary": "옛 수녀원 터의 작은 식물원. 무료",
+    "why": "옛 수녀원 터에 만든 작은 식물원입니다. 무료이고 규모가 작아 지나며 들릅니다.",
+    "caution": "이웃 마을 라 오로타바에 있습니다."
+  },
   "puerto-de-la-cruz-wd-jardin-victoria": {
     "summary": "계단식 정원과 흰 대리석 영묘",
     "why": "빅토리아 시대풍 계단식 정원으로, 맨 위에 흰 대리석 영묘가 서 있습니다. 정원 너머로 오로타바 계곡이 내려다보입니다.",
@@ -161,10 +136,5 @@
   "puerto-de-la-cruz-wd-casa-amarilla-puerto-de-la-cruz": {
     "summary": "옛 세관 건물. 노란 외벽이 눈에 띈다",
     "why": "옛 세관 건물로, 노란 외벽 때문에 '노란 집'이라 불립니다. 항구가 무역항이던 시절의 흔적입니다."
-  },
-  "puerto-de-la-cruz-wd-hijuela-del-botanico-la-orotava": {
-    "summary": "옛 수녀원 터의 작은 식물원. 무료",
-    "why": "옛 수녀원 터에 만든 작은 식물원입니다. 무료이고 규모가 작아 지나며 들릅니다.",
-    "caution": "이웃 마을 라 오로타바에 있습니다."
   }
 }
