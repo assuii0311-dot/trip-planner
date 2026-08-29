@@ -67,6 +67,9 @@ const DROP_IDS = new Set([
   'cadiz-wd-roman-theatre-of-cadiz', // = cadiz-teatro-romano
   'granada-wd-banos-arabes-del-banuelo',   // = granada-hamman-el-banuelo
   'granada-wd-basilica-of-saint-john-of-god', // = granada-basilica-san-juan-de-dios
+  'malaga-wd-castle-of-gibralfaro',        // = malaga-castillo-de-gibralfaro
+  'malaga-wd-carmen-thyssen-museum',       // = malaga-museo-carmen-thyssen
+  'malaga-wd-casa-natal-de-pablo-ruiz-picasso', // = malaga-picasso-s-birthplace
 ]);
 const isSight = (it) => it.theme !== 'food' && it.theme !== 'nightlife';
 
