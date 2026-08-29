@@ -1,121 +1,94 @@
 {
   "ourense-nova": {
-    "name": "노바",
     "summary": "미슐랭 1스타. 값 대비 완성도가 높다",
     "why": "미슐랭 1스타인데 값이 다른 별집보다 눅어, 가격 대비 완성도로 이름났습니다. 소도시에 이런 집이 있다는 것이 오우렌세의 의외성입니다.",
     "booking": "예약을 권합니다"
   },
   "ourense-a-palleira": {
-    "name": "아 파예이라",
     "summary": "테이블 열두 개뿐인 갈리시아 요리 식당",
     "why": "테이블이 열두 개뿐인 작은 집으로, 갈리시아 요리를 정성껏 냅니다. 자리가 적어 예약이 안전합니다.",
     "booking": "자리가 적어 예약을 권합니다"
   },
   "ourense-sanmiguel": {
-    "name": "산미겔",
     "summary": "해산물과 갈리시아 요리",
     "why": "해산물과 갈리시아 요리를 함께 냅니다. 내륙 도시치고 생선이 좋습니다."
   },
   "ourense-tapa-negra": {
-    "name": "타파 네그라",
     "summary": "붐비는 타파스 바",
     "why": "질 좋은 타파스로 늘 붐비는 바입니다. 자정까지 열어 저녁 마무리로도 씁니다."
   },
   "ourense-cathedral-of-san-martin": {
-    "name": "산 마르틴 대성당",
     "summary": "산티아고의 영광의 문을 본뜬 '천국의 문'",
     "why": "12세기에 짓기 시작한 대성당입니다. 산티아고의 영광의 문을 본떠 만든 '천국의 문'이 안에 있는데, 채색이 남아 있어 원본보다 색이 뚜렷합니다."
   },
   "ourense-santa-eufemia": {
-    "name": "산타 에우페미아 성당",
     "summary": "곡면 정면이 특징인 17세기 바로크 성당",
     "why": "17세기부터 지은 바로크 성당으로, 정면이 안쪽으로 휘어 있습니다. 좁은 골목에 맞춰 그렇게 지은 것이라 그 자체가 해법입니다."
   },
   "ourense-porta-da-aira": {
-    "name": "포르타 다 아이라",
-    "theme": "food",
     "summary": "음식과 와인 모두 평이 좋은 집",
     "why": "음식과 와인 목록 모두 평이 좋습니다. 갈리시아 와인은 스페인에서도 성격이 다른데, 여기서 그것을 배울 수 있습니다."
   },
   "ourense-termas-outariz-e-canedo": {
-    "name": "오우타리스 온천",
     "summary": "강변에 조성한 일본식 온천 단지. 무료",
     "why": "미뇨 강변에 일본식으로 꾸민 노천 온천 단지입니다. 무료이고 밤 10시까지 열어, 하루를 마무리하는 자리로 좋습니다.",
     "caution": "수영복과 수건이 필요합니다. 시내에서 온천 열차나 버스를 타야 합니다."
   },
   "ourense-termas-do-muino-da-veiga": {
-    "name": "무이뇨 다 베이가 온천",
     "summary": "강가에 다섯 개 탕이 이어지는 무료 노천 온천",
     "why": "강가에 온도가 다른 탕 다섯 개가 이어지는 무료 노천 온천입니다. 바로 옆이 강이라 뜨거운 물과 찬 강물을 오갈 수 있습니다.",
     "caution": "탈의 시설이 최소한입니다. 수영복을 입고 가세요."
   },
   "ourense-termas-a-chavasqueira": {
-    "name": "차바스케이라 온천",
-    "bestSlots": [
-      "evening"
-    ],
     "summary": "시내에서 가장 가까운 강변 일본식 온천",
     "why": "시내에서 가장 가까운 강변 노천 온천으로, 일본식으로 꾸몄습니다. 온천 열차를 타고 갈 수 있습니다."
   },
   "ourense-wd-ponte-vella": {
-    "name": "폰테 베야(옛 다리)",
     "summary": "아치가 38m로 높은 로마·중세 다리",
     "why": "로마 시대에 놓고 중세에 다시 세운 미뉴 강 다리입니다. 가운데 아치가 38m로 높아, 다리라기보다 문처럼 보입니다."
   },
   "ourense-wd-as-burgas": {
-    "name": "아스 부르가스 온천",
     "summary": "도심에서 66도 온천수가 솟는다. 로마 시대부터",
     "why": "도심 한복판에서 66도 온천수가 그대로 솟습니다. 로마 시대부터 쓰였고, 옆에 무료 노천탕이 딸려 있어 발을 담글 수 있습니다.",
     "caution": "물이 매우 뜨겁습니다. 손을 대기 전에 온도를 확인하세요."
   },
   "ourense-wd-ud-ourense": {
-    "name": "UD 오우렌세",
-    "theme": "activity",
     "summary": "지역 축구 구단",
     "why": "지역 축구 구단입니다. 경기가 있는 날에만 의미가 있습니다."
   },
   "ourense-wd-ponte-do-milenio": {
-    "name": "밀레니오 다리",
     "summary": "곡선 보행로가 얹힌 현대식 다리",
     "why": "차도 위로 곡선 보행로가 따로 얹힌 현대식 다리입니다. 그 보행로를 걸어 오르면 강과 도시가 발밑으로 내려갑니다."
   },
   "ourense-wd-church-of-the-santisima-trinidade-ourense": {
-    "name": "산티시마 트리니다데 성당",
     "summary": "요새형 탑이 있는 성당",
     "why": "요새를 겸한 두 개의 탑이 선 성당입니다. 구시가에서 눈에 띕니다."
   },
   "ourense-wd-museo-arqueologico-provincial-de-ourense": {
-    "name": "지방 고고학 박물관",
     "summary": "옛 주교궁의 고고학 박물관",
     "why": "옛 주교궁 건물을 쓰는 고고학 박물관입니다. 갈리시아 켈트계 유물이 중심입니다."
   },
   "ourense-wd-church-of-san-francisco-ourense": {
-    "name": "산 프란시스코 성당",
     "summary": "로마네스크 회랑이 아름다운 성당",
     "why": "회랑의 기둥머리 조각이 갈리시아 로마네스크에서 손꼽힙니다. 구시가에서 조금 떨어져 있어 조용합니다."
   },
   "ourense-wd-museo-catedralicio-de-ourense": {
-    "name": "대성당 박물관",
     "summary": "대성당의 보물과 성구를 전시",
     "why": "대성당의 보물과 성구를 전시합니다. 성당 관람과 이어서 보게 됩니다."
   },
   "ourense-wd-parque-de-san-lazaro": {
-    "name": "산 라사로 공원",
     "summary": "도심의 공원",
     "why": "도심의 공원입니다. 시내 이동 중에 잠깐 쉬기 좋습니다."
   },
   "ourense-wd-church-of-san-bernabeu-da-valenza": {
-    "name": "산 베르나베우 성당",
     "summary": "구시가의 성당",
     "why": "구시가의 성당입니다. 지나며 보는 정도입니다."
   },
   "ourense-wd-church-of-santa-teresita-ourense": {
-    "name": "산타 테레시타 성당",
     "summary": "20세기에 지은 성당",
     "why": "20세기에 지은 성당입니다. 신시가 쪽에 있습니다."
   },
   "ourense-wd-church-of-virgen-milagrosa-ourense": {
-    "name": "비르헨 밀라그로사 성당",
     "summary": "동네 성당",
     "why": "동네 성당입니다. 규모가 작습니다."
   }

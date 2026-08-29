@@ -82,6 +82,11 @@ const DROP_IDS = new Set([
   'a-coruna-wd-casa-del-hombre-la-coruna',       // = a-coruna-domus
   'a-coruna-wd-iglesia-de-santiago',             // = a-coruna-church-of-santiago
   'a-coruna-wd-casa-de-las-ciencias-la-coruna',  // = a-coruna-casa-das-ciencias
+  'vigo-wd-concatedral-de-santa-maria-de-vigo',  // = vigo-vigo-co-cathedral
+  'vigo-wd-castro-fortress',                     // = vigo-castillo-de-san-sebastian
+  'oviedo-wd-santa-maria-del-naranjo',           // = oviedo-santa-maria-del-naranco
+  'oviedo-wd-metropolitan-cathedral-basilica-of-the-holy-savi', // = oviedo-cathedral-of-san-salvador
+  'oviedo-wd-fine-arts-museum-of-asturias',      // = oviedo-museum-of-fine-arts
 ]);
 const isSight = (it) => it.theme !== 'food' && it.theme !== 'nightlife';
 
