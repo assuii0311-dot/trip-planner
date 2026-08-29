@@ -72,7 +72,7 @@ export default function Step6Guide({
                 </summary>
                 <div className="inner">
                   <LinkRow
-                    label={prev ? `${prev.name} 에서 길찾기` : '이 장소까지 길찾기'}
+                    label={prev ? `${prev.name}에서 길찾기` : '이 장소까지 길찾기'}
                     note="대중교통 기준 경로가 열립니다. 스페인 도시는 지하철·버스가 촘촘합니다."
                     url={directionsUrl(prev, e.item, city)}
                   />

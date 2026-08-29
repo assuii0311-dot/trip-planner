@@ -1,41 +1,161 @@
 {
-  "marbella-plaza-de-los-naranjos": { "name": "오렌지 광장", "desc": "오렌지 나무가 늘어선 15세기 광장. 마르베야 구시가의 중심이고 테라스가 광장을 채웁니다." },
-  "marbella-moorish-walls": { "name": "이슬람 성벽", "desc": "10세기 요새의 남은 성벽. 구시가 골목 사이에 끼어 있습니다." },
-  "marbella-ermita-de-santiago": { "name": "산티아고 예배당", "desc": "이슬람 사원을 개조한 마르베야에서 가장 오래된 종교 건물입니다." },
-  "marbella-capilla-de-santo-sepulcro": { "name": "산토 세풀크로 예배당", "desc": "구시가의 작은 예배당입니다." },
-  "marbella-capilla-de-san-juan-de-dios": { "name": "산 후안 데 디오스 예배당", "desc": "16세기에 지은 예배당입니다." },
-  "marbella-nuestra-senora-de-la-encarnacion": { "name": "엔카르나시온 성당", "desc": "오렌지 광장 옆의 주 성당입니다." },
-  "marbella-virgen-de-los-dolores": { "name": "돌로레스 성모상", "desc": "구시가 골목의 성모 조각입니다." },
-  "marbella-museo-del-grabado": { "name": "판화 미술관", "desc": "피카소·미로·달리의 판화를 모은 미술관. 16세기 병원 건물에 있습니다." },
-  "marbella-avenida-del-mar": { "name": "아베니다 델 마르", "desc": "공원에서 바다로 이어지는 보행자 길. 달리의 청동 조각 10점이 늘어서 있습니다." },
-  "marbella-paseo-maritimo": { "name": "해변 산책로", "desc": "6km에 이르는 해변 산책로. 자전거로 달리기 좋습니다." },
-  "marbella-parque-de-alameda": { "name": "알라메다 공원", "desc": "구시가와 바다 사이의 작은 공원. 타일 벤치와 열대 나무가 있습니다." },
-  "marbella-parque-de-la-represa": { "name": "라 레프레사 공원", "desc": "길게 뻗은 도시 공원. 보스케 미술관이 함께 있습니다." },
-  "marbella-guadalmina-beach": { "name": "과달미나 해변", "desc": "주변 환경이 좋은 넓은 해변입니다." },
-  "marbella-amare-beach": { "name": "아마레 비치클럽", "theme": "food", "desc": "지중해 요리를 내는 비치클럽입니다." },
-  "marbella-parasailing-activity": { "name": "패러세일링", "desc": "보트에 매달려 해안 상공을 나는 체험입니다.", "energy": 3 },
-  "marbella-hipodromo-mijas-costa": { "name": "미하스 코스타 경마장", "desc": "전천후 경마장입니다." },
-  "marbella-guadalmina-club-de-golf": { "name": "과달미나 골프클럽", "theme": "activity", "desc": "코스타 델 솔에서 가장 오래된 골프장 중 하나입니다." },
-  "marbella-la-canada": { "name": "라 카냐다", "desc": "150여 개 점포가 있는 대형 쇼핑몰입니다." },
-  "marbella-che-ole": { "name": "체 올레", "desc": "의류 매장입니다." },
-  "marbella-mercadona": { "name": "메르카도나", "desc": "스페인 대표 슈퍼마켓. 간식과 와인을 사기 좋습니다." },
-  "marbella-lidl": { "name": "리들", "desc": "할인 슈퍼마켓입니다." },
-
-  "marbella-santiago": { "name": "산티아고", "desc": "마르베야를 대표하는 생선 요리 식당입니다." },
-  "marbella-casa-del-corregidor": { "name": "카사 델 코레히도르", "desc": "오렌지 광장에 면한 식당입니다." },
-  "marbella-restaurante-el-cortijo": { "name": "엘 코르티호", "desc": "안달루시아 요리를 전문으로 합니다." },
-  "marbella-restaurante-la-buena-vida": { "name": "라 부에나 비다", "desc": "지중해 요리를 내는 식당입니다." },
-  "marbella-los-cano": { "name": "로스 카노", "desc": "바다에 면한 기분 좋은 식당입니다." },
-  "marbella-venencia": { "name": "베넨시아", "desc": "실내외 자리가 있는 인기 타파스 집입니다." },
-  "marbella-la-taberna-del-pinxto": { "name": "타베르나 델 핀초", "desc": "바스크식 핀초스를 냅니다." },
-  "marbella-el-salon": { "name": "엘 살론", "desc": "하루 종일 여는 인기 식당입니다." },
-  "marbella-casa-tua": { "name": "카사 투아", "desc": "이탈리아 식당입니다." },
-  "marbella-restaurante-marbella-club": { "name": "마르베야 클럽 레스토랑", "desc": "고급 리조트 안의 식당입니다." },
-  "marbella-soleo-marbella-beach-club-restaurant": { "name": "솔레오 비치클럽", "desc": "해변에 면한 비치클럽 식당입니다." },
-  "marbella-bar-el-estrecho": { "name": "바르 엘 에스트레초", "desc": "구시가의 좁고 오래된 타파스 바입니다." },
-  "marbella-vale-vale-bar-and-grill": { "name": "발레 발레", "desc": "친근한 분위기의 바 겸 그릴입니다." },
-  "marbella-circus-cabaret": { "name": "서커스 카바레", "desc": "공연이 있는 클럽입니다." },
-  "marbella-buddha-del-sol": { "name": "부다 델 솔", "desc": "나이트클럽입니다." },
-  "marbella-la-notte": { "name": "라 노테", "desc": "밤에 여는 클럽입니다." },
-  "marbella-karaoke-1": { "name": "카라오케 1", "desc": "노래방 바입니다." }
+  "marbella-plaza-de-los-naranjos": {
+    "name": "오렌지 광장",
+    "desc": "오렌지 나무가 늘어선 15세기 광장. 마르베야 구시가의 중심이고 테라스가 광장을 채웁니다."
+  },
+  "marbella-moorish-walls": {
+    "name": "이슬람 성벽",
+    "desc": "10세기 요새의 남은 성벽. 구시가 골목 사이에 끼어 있습니다."
+  },
+  "marbella-ermita-de-santiago": {
+    "name": "산티아고 예배당",
+    "desc": "이슬람 사원을 개조한 마르베야에서 가장 오래된 종교 건물입니다."
+  },
+  "marbella-capilla-de-santo-sepulcro": {
+    "name": "산토 세풀크로 예배당",
+    "desc": "구시가의 작은 예배당입니다."
+  },
+  "marbella-capilla-de-san-juan-de-dios": {
+    "name": "산 후안 데 디오스 예배당",
+    "desc": "16세기에 지은 예배당입니다."
+  },
+  "marbella-nuestra-senora-de-la-encarnacion": {
+    "name": "엔카르나시온 성당",
+    "desc": "오렌지 광장 옆의 주 성당입니다."
+  },
+  "marbella-virgen-de-los-dolores": {
+    "name": "돌로레스 성모상",
+    "desc": "구시가 골목의 성모 조각입니다."
+  },
+  "marbella-museo-del-grabado": {
+    "name": "판화 미술관",
+    "desc": "피카소·미로·달리의 판화를 모은 미술관. 16세기 병원 건물에 있습니다."
+  },
+  "marbella-avenida-del-mar": {
+    "name": "아베니다 델 마르",
+    "desc": "공원에서 바다로 이어지는 보행자 길. 달리의 청동 조각 10점이 늘어서 있습니다."
+  },
+  "marbella-paseo-maritimo": {
+    "name": "해변 산책로",
+    "desc": "6km에 이르는 해변 산책로. 자전거로 달리기 좋습니다."
+  },
+  "marbella-parque-de-alameda": {
+    "name": "알라메다 공원",
+    "desc": "구시가와 바다 사이의 작은 공원. 타일 벤치와 열대 나무가 있습니다."
+  },
+  "marbella-parque-de-la-represa": {
+    "name": "라 레프레사 공원",
+    "desc": "길게 뻗은 도시 공원. 보스케 미술관이 함께 있습니다."
+  },
+  "marbella-guadalmina-beach": {
+    "name": "과달미나 해변",
+    "desc": "주변 환경이 좋은 넓은 해변입니다."
+  },
+  "marbella-amare-beach": {
+    "name": "아마레 비치클럽",
+    "theme": "food",
+    "desc": "지중해 요리를 내는 비치클럽입니다."
+  },
+  "marbella-parasailing-activity": {
+    "name": "패러세일링",
+    "desc": "보트에 매달려 해안 상공을 나는 체험입니다.",
+    "energy": 3
+  },
+  "marbella-hipodromo-mijas-costa": {
+    "name": "미하스 코스타 경마장",
+    "desc": "전천후 경마장입니다."
+  },
+  "marbella-guadalmina-club-de-golf": {
+    "name": "과달미나 골프클럽",
+    "theme": "activity",
+    "desc": "코스타 델 솔에서 가장 오래된 골프장 중 하나입니다."
+  },
+  "marbella-la-canada": {
+    "name": "라 카냐다",
+    "desc": "150여 개 점포가 있는 대형 쇼핑몰입니다."
+  },
+  "marbella-che-ole": {
+    "name": "체 올레",
+    "desc": "의류 매장입니다."
+  },
+  "marbella-mercadona": {
+    "name": "메르카도나",
+    "desc": "스페인 대표 슈퍼마켓. 간식과 와인을 사기 좋습니다."
+  },
+  "marbella-lidl": {
+    "name": "리들",
+    "desc": "할인 슈퍼마켓입니다."
+  },
+  "marbella-santiago": {
+    "name": "산티아고",
+    "desc": "마르베야를 대표하는 생선 요리 식당입니다."
+  },
+  "marbella-casa-del-corregidor": {
+    "name": "카사 델 코레히도르",
+    "desc": "오렌지 광장에 면한 식당입니다."
+  },
+  "marbella-restaurante-el-cortijo": {
+    "name": "엘 코르티호",
+    "desc": "안달루시아 요리를 전문으로 합니다."
+  },
+  "marbella-restaurante-la-buena-vida": {
+    "name": "라 부에나 비다",
+    "desc": "지중해 요리를 내는 식당입니다."
+  },
+  "marbella-los-cano": {
+    "name": "로스 카노",
+    "desc": "바다에 면한 기분 좋은 식당입니다."
+  },
+  "marbella-venencia": {
+    "name": "베넨시아",
+    "desc": "실내외 자리가 있는 인기 타파스 집입니다."
+  },
+  "marbella-la-taberna-del-pinxto": {
+    "name": "타베르나 델 핀초",
+    "desc": "바스크식 핀초스를 냅니다."
+  },
+  "marbella-el-salon": {
+    "name": "엘 살론",
+    "desc": "하루 종일 여는 인기 식당입니다."
+  },
+  "marbella-casa-tua": {
+    "name": "카사 투아",
+    "desc": "이탈리아 식당입니다."
+  },
+  "marbella-restaurante-marbella-club": {
+    "name": "마르베야 클럽 레스토랑",
+    "desc": "고급 리조트 안의 식당입니다."
+  },
+  "marbella-soleo-marbella-beach-club-restaurant": {
+    "name": "솔레오 비치클럽",
+    "desc": "해변에 면한 비치클럽 식당입니다."
+  },
+  "marbella-bar-el-estrecho": {
+    "name": "바르 엘 에스트레초",
+    "desc": "구시가의 좁고 오래된 타파스 바입니다."
+  },
+  "marbella-vale-vale-bar-and-grill": {
+    "name": "발레 발레",
+    "desc": "친근한 분위기의 바 겸 그릴입니다."
+  },
+  "marbella-circus-cabaret": {
+    "name": "서커스 카바레",
+    "desc": "공연이 있는 클럽입니다."
+  },
+  "marbella-buddha-del-sol": {
+    "name": "부다 델 솔",
+    "desc": "나이트클럽입니다."
+  },
+  "marbella-la-notte": {
+    "name": "라 노테",
+    "desc": "밤에 여는 클럽입니다."
+  },
+  "marbella-karaoke-1": {
+    "name": "카라오케 1",
+    "desc": "노래방 바입니다."
+  },
+  "marbella-capilla-del-santo-sepulcro": {
+    "name": "산토 세풀크로 예배당",
+    "desc": "옛 예배당 자리에 1994년 다시 지은 작은 예배당입니다."
+  }
 }

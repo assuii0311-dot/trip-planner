@@ -1,82 +1,347 @@
 {
-  "valencia-catedral-de-santa-maria-de-valencia": { "name": "발렌시아 대성당", "desc": "로마 신전, 서고트 성당, 이슬람 사원을 거쳐 세워진 대성당. 성배 예배당에 성배로 여겨지는 마노 잔이 있습니다." },
-  "valencia-capella-del-sant-calze": { "name": "성배 예배당", "theme": "history", "desc": "대성당 안쪽의 예배당. 최후의 만찬에 쓰였다고 전해지는 마노 잔을 모시고 있습니다." },
-  "valencia-micalet": { "name": "미칼렛 종탑", "desc": "대성당의 팔각 종탑. 207계단을 오르면 구시가 지붕과 오렌지빛 타일이 펼쳐집니다.", "energy": 3 },
-  "valencia-esglesia-de-sant-nicolau": { "name": "산 니콜라스 성당", "desc": "천장 전체가 프레스코로 덮여 '발렌시아의 시스티나 성당'이라 불립니다. 좁은 골목에 숨어 있습니다." },
-  "valencia-monestir-de-sant-miquel-dels-reis": { "name": "산 미겔 데 로스 레예스 수도원", "desc": "16세기 르네상스 수도원. 지금은 발렌시아 도서관으로 쓰입니다." },
-  "valencia-palau-de-cervello": { "name": "세르베요 궁", "desc": "18세기 백작가 저택이자 한때 왕실 임시 거처였던 건물입니다." },
-  "valencia-palau-reial-de-valencia": { "name": "왕궁 터", "desc": "이슬람 시대에 세워졌다가 헐린 왕궁 자리. 지금은 공원과 유구만 남아 있습니다." },
-  "valencia-palau-de-les-arts-reina-sofia": { "name": "레이나 소피아 예술궁전", "theme": "art", "desc": "칼라트라바가 설계한 오페라하우스. 예술과학도시의 가장 극적인 건물입니다." },
-
-  "valencia-museu-nacional-de-ceramica": { "name": "국립 도자기 박물관", "desc": "설화석고를 깎아 만든 바로크 정문 하나만으로도 갈 이유가 됩니다. 도자기 컬렉션도 방대합니다." },
-  "valencia-museu-de-belles-arts-de-valencia": { "name": "발렌시아 미술관", "desc": "고야와 벨라스케스를 포함해 2000점이 넘는 컬렉션. 무료입니다." },
-  "valencia-palau-de-la-musica": { "name": "음악당", "desc": "투리아 공원 안 유리 온실 같은 콘서트홀. 유럽에서 음향이 좋기로 손꼽힙니다." },
-  "valencia-museu-valencia-d-etnologia": { "name": "민속 박물관", "desc": "발렌시아 지방의 생활 문화를 다룹니다. 관광객이 적고 무료입니다." },
-  "valencia-museu-de-prehistoria-de-valencia": { "name": "선사 박물관", "desc": "구석기부터 서고트 시대까지 지역 유물을 모았습니다." },
-  "valencia-el-museu-de-les-ciencies-principe-felipe": { "name": "과학 박물관", "desc": "고래 뼈대를 본뜬 칼라트라바의 건물. 3층 전부가 만져 보는 전시입니다. 아이 동반에 특히 좋습니다." },
-  "valencia-museu-d-historia-de-valencia": { "name": "발렌시아 역사박물관", "desc": "옛 저수조를 개조한 공간. 도시의 형성 과정을 잘 정리해 두었습니다." },
-  "valencia-museo-del-patriarca": { "name": "파트리아르카 박물관", "desc": "신학교가 관리하는 작은 미술관. 소장 회화의 수준이 높습니다." },
-  "valencia-casa-museu-benlliure": { "name": "벤유레 저택 박물관", "desc": "발렌시아 예술가 가문의 집과 화실, 정원이 그대로 남아 있습니다." },
-  "valencia-institut-valencia-d-art-modern": { "name": "발렌시아 현대미술관(IVAM)", "theme": "art", "desc": "스페인 현대미술과 사진에 집중한 미술관. 옛 성벽 유구가 지하에 드러나 있습니다." },
-  "valencia-bombas-gens-centre-d-art": { "name": "봄바스 헨스 아트센터", "theme": "art", "desc": "1930년대 공장을 개조한 전시장. 지하 방공호와 와인 저장고가 남아 있습니다." },
-
-  "valencia-ciutat-de-les-arts-i-les-ciencies": { "name": "예술과학도시", "desc": "칼라트라바가 옛 강바닥에 세운 초현대 건축 단지. 발렌시아를 상징하는 풍경이고 밤 조명이 특히 좋습니다.", "durationMin": 120 },
-  "valencia-l-oceanografic": { "name": "오세아노그라픽", "theme": "activity", "desc": "유럽 최대 해양 수족관. 벨루가와 돌고래를 포함해 구역이 일곱 개라 반나절이 걸립니다.", "durationMin": 180 },
-  "valencia-l-hemisferic": { "name": "에미스페릭", "desc": "거대한 눈 모양 건물. 아이맥스와 플라네타륨이 들어 있고 물에 비친 모습이 사진 명소입니다." },
-  "valencia-l-umbracle": { "name": "움브라클레", "theme": "nature", "desc": "예술과학도시 위를 덮은 아치형 산책 정원. 무료이고 밤에는 야외 클럽으로 바뀝니다." },
-  "valencia-l-agora": { "name": "아고라", "desc": "예술과학도시의 다목적 실내 광장. 경기와 공연이 열립니다." },
-  "valencia-pont-de-l-assut-de-l-or": { "name": "아수트 데 로르 다리", "desc": "칼라트라바가 설계한 하프 모양 사장교. 예술과학도시의 스카이라인을 완성합니다." },
-  "valencia-llotja-de-la-seda": { "name": "라 론하(비단 거래소)", "desc": "나선형 기둥이 야자수처럼 뻗은 15세기 고딕 상거래소. 유네스코 세계유산이고 입장료가 쌉니다." },
-  "valencia-colegio-del-arte-mayor-de-la-seda": { "name": "비단조합 박물관", "desc": "비단 무역으로 번성하던 시절의 조합 건물. 원형 타일 바닥이 아름답습니다." },
-  "valencia-torres-de-serrano": { "name": "세라노스 탑", "desc": "1392년에 세운 성문. 옥상까지 오를 수 있고 구시가 전망이 좋습니다. 요금이 저렴합니다." },
-  "valencia-torres-de-quart": { "name": "콰르트 탑", "desc": "또 하나의 중세 성문. 나폴레옹 전쟁 때 포탄 자국이 벽에 그대로 남아 있습니다." },
-  "valencia-tribunal-de-les-aigues": { "name": "물의 법정", "theme": "history", "desc": "천 년 넘게 이어진 관개 분쟁 재판. 매주 목요일 정오 대성당 문 앞에서 구두로 진행하고 무료로 볼 수 있습니다." },
-  "valencia-almodi": { "name": "알모디", "desc": "14세기 곡물 창고였던 건물. 지금은 전시 공간으로 쓰입니다." },
-  "valencia-banys-de-l-almirall": { "name": "제독의 목욕탕", "desc": "1313년에 지은 아랍식 목욕탕. 별 모양 천창으로 빛이 떨어집니다." },
-  "valencia-drassanes-del-grau": { "name": "고딕 조선소", "desc": "14세기 왕립 조선소. 항구 근처에 남은 드문 중세 산업 건축입니다." },
-  "valencia-centre-arqueologic-de-l-almoina": { "name": "알모이나 고고학 센터", "desc": "공사 중 발견된 로마·서고트·이슬람 시대 유구를 유리 바닥 아래로 보여 줍니다." },
-  "valencia-placa-redona": { "name": "레돈다 광장", "desc": "완전한 원형의 작은 광장. 수예품과 잡화를 파는 가게가 둥글게 둘러싸고 있습니다." },
-  "valencia-benimaclet": { "name": "베니마클렛 동네", "desc": "옛 아랍 농가 마을이 학생 동네가 된 곳. 벽화와 저렴한 바가 많고 관광객이 거의 없습니다." },
-  "valencia-cementerio-general-de-valencia": { "name": "중앙 묘지", "desc": "1807년부터 쓰인 묘지. 조각과 영묘가 야외 미술관에 가깝습니다." },
-  "valencia-placa-de-bous-de-valencia": { "name": "발렌시아 투우장", "desc": "로마 콜로세움을 본뜬 19세기 투우장. 기차역 바로 옆이라 지나는 길에 보게 됩니다." },
-  "valencia-bioparc-valencia": { "name": "비오파르크", "theme": "activity", "desc": "우리 대신 지형으로 동물과 관람객을 나눈 아프리카 특화 동물원입니다.", "durationMin": 180 },
-
-  "valencia-jardi-del-turia": { "name": "투리아 공원", "theme": "nature", "desc": "홍수 뒤 강물을 돌려 만든 9km 선형 공원. 자전거로 도시를 가로지르는 가장 좋은 방법입니다." },
-  "valencia-parc-gulliver": { "name": "걸리버 공원", "desc": "70m 길이 걸리버 조형물이 통째로 미끄럼틀인 놀이터. 무료입니다." },
-  "valencia-jardin-de-viveros": { "name": "비베로스 정원", "desc": "옛 왕궁 정원 자리. 장미원과 분수가 있고 그늘이 넉넉합니다." },
-  "valencia-jardi-botanic": { "name": "식물원", "desc": "1802년에 세운 대학 식물원. 온실과 오래된 나무가 조용합니다." },
-  "valencia-jardi-de-montfort": { "name": "몬포르트 정원", "theme": "nature", "desc": "19세기 신고전 정원. 조각과 미로가 있고 입장이 무료입니다." },
-  "valencia-mirador-valencia": { "name": "미라도르 발렌시아", "theme": "landmark", "desc": "사교 클럽 옥상의 360도 전망대. 예약이 필요하고 일몰 시간대가 가장 좋습니다.", "bestSlots": ["evening"] },
-
-  "valencia-mercat-central": { "name": "중앙시장", "desc": "1928년 모데르니스메 철골 건물. 유럽 최대급 신선식품 시장이고 오전에만 붐빕니다.", "bestSlots": ["morning"] },
-  "valencia-mercat-de-colon": { "name": "콜론 시장", "desc": "시장 건물을 카페와 식당으로 바꾼 곳. 오르차타를 마시기 좋습니다." },
-  "valencia-mercat-de-russafa": { "name": "루사파 시장", "desc": "힙한 루사파 동네의 중심 시장. 주변 골목에 카페와 바가 많습니다." },
-
-  "valencia-cines-babel": { "name": "시네스 바벨", "desc": "원어 상영 예술영화관입니다." },
-  "valencia-la-filmoteca": { "name": "라 필모테카", "desc": "카페가 딸린 시네마테크. 고전 영화를 저렴하게 상영합니다." },
-  "valencia-espai-rambleta": { "name": "람블레타 문화센터", "desc": "음악·연극·무용 공연과 순회 전시가 열리는 복합문화공간입니다." },
-  "valencia-yelmo-cines": { "name": "옐모 시네마", "desc": "최신 개봉작을 더빙과 원어로 상영하는 멀티플렉스입니다." },
-  "valencia-wd-mestalla-stadium": { "name": "메스타야 경기장", "desc": "발렌시아 CF의 홈구장. 경사가 가팔라 그라운드가 가깝게 느껴집니다." },
-  "valencia-wd-nou-mestalla": { "name": "누 메스타야", "desc": "공사가 오래 멈춰 있던 신구장입니다." },
-
-  "valencia-el-poblet-restaurante": { "name": "엘 포블레트", "desc": "키케 다코스타의 미슐랭 식당. 대표 요리를 비교적 합리적인 가격에 냅니다." },
-  "valencia-ricard-camarena-restaurant": { "name": "리카르드 카마레나", "desc": "발렌시아를 대표하는 미슐랭 2스타. 예약이 필수입니다." },
-  "valencia-restaurante-vertical": { "name": "베르티칼", "desc": "옥상에 있는 미슐랭 식당. 지중해 요리와 도시 전망을 함께 냅니다." },
-  "valencia-casa-roberto": { "name": "카사 로베르토", "desc": "관광지를 피하려는 현지인이 찾는 집. 정통 발렌시아 파에야를 제대로 합니다." },
-  "valencia-restaurante-navarro": { "name": "나바로", "desc": "중앙시장과 루사파 시장 재료로 지중해 요리를 냅니다. 쌀 요리가 강점입니다." },
-  "valencia-restaurante-la-principal": { "name": "라 프린시팔", "desc": "전통 발렌시아 요리로 이름난 인기 식당입니다." },
-  "valencia-tasca-angel": { "name": "타스카 앙헬", "desc": "구운 정어리로 유명한 아주 작은 타파스 바. 서서 먹습니다." },
-  "valencia-la-pascuala": { "name": "라 파스쿠알라", "desc": "늦은 아침(알무에르소)을 먹는 곳. 두툼한 보카디요가 간판입니다.", "bestSlots": ["morning"] },
-  "valencia-kiosco-la-pergola": { "name": "키오스코 라 페르골라", "desc": "값싸고 맛있는 보카디요로 붐비는 점심 명소입니다." },
-  "valencia-la-mas-bonita-patacona": { "name": "라 마스 보니타", "desc": "파타코나 해변의 카페. 아침과 브런치, 칵테일까지 하루 종일 엽니다." },
-  "valencia-cafe-del-duende": { "name": "카페 델 두엔데", "desc": "작은 공간에서 플라멩코 공연이 열리는 카페. 공연일을 미리 확인하세요.", "bestSlots": ["evening", "night"] },
-  "valencia-yuk-mi": { "name": "육미", "desc": "발렌시아에 몇 없는 한국 식당. 가족이 운영하고 평이 좋습니다." },
-  "valencia-swagat-valencia": { "name": "스와갓", "desc": "시내에서 가장 제대로 된 인도 식당으로 꼽힙니다." },
-  "valencia-portland-ale-house": { "name": "포틀랜드 에일 하우스", "desc": "미국식 펍 요리와 수제 맥주를 냅니다." },
-
-  "valencia-horchateria-daniel": { "name": "오르차테리아 다니엘", "theme": "food", "desc": "1949년에 문을 연 대표 오르차타 가게. 파르톤 빵에 찍어 먹는 것이 정석입니다." },
-  "valencia-orxata": { "name": "오르차타 마시기", "theme": "food", "desc": "타이거너트로 만든 발렌시아의 전통 음료. 여름 오후 간식으로 파르톤과 함께 냅니다.", "durationMin": 30 },
-  "valencia-bodega-casa-montana": { "name": "카사 몬타냐", "desc": "1836년에 문을 연 발렌시아에서 가장 오래된 타파스 바. 와인 목록이 방대합니다." },
-  "valencia-central-bar": { "name": "센트럴 바", "desc": "중앙시장 안, 리카르드 카마레나가 운영하는 바. 시장 재료로 만든 보카디요가 훌륭합니다." },
-  "valencia-cerveceria-alhambra": { "name": "세르베세리아 알함브라", "desc": "감자 토르티야로 이름난 작은 노천 식당입니다." }
+  "valencia-catedral-de-santa-maria-de-valencia": {
+    "name": "발렌시아 대성당",
+    "desc": "로마 신전, 서고트 성당, 이슬람 사원을 거쳐 세워진 대성당. 성배 예배당에 성배로 여겨지는 마노 잔이 있습니다."
+  },
+  "valencia-capella-del-sant-calze": {
+    "name": "성배 예배당",
+    "theme": "history",
+    "desc": "대성당 안쪽의 예배당. 최후의 만찬에 쓰였다고 전해지는 마노 잔을 모시고 있습니다."
+  },
+  "valencia-micalet": {
+    "name": "미칼렛 종탑",
+    "desc": "대성당의 팔각 종탑. 207계단을 오르면 구시가 지붕과 오렌지빛 타일이 펼쳐집니다.",
+    "energy": 3
+  },
+  "valencia-esglesia-de-sant-nicolau": {
+    "name": "산 니콜라스 성당",
+    "desc": "천장 전체가 프레스코로 덮여 '발렌시아의 시스티나 성당'이라 불립니다. 좁은 골목에 숨어 있습니다."
+  },
+  "valencia-monestir-de-sant-miquel-dels-reis": {
+    "name": "산 미겔 데 로스 레예스 수도원",
+    "desc": "16세기 르네상스 수도원. 지금은 발렌시아 도서관으로 쓰입니다."
+  },
+  "valencia-palau-de-cervello": {
+    "name": "세르베요 궁",
+    "desc": "18세기 백작가 저택이자 한때 왕실 임시 거처였던 건물입니다."
+  },
+  "valencia-palau-reial-de-valencia": {
+    "name": "왕궁 터",
+    "desc": "이슬람 시대에 세워졌다가 헐린 왕궁 자리. 지금은 공원과 유구만 남아 있습니다."
+  },
+  "valencia-palau-de-les-arts-reina-sofia": {
+    "name": "레이나 소피아 예술궁전",
+    "theme": "art",
+    "desc": "칼라트라바가 설계한 오페라하우스. 예술과학도시의 가장 극적인 건물입니다."
+  },
+  "valencia-museu-nacional-de-ceramica": {
+    "name": "국립 도자기 박물관",
+    "desc": "설화석고를 깎아 만든 바로크 정문 하나만으로도 갈 이유가 됩니다. 도자기 컬렉션도 방대합니다."
+  },
+  "valencia-museu-de-belles-arts-de-valencia": {
+    "name": "발렌시아 미술관",
+    "desc": "고야와 벨라스케스를 포함해 2000점이 넘는 컬렉션. 무료입니다."
+  },
+  "valencia-palau-de-la-musica": {
+    "name": "음악당",
+    "desc": "투리아 공원 안 유리 온실 같은 콘서트홀. 유럽에서 음향이 좋기로 손꼽힙니다."
+  },
+  "valencia-museu-valencia-d-etnologia": {
+    "name": "민속 박물관",
+    "desc": "발렌시아 지방의 생활 문화를 다룹니다. 관광객이 적고 무료입니다."
+  },
+  "valencia-museu-de-prehistoria-de-valencia": {
+    "name": "선사 박물관",
+    "desc": "구석기부터 서고트 시대까지 지역 유물을 모았습니다."
+  },
+  "valencia-el-museu-de-les-ciencies-principe-felipe": {
+    "name": "과학 박물관",
+    "desc": "고래 뼈대를 본뜬 칼라트라바의 건물. 3층 전부가 만져 보는 전시입니다. 아이 동반에 특히 좋습니다."
+  },
+  "valencia-museu-d-historia-de-valencia": {
+    "name": "발렌시아 역사박물관",
+    "desc": "옛 저수조를 개조한 공간. 도시의 형성 과정을 잘 정리해 두었습니다."
+  },
+  "valencia-museo-del-patriarca": {
+    "name": "파트리아르카 박물관",
+    "desc": "신학교가 관리하는 작은 미술관. 소장 회화의 수준이 높습니다."
+  },
+  "valencia-casa-museu-benlliure": {
+    "name": "벤유레 저택 박물관",
+    "desc": "발렌시아 예술가 가문의 집과 화실, 정원이 그대로 남아 있습니다."
+  },
+  "valencia-institut-valencia-d-art-modern": {
+    "name": "발렌시아 현대미술관(IVAM)",
+    "theme": "art",
+    "desc": "스페인 현대미술과 사진에 집중한 미술관. 옛 성벽 유구가 지하에 드러나 있습니다."
+  },
+  "valencia-bombas-gens-centre-d-art": {
+    "name": "봄바스 헨스 아트센터",
+    "theme": "art",
+    "desc": "1930년대 공장을 개조한 전시장. 지하 방공호와 와인 저장고가 남아 있습니다."
+  },
+  "valencia-ciutat-de-les-arts-i-les-ciencies": {
+    "name": "예술과학도시",
+    "desc": "칼라트라바가 옛 강바닥에 세운 초현대 건축 단지. 발렌시아를 상징하는 풍경이고 밤 조명이 특히 좋습니다.",
+    "durationMin": 120
+  },
+  "valencia-l-oceanografic": {
+    "name": "오세아노그라픽",
+    "theme": "activity",
+    "desc": "유럽 최대 해양 수족관. 벨루가와 돌고래를 포함해 구역이 일곱 개라 반나절이 걸립니다.",
+    "durationMin": 180
+  },
+  "valencia-l-hemisferic": {
+    "name": "에미스페릭",
+    "desc": "거대한 눈 모양 건물. 아이맥스와 플라네타륨이 들어 있고 물에 비친 모습이 사진 명소입니다."
+  },
+  "valencia-l-umbracle": {
+    "name": "움브라클레",
+    "theme": "nature",
+    "desc": "예술과학도시 위를 덮은 아치형 산책 정원. 무료이고 밤에는 야외 클럽으로 바뀝니다."
+  },
+  "valencia-l-agora": {
+    "name": "아고라",
+    "desc": "예술과학도시의 다목적 실내 광장. 경기와 공연이 열립니다."
+  },
+  "valencia-pont-de-l-assut-de-l-or": {
+    "name": "아수트 데 로르 다리",
+    "desc": "칼라트라바가 설계한 하프 모양 사장교. 예술과학도시의 스카이라인을 완성합니다."
+  },
+  "valencia-llotja-de-la-seda": {
+    "name": "라 론하(비단 거래소)",
+    "desc": "나선형 기둥이 야자수처럼 뻗은 15세기 고딕 상거래소. 유네스코 세계유산이고 입장료가 쌉니다."
+  },
+  "valencia-colegio-del-arte-mayor-de-la-seda": {
+    "name": "비단조합 박물관",
+    "desc": "비단 무역으로 번성하던 시절의 조합 건물. 원형 타일 바닥이 아름답습니다."
+  },
+  "valencia-torres-de-serrano": {
+    "name": "세라노스 탑",
+    "desc": "1392년에 세운 성문. 옥상까지 오를 수 있고 구시가 전망이 좋습니다. 요금이 저렴합니다."
+  },
+  "valencia-torres-de-quart": {
+    "name": "콰르트 탑",
+    "desc": "또 하나의 중세 성문. 나폴레옹 전쟁 때 포탄 자국이 벽에 그대로 남아 있습니다."
+  },
+  "valencia-tribunal-de-les-aigues": {
+    "name": "물의 법정",
+    "theme": "history",
+    "desc": "천 년 넘게 이어진 관개 분쟁 재판. 매주 목요일 정오 대성당 문 앞에서 구두로 진행하고 무료로 볼 수 있습니다."
+  },
+  "valencia-almodi": {
+    "name": "알모디",
+    "desc": "14세기 곡물 창고였던 건물. 지금은 전시 공간으로 쓰입니다."
+  },
+  "valencia-banys-de-l-almirall": {
+    "name": "제독의 목욕탕",
+    "desc": "1313년에 지은 아랍식 목욕탕. 별 모양 천창으로 빛이 떨어집니다."
+  },
+  "valencia-drassanes-del-grau": {
+    "name": "고딕 조선소",
+    "desc": "14세기 왕립 조선소. 항구 근처에 남은 드문 중세 산업 건축입니다."
+  },
+  "valencia-centre-arqueologic-de-l-almoina": {
+    "name": "알모이나 고고학 센터",
+    "desc": "공사 중 발견된 로마·서고트·이슬람 시대 유구를 유리 바닥 아래로 보여 줍니다."
+  },
+  "valencia-placa-redona": {
+    "name": "레돈다 광장",
+    "desc": "완전한 원형의 작은 광장. 수예품과 잡화를 파는 가게가 둥글게 둘러싸고 있습니다."
+  },
+  "valencia-benimaclet": {
+    "name": "베니마클렛 동네",
+    "desc": "옛 아랍 농가 마을이 학생 동네가 된 곳. 벽화와 저렴한 바가 많고 관광객이 거의 없습니다."
+  },
+  "valencia-cementerio-general-de-valencia": {
+    "name": "중앙 묘지",
+    "desc": "1807년부터 쓰인 묘지. 조각과 영묘가 야외 미술관에 가깝습니다."
+  },
+  "valencia-placa-de-bous-de-valencia": {
+    "name": "발렌시아 투우장",
+    "desc": "로마 콜로세움을 본뜬 19세기 투우장. 기차역 바로 옆이라 지나는 길에 보게 됩니다."
+  },
+  "valencia-bioparc-valencia": {
+    "name": "비오파르크",
+    "theme": "activity",
+    "desc": "우리 대신 지형으로 동물과 관람객을 나눈 아프리카 특화 동물원입니다.",
+    "durationMin": 180
+  },
+  "valencia-jardi-del-turia": {
+    "name": "투리아 공원",
+    "theme": "nature",
+    "desc": "홍수 뒤 강물을 돌려 만든 9km 선형 공원. 자전거로 도시를 가로지르는 가장 좋은 방법입니다."
+  },
+  "valencia-parc-gulliver": {
+    "name": "걸리버 공원",
+    "desc": "70m 길이 걸리버 조형물이 통째로 미끄럼틀인 놀이터. 무료입니다."
+  },
+  "valencia-jardin-de-viveros": {
+    "name": "비베로스 정원",
+    "desc": "옛 왕궁 정원 자리. 장미원과 분수가 있고 그늘이 넉넉합니다."
+  },
+  "valencia-jardi-botanic": {
+    "name": "식물원",
+    "desc": "1802년에 세운 대학 식물원. 온실과 오래된 나무가 조용합니다."
+  },
+  "valencia-jardi-de-montfort": {
+    "name": "몬포르트 정원",
+    "theme": "nature",
+    "desc": "19세기 신고전 정원. 조각과 미로가 있고 입장이 무료입니다."
+  },
+  "valencia-mirador-valencia": {
+    "name": "미라도르 발렌시아",
+    "theme": "landmark",
+    "desc": "사교 클럽 옥상의 360도 전망대. 예약이 필요하고 일몰 시간대가 가장 좋습니다.",
+    "bestSlots": [
+      "evening"
+    ]
+  },
+  "valencia-mercat-central": {
+    "name": "중앙시장",
+    "desc": "1928년 모데르니스메 철골 건물. 유럽 최대급 신선식품 시장이고 오전에만 붐빕니다.",
+    "bestSlots": [
+      "morning"
+    ]
+  },
+  "valencia-mercat-de-colon": {
+    "name": "콜론 시장",
+    "desc": "시장 건물을 카페와 식당으로 바꾼 곳. 오르차타를 마시기 좋습니다."
+  },
+  "valencia-mercat-de-russafa": {
+    "name": "루사파 시장",
+    "desc": "힙한 루사파 동네의 중심 시장. 주변 골목에 카페와 바가 많습니다."
+  },
+  "valencia-cines-babel": {
+    "name": "시네스 바벨",
+    "desc": "원어 상영 예술영화관입니다."
+  },
+  "valencia-la-filmoteca": {
+    "name": "라 필모테카",
+    "desc": "카페가 딸린 시네마테크. 고전 영화를 저렴하게 상영합니다."
+  },
+  "valencia-espai-rambleta": {
+    "name": "람블레타 문화센터",
+    "desc": "음악·연극·무용 공연과 순회 전시가 열리는 복합문화공간입니다."
+  },
+  "valencia-yelmo-cines": {
+    "name": "옐모 시네마",
+    "desc": "최신 개봉작을 더빙과 원어로 상영하는 멀티플렉스입니다."
+  },
+  "valencia-wd-mestalla-stadium": {
+    "name": "메스타야 경기장",
+    "desc": "발렌시아 CF의 홈구장. 경사가 가팔라 그라운드가 가깝게 느껴집니다."
+  },
+  "valencia-wd-nou-mestalla": {
+    "name": "누 메스타야",
+    "desc": "공사가 오래 멈춰 있던 신구장입니다."
+  },
+  "valencia-el-poblet-restaurante": {
+    "name": "엘 포블레트",
+    "desc": "키케 다코스타의 미슐랭 식당. 대표 요리를 비교적 합리적인 가격에 냅니다."
+  },
+  "valencia-ricard-camarena-restaurant": {
+    "name": "리카르드 카마레나",
+    "desc": "발렌시아를 대표하는 미슐랭 2스타. 예약이 필수입니다."
+  },
+  "valencia-restaurante-vertical": {
+    "name": "베르티칼",
+    "desc": "옥상에 있는 미슐랭 식당. 지중해 요리와 도시 전망을 함께 냅니다."
+  },
+  "valencia-casa-roberto": {
+    "name": "카사 로베르토",
+    "desc": "관광지를 피하려는 현지인이 찾는 집. 정통 발렌시아 파에야를 제대로 합니다."
+  },
+  "valencia-restaurante-navarro": {
+    "name": "나바로",
+    "desc": "중앙시장과 루사파 시장 재료로 지중해 요리를 냅니다. 쌀 요리가 강점입니다."
+  },
+  "valencia-restaurante-la-principal": {
+    "name": "라 프린시팔",
+    "desc": "전통 발렌시아 요리로 이름난 인기 식당입니다."
+  },
+  "valencia-tasca-angel": {
+    "name": "타스카 앙헬",
+    "desc": "구운 정어리로 유명한 아주 작은 타파스 바. 서서 먹습니다."
+  },
+  "valencia-la-pascuala": {
+    "name": "라 파스쿠알라",
+    "desc": "늦은 아침(알무에르소)을 먹는 곳. 두툼한 보카디요가 간판입니다.",
+    "bestSlots": [
+      "morning"
+    ]
+  },
+  "valencia-kiosco-la-pergola": {
+    "name": "키오스코 라 페르골라",
+    "desc": "값싸고 맛있는 보카디요로 붐비는 점심 명소입니다."
+  },
+  "valencia-la-mas-bonita-patacona": {
+    "name": "라 마스 보니타",
+    "desc": "파타코나 해변의 카페. 아침과 브런치, 칵테일까지 하루 종일 엽니다."
+  },
+  "valencia-cafe-del-duende": {
+    "name": "카페 델 두엔데",
+    "desc": "작은 공간에서 플라멩코 공연이 열리는 카페. 공연일을 미리 확인하세요.",
+    "bestSlots": [
+      "evening",
+      "night"
+    ]
+  },
+  "valencia-yuk-mi": {
+    "name": "육미",
+    "desc": "발렌시아에 몇 없는 한국 식당. 가족이 운영하고 평이 좋습니다."
+  },
+  "valencia-swagat-valencia": {
+    "name": "스와갓",
+    "desc": "시내에서 가장 제대로 된 인도 식당으로 꼽힙니다."
+  },
+  "valencia-portland-ale-house": {
+    "name": "포틀랜드 에일 하우스",
+    "desc": "미국식 펍 요리와 수제 맥주를 냅니다."
+  },
+  "valencia-horchateria-daniel": {
+    "name": "오르차테리아 다니엘",
+    "theme": "food",
+    "desc": "1949년에 문을 연 대표 오르차타 가게. 파르톤 빵에 찍어 먹는 것이 정석입니다."
+  },
+  "valencia-orxata": {
+    "name": "오르차타 마시기",
+    "theme": "food",
+    "desc": "타이거너트로 만든 발렌시아의 전통 음료. 여름 오후 간식으로 파르톤과 함께 냅니다.",
+    "durationMin": 30
+  },
+  "valencia-bodega-casa-montana": {
+    "name": "카사 몬타냐",
+    "desc": "1836년에 문을 연 발렌시아에서 가장 오래된 타파스 바. 와인 목록이 방대합니다."
+  },
+  "valencia-central-bar": {
+    "name": "센트럴 바",
+    "desc": "중앙시장 안, 리카르드 카마레나가 운영하는 바. 시장 재료로 만든 보카디요가 훌륭합니다."
+  },
+  "valencia-cerveceria-alhambra": {
+    "name": "세르베세리아 알함브라",
+    "desc": "감자 토르티야로 이름난 작은 노천 식당입니다."
+  },
+  "valencia-bodega-fila-el-labrador": {
+    "name": "보데가 엘 라브라도르",
+    "desc": "통에서 바로 따라 주는 옛 방식의 선술집. 값이 싸고 현지인만 있습니다."
+  },
+  "valencia-la-fabrica-de-hielo": {
+    "name": "라 파브리카 데 이엘로",
+    "desc": "버려진 제빙 공장을 되살린 복합 공간. 해변 근처이고 라이브 공연과 벼룩시장이 열립니다.",
+    "bestSlots": [
+      "evening",
+      "night"
+    ]
+  },
+  "valencia-museu-de-l-arros": {
+    "name": "쌀 박물관",
+    "theme": "art",
+    "desc": "옛 정미소를 그대로 남긴 박물관. 파에야의 재료가 어디서 오는지 알 수 있습니다."
+  },
+  "valencia-galeria-del-tossal": {
+    "name": "토살 갤러리",
+    "theme": "history",
+    "desc": "지하에 드러난 이슬람 시대 성벽 유구를 전시 공간으로 만들었습니다. 무료입니다."
+  }
 }

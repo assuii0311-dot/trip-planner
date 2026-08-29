@@ -1,0 +1,19 @@
+{
+  "teruel-catedral-de-santa-maria-de-teruel": { "name": "테루엘 대성당", "desc": "무데하르 목조 천장이 '스페인의 시스티나'라 불리는 대성당. 천장 그림에 중세 일상이 빼곡히 그려져 있습니다." },
+  "teruel-torre-de-san-martin": { "name": "산 마르틴 탑", "desc": "벽돌과 유약 타일로 쌓은 무데하르 탑. 유네스코 세계유산입니다." },
+  "teruel-torre-de-la-iglesia-de-san-salvador": { "name": "산 살바도르 탑", "desc": "산 마르틴과 쌍을 이루는 무데하르 탑. 내부 계단으로 오를 수 있습니다." },
+  "teruel-iglesia-de-san-pedro": { "name": "산 페드로 성당", "desc": "무데하르 탑과 회랑이 있는 14세기 성당. '테루엘의 연인' 무덤이 여기 있습니다." },
+  "teruel-wd-jewish-quarter-of-teruel": { "name": "유대인 지구", "desc": "추방 이전 유대 공동체가 살던 골목입니다." },
+  "teruel-acueducto-los-arcos": { "name": "로스 아르코스 수도교", "desc": "1554년에 완성한 르네상스 수도교. 위층은 수로, 아래층은 사람이 다니는 이중 구조입니다." },
+  "teruel-escalinata-neo-mudejar": { "name": "네오무데하르 계단", "desc": "기차역과 구시가를 잇는 1921년 계단. 타일 장식이 화려합니다." },
+  "teruel-wd-la-escalinata": { "name": "에스칼리나타", "desc": "역에서 도시로 오르는 장식 계단입니다." },
+  "teruel-wd-fountain-of-el-torico": { "name": "엘 토리코 분수", "desc": "작은 황소 조각이 기둥 위에 선 도시의 상징. 중앙 광장에 있습니다." },
+  "teruel-wd-casa-de-tejidos-el-torico": { "name": "엘 토리코 모데르니스메 건물", "desc": "중앙 광장에 면한 아르누보 건물입니다." },
+  "teruel-museo-de-teruel": { "name": "테루엘 박물관", "desc": "16세기 저택의 지역 박물관. 무료입니다." },
+  "teruel-museo-de-arte-sacro": { "name": "성미술 박물관", "desc": "16세기 건물의 종교 미술 컬렉션입니다." },
+  "teruel-dinopolis": { "name": "디노폴리스", "desc": "스페인에서 처음 발견된 공룡이 이 지역에서 나왔습니다. 박물관과 테마파크를 겸하고 아이 동반에 잘 맞습니다.", "durationMin": 240 },
+  "teruel-wd-bullring-of-teruel": { "name": "테루엘 투우장", "desc": "시내의 투우장입니다." },
+  "teruel-dining-old-town": { "name": "테루엘 구시가 식당가", "desc": "엘 토리코 광장 주변에 식당이 모여 있습니다. 테루엘 하몬은 스페인에서 처음 원산지 인증을 받은 하몬입니다." },
+  "teruel-dining-menu-del-dia": { "name": "테루엘 오늘의 메뉴", "desc": "평일 점심 정식이 12~15유로 선입니다." },
+  "teruel-dining-dinner-area": { "name": "테루엘 저녁 식사", "desc": "해발 900m로 여름에도 저녁이 서늘합니다. 소도시라 21시 전에 자리를 잡는 편이 안전합니다." }
+}
