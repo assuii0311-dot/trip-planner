@@ -80,7 +80,12 @@ export async function fetchNearby(city, { radiusKm = 4, minSitelinks = 4, exclud
     if (!name || name.startsWith('Q') === false && !name) continue;
     if (/^Q\d+$/.test(name)) continue;                 // 라벨이 없는 항목
     if (NOT_A_DESTINATION.test(typeLabel)) continue;
-    if (norm(name) === norm(city.nameEn) || norm(name) === norm(city.name)) continue;
+    // 도시 그 자체("Palma")와, 이미 헐린 건물은 갈 곳이 아니다.
+    const cityNorm = norm(city.nameEn);
+    const thisNorm = norm(name);
+    if (thisNorm === cityNorm || thisNorm === norm(city.name)) continue;
+    if (thisNorm.length >= 4 && (cityNorm.startsWith(thisNorm) || thisNorm.startsWith(cityNorm))) continue;
+    if (/\b(demolished|destroyed|former site|no longer exists)\b/i.test(row.desc?.value ?? '')) continue;
 
     // Wikidata 좌표가 틀린 항목이 드물게 있다. 마드리드의 경기장이 빌바오
     // 반경 6km 안에서 나오는 식이다. 설명에 다른 도시 이름이 박혀 있으면 버린다.
