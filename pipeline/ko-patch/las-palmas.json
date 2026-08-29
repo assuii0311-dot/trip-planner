@@ -1,322 +1,227 @@
 {
   "las-palmas-sakura-city": {
-    "name": "사쿠라 시티",
     "summary": "가격 대비 수준이 좋은 일식·아시아 식당",
     "why": "값에 비해 수준이 좋은 일식·아시아 식당입니다. 카나리아 요리가 물릴 때 갑니다."
   },
   "las-palmas-la-travesia-de-triana": {
-    "name": "라 트라베시아 데 트리아나",
     "summary": "감각적인 타파스 바",
     "why": "트리아나 거리의 감각적인 타파스 바입니다. 와인 목록이 넓습니다."
   },
   "las-palmas-tasca-siete-viejas": {
-    "name": "타스카 시에테 비에하스",
     "summary": "분위기 좋은 타파스 바. 음식 수준이 높다",
     "why": "분위기가 좋으면서 음식 수준도 높은 타파스 바입니다. 이 도시에서 실패가 적은 선택입니다."
   },
   "las-palmas-restaurante-ons": {
-    "name": "온스",
     "summary": "메인 요리가 훌륭하고 양이 많다",
     "why": "메인 요리가 훌륭하고 양이 많습니다. 응대가 따뜻해 손님이 꾸준합니다."
   },
   "las-palmas-camino-al-jamonal": {
-    "name": "카미노 알 하모날",
     "summary": "하몬과 이베리코 요리를 제대로 하는 집",
     "why": "하몬과 이베리코 요리를 제대로 하는 집입니다. 섬이지만 본토 재료를 잘 다룹니다."
   },
   "las-palmas-restaurante-que-leche": {
-    "name": "케 레체",
     "summary": "정성스러운 창작 요리로 평이 높다",
     "why": "창작 요리로 평이 높은 식당입니다. 자리가 많지 않으니 예약하는 편이 안전합니다.",
     "booking": "예약을 권합니다"
   },
   "las-palmas-restaurante-samoa": {
-    "name": "사모아",
     "summary": "현지인이 즐겨 찾는 식당",
     "why": "현지 사람들이 꾸준히 찾는 식당입니다. 정직한 스페인 요리를 적당한 값에 냅니다."
   },
   "las-palmas-restaurante-marisqueria-rias-bajas": {
-    "name": "리아스 바하스",
     "summary": "갈리시아식 해산물 전문점",
     "why": "갈리시아식 해산물을 전문으로 합니다. 대서양 한복판이라 재료가 좋습니다."
   },
   "las-palmas-restaurante-tabla-caliente": {
-    "name": "타블라 칼리엔테",
     "summary": "뜨거운 돌판에 직접 구워 먹는 식당",
     "why": "달군 돌판을 그대로 내주어 직접 구워 먹습니다. 그 방식 자체가 재미라 일행이 여럿일 때 좋습니다."
   },
   "las-palmas-la-coqueta-de-cano": {
-    "name": "라 코케타 데 카노",
     "summary": "작고 매력적인 타파스 선술집",
     "why": "작고 매력적인 타파스 선술집입니다. 응대가 편하고 값이 착합니다."
   },
   "las-palmas-restaurante-bodegon-lagunetas": {
-    "name": "보데곤 라구네타스",
     "summary": "카나리아 전통 요리를 내는 큰 식당",
     "why": "카나리아 전통 요리를 내는 큰 식당입니다. 단체도 받을 수 있는 규모입니다."
   },
   "las-palmas-tasca-galileo": {
-    "name": "타스카 갈릴레오",
     "summary": "소박한 인테리어의 선술집. 값이 착하다",
     "why": "꾸밈없는 선술집으로 음식이 맛있고 값이 착합니다. 관광객이 적습니다."
   },
   "las-palmas-midway": {
-    "name": "미드웨이",
     "summary": "감자 토르티야와 살모레호가 훌륭하다",
     "why": "감자 토르티야와 차가운 토마토 수프 살모레호가 훌륭합니다. 응대도 좋습니다."
   },
   "las-palmas-mama-angela": {
-    "name": "마마 앙헬라",
     "summary": "생선 파스타와 피자를 신선한 재료로",
     "why": "생선 파스타와 피자를 신선한 재료로 만듭니다. 이탈리아 요리가 필요할 때 갑니다."
   },
   "las-palmas-catedral-de-santa-ana": {
-    "name": "산타 아나 대성당",
     "summary": "야자수 모양 기둥의 대성당. 엘리베이터로 종탑에",
     "why": "400년에 걸쳐 지어 고딕과 신고전이 섞였습니다. 안의 기둥이 위에서 야자수처럼 갈라지는 형태라 이 섬다운 인상을 남기고, 엘리베이터로 종탑에 올라 구시가를 내려다볼 수 있습니다."
   },
   "las-palmas-castillo-de-la-luz": {
-    "name": "라 루스 성",
     "summary": "섬에서 가장 오래된 16세기 요새. 지금은 전시장",
     "why": "섬에서 가장 오래된 16세기 요새입니다. 드레이크의 함대를 막아 낸 자리이고, 지금은 전시 공간으로 씁니다."
   },
   "las-palmas-ermita-de-san-antonio-abad": {
-    "name": "산 안토니오 아바드 예배당",
     "summary": "콜럼버스가 기도했다고 전해지는 예배당",
     "why": "콜럼버스가 아메리카로 떠나기 전 여기서 기도했다고 전해집니다. 베게타 구시가에 있어 콜럼버스의 집과 함께 보게 됩니다."
   },
   "las-palmas-columbus-house-museum": {
-    "name": "콜럼버스의 집",
     "summary": "콜럼버스가 신대륙으로 떠나기 전 머문 총독 관저",
     "why": "콜럼버스가 항해 도중 배를 고치려고 이 섬에 들렀을 때 머문 총독 관저입니다. 항해와 식민 시대를 다루고, 카나리아 목조 안뜰이 그대로 남아 있습니다."
   },
   "las-palmas-alfredo-kraus-auditorium": {
-    "name": "알프레도 크라우스 아우디토리오",
     "summary": "무대 뒤 유리창 너머로 대서양이 보이는 공연장",
     "why": "라스 칸테라스 해변 끝에 선 공연장입니다. 무대 뒤 벽이 통유리라, 공연 중에 커튼을 열면 대서양이 배경이 됩니다.",
     "booking": "공연 일정을 미리 확인하세요"
   },
   "las-palmas-elder-museum-of-science-and-technology": {
-    "name": "엘데르 과학기술 박물관",
     "summary": "직접 조작하는 전시가 많은 과학관. 실제 항공기",
     "why": "직접 만지고 조작하는 전시가 중심인 과학관입니다. 실제 항공기가 통째로 들어와 있어 아이 동반이면 반응이 좋습니다."
   },
   "las-palmas-museo-canario": {
-    "name": "카나리아 박물관",
     "summary": "관체족 두개골 컬렉션이 세계 최대 규모",
     "why": "1879년에 세운 박물관으로, 정복 이전 원주민의 유물과 두개골 컬렉션이 세계 최대 규모입니다. 이 섬에 누가 먼저 살았는지를 정면으로 다룹니다."
   },
   "las-palmas-teatro-perez-galdos": {
-    "name": "페레스 갈도스 극장",
     "summary": "항구 도시의 주요 극장. 천장화가 볼 만하다",
     "why": "이 도시 출신 작가 페레스 갈도스의 이름을 딴 주요 극장입니다. 천장화가 볼 만하고 지금도 공연이 올라갑니다."
   },
   "las-palmas-casa-museo-perez-galdos": {
-    "name": "페레스 갈도스 생가",
     "summary": "스페인 근대 문학을 대표하는 작가의 생가",
     "why": "세르반테스 다음가는 스페인 소설가로 꼽히는 베니토 페레스 갈도스의 생가입니다. 그가 쓰던 방과 원고가 남아 있습니다."
   },
   "las-palmas-teatro-guiniguada": {
-    "name": "기니과다 극장",
     "summary": "1938년 저택 건물의 공연장",
     "why": "1938년에 지은 저택 건물의 공연장입니다. 연극과 영화 상영이 함께 열립니다."
   },
   "las-palmas-centro-atlantico-de-arte-moderno": {
-    "name": "대서양 현대미술센터(CAAM)",
-    "theme": "art",
     "summary": "옛 파사드 뒤에 현대 공간을 넣은 미술관. 무료",
     "why": "베게타 구시가의 옛 건물 파사드를 그대로 두고 안쪽만 현대적으로 새로 지었습니다. 아프리카·아메리카·유럽이 만나는 지점의 현대미술을 다루고, 무료입니다."
   },
   "las-palmas-pueblo-canario": {
-    "name": "푸에블로 카나리오",
     "summary": "카나리아 전통 마을을 재현한 구역. 주말 민속 공연",
     "why": "카나리아 전통 건축을 재현한 구역입니다. 주말에는 전통 의상을 입고 하는 민속 공연이 열립니다."
   },
   "las-palmas-poema-del-mar": {
-    "name": "포에마 델 마르 수족관",
-    "theme": "activity",
     "summary": "유럽 최대급 단일 곡면 수조가 있는 수족관",
     "why": "2018년에 문을 연 대형 수족관으로, 유럽에서 가장 큰 축의 단일 곡면 수조가 있습니다. 항구 쪽이라 접근이 쉽습니다."
   },
   "las-palmas-ermito-de-san-telmo": {
-    "name": "산 텔모 예배당",
     "summary": "트리아나 거리 끝의 작은 예배당",
     "why": "트리아나 상점가 끝의 작은 예배당입니다. 옆 공원이 쉬어 가기 좋습니다."
   },
   "las-palmas-plaza-de-espana": {
-    "name": "에스파냐 광장",
     "summary": "도시 교통이 모이는 광장",
     "why": "도시 교통이 모이는 광장입니다. 이동의 기준점으로 쓰게 됩니다."
   },
   "las-palmas-plaza-de-santa-ana": {
-    "name": "산타 아나 광장",
     "summary": "청동 개 여덟 마리가 지키는 대성당 앞 광장",
     "why": "대성당 앞 광장으로, 청동 개 조각 여덟 마리가 늘어서 있습니다. '카나리아'라는 이름이 새가 아니라 개(canis)에서 왔다는 설을 이 조각들이 대변합니다."
   },
   "las-palmas-playa-de-las-canteras": {
-    "name": "라스 칸테라스 해변",
-    "durationMin": 150,
     "summary": "도심에 붙은 4km 백사장. 암초가 파도를 막는다",
     "why": "도심에 그대로 붙은 4km 백사장입니다. 앞바다에 천연 암초가 길게 뻗어 파도를 막아 주어, 대서양인데도 물이 잔잔하고 스노클링이 됩니다."
   },
   "las-palmas-parque-santa-catalina": {
-    "name": "산타 카탈리나 공원",
     "summary": "카니발의 중심 무대. 노천 카페가 많다",
     "why": "항구 앞 광장 겸 공원으로, 라스팔마스 카니발의 중심 무대입니다. 평소에는 노천 카페가 늘어서 사람 구경을 하게 됩니다."
   },
   "las-palmas-parque-doramas": {
-    "name": "도라마스 공원",
     "summary": "관체족 영웅의 이름을 딴 공원",
     "why": "스페인 정복에 맞선 관체족 영웅 도라마스의 이름을 딴 공원입니다. 푸에블로 카나리오와 붙어 있어 함께 보게 됩니다."
   },
   "las-palmas-playa-del-confital": {
-    "name": "엘 콘피탈 해변",
     "summary": "화산암 지형의 거친 해변. 서핑 포인트",
     "why": "화산암이 그대로 드러난 거친 해변입니다. 파도가 좋아 서핑 대회가 열리는 포인트입니다.",
     "caution": "파도와 바위가 있어 수영에는 맞지 않습니다."
   },
   "las-palmas-playa-de-las-alcaravaneras": {
-    "name": "알카라바네라스 해변",
     "summary": "항구 쪽 해변. 파도가 없어 수영과 요트에 적합",
     "why": "항구 안쪽 해변이라 파도가 거의 없습니다. 요트 클럽이 있고, 아이와 함께라면 안전합니다."
   },
-  "las-palmas-auditorio-alfredo-kraus": {
-    "name": "알프레도 크라우스 공연",
-    "theme": "art",
-    "desc": "클래식 공연의 본거지. 공연 일정을 미리 확인하세요."
-  },
   "las-palmas-ud-las-palmas": {
-    "name": "UD 라스팔마스",
     "summary": "그란카나리아 스타디움의 축구 구단",
     "why": "그란카나리아 스타디움을 홈으로 쓰는 축구 구단입니다. 경기가 있는 날에만 의미가 있습니다."
   },
   "las-palmas-gran-canaria-arena": {
-    "name": "그란카나리아 아레나",
     "summary": "농구 경기와 공연이 열리는 실내 경기장",
     "why": "농구 경기와 공연이 열리는 실내 경기장입니다. 이 섬은 농구가 강해 경기 열기가 높습니다."
   },
   "las-palmas-las-palmeras": {
-    "name": "라스 팔메라스 스포츠클럽",
     "summary": "골프 코스와 테니스 코트가 있는 시설",
     "why": "골프 코스와 테니스 코트 여섯 개를 갖춘 시설입니다."
   },
   "las-palmas-bar-san-remo": {
-    "name": "바르 산 레모",
     "summary": "실내외 자리가 있는 아늑한 바",
     "why": "실내외 자리가 있는 아늑한 바로, 당구대와 다트가 있습니다. 새벽 1시까지 엽니다."
   },
   "las-palmas-nyc-taxi-rockbar": {
-    "name": "NYC 택시 록바",
     "summary": "블루스와 록을 트는 바",
     "why": "블루스와 록을 트는 바로 햄버거도 냅니다. 음악 취향이 맞으면 오래 앉게 됩니다."
   },
   "las-palmas-la-azotea-de-benito": {
-    "name": "라 아소테아 데 베니토",
-    "bestSlots": [
-      "evening",
-      "night"
-    ],
     "summary": "옥상 칵테일 바. 해변 일몰이 내려다보인다",
     "why": "옥상 칵테일 바로, 해 질 무렵 라스 칸테라스 해변이 내려다보입니다. 일몰 시간에 맞춰 가면 값어치가 다릅니다."
   },
   "las-palmas-chester-lounge-bar": {
-    "name": "체스터 라운지 바",
     "summary": "규모가 큰 클럽 겸 바",
     "why": "규모가 큰 클럽 겸 바입니다. 밤 일정으로 씁니다."
   },
   "las-palmas-real-club-de-golf-de-las-palmas": {
-    "name": "라스팔마스 왕립 골프클럽",
-    "theme": "activity",
     "summary": "1891년. 스페인 최초의 골프장. 화산 분화구 안",
     "why": "1891년에 만든 스페인 최초의 골프장입니다. 화산 분화구 안에 코스를 냈다는 점만으로도 다른 골프장과 다릅니다.",
     "booking": "방문객 라운드는 사전 예약이 필요합니다"
   },
   "las-palmas-mercado-de-vegueta": {
-    "name": "베게타 시장",
-    "bestSlots": [
-      "morning"
-    ],
     "summary": "1787년. 섬에서 가장 오래된 시장",
     "why": "1787년에 문을 연 섬에서 가장 오래된 시장입니다. 베게타 구시가 산책과 묶으면 동선이 자연스럽습니다."
   },
   "las-palmas-centro-comercial-el-muelle": {
-    "name": "엘 무엘레 쇼핑센터",
     "summary": "항구 여객터미널 옆 쇼핑몰",
     "why": "항구 여객터미널 옆 쇼핑몰입니다. 배 시간을 기다릴 때 쓰기 좋습니다."
   },
   "las-palmas-centro-comercial-las-arenas": {
-    "name": "라스 아레나스 쇼핑센터",
     "summary": "섬에서 가장 큰 쇼핑몰",
     "why": "섬에서 가장 큰 쇼핑몰입니다. 필요한 것을 한 번에 살 때 씁니다."
   },
   "las-palmas-bodegon-pachichi": {
-    "name": "보데곤 파치치",
     "summary": "카나리아 향토 음식을 편하게 먹는 곳",
     "why": "카나리아 향토 음식을 편하게 먹을 수 있는 곳입니다. 값이 정직합니다."
   },
   "las-palmas-bar-cafeteria-ricarepa": {
-    "name": "리카레파",
     "summary": "베네수엘라식 아레파를 파는 카페",
     "why": "베네수엘라 음식을 파는 카페입니다. 카나리아 사람들이 오래 베네수엘라로 이민 갔다가 돌아와, 이 섬에는 베네수엘라 음식이 자연스럽게 자리 잡았습니다."
   },
   "las-palmas-la-candella": {
-    "name": "라 칸데야",
     "summary": "화덕 피자집",
     "why": "화덕에 굽는 피자집입니다. 포장도 됩니다."
   },
   "las-palmas-verde-limon-comida-casera": {
-    "name": "베르데 리몬",
     "summary": "가정식 카나리아 요리",
     "why": "집에서 만든 듯한 카나리아 요리를 냅니다. 값이 눅고 양이 넉넉합니다."
   },
   "las-palmas-mercado-del-puerto": {
-    "name": "푸에르토 시장",
     "summary": "에펠 공방 양식 철골 건물의 미식 시장",
     "why": "에펠 공방 양식으로 지은 철골 시장 건물입니다. 지금은 타파스 바가 모인 미식 시장이 되어, 건물과 음식을 함께 씁니다."
   },
   "las-palmas-mercado-central": {
-    "name": "중앙시장",
     "summary": "신선식품이 두루 갖춰진 큰 시장",
     "why": "생선과 해산물 구색이 특히 좋은 큰 시장입니다. 대서양 어종이라 본토와 종류가 다릅니다."
   },
   "las-palmas-museo-nestor": {
-    "name": "네스토르 미술관",
     "summary": "카나리아 상징주의 화가 네스토르의 작품",
     "why": "카나리아 상징주의를 대표하는 화가 네스토르의 작품을 모았습니다. 그가 설계에 관여한 푸에블로 카나리오 안에 있어, 그림과 건축을 함께 봅니다."
   },
   "las-palmas-ginger": {
-    "name": "진저",
     "summary": "칵테일 바",
     "why": "칵테일 바입니다. 저녁 한 잔으로 씁니다."
   },
   "las-palmas-playa-de-la-laja": {
-    "name": "라 라하 해변",
     "summary": "회흑색 모래의 긴 해변. 파도가 있다",
     "why": "화산에서 온 회흑색 모래가 길게 이어지는 해변입니다. 파도가 있어 물놀이보다 산책에 맞습니다.",
     "caution": "파도와 조류가 있습니다. 안전 안내를 확인하세요."
-  },
-  "las-palmas-wd-cathedral-basilica-of-st-ann": {
-    "name": "산타 아나 대성당 내부",
-    "desc": "야자수 모양 기둥이 인상적인 대성당 본당입니다."
-  },
-  "las-palmas-bochinche-el-chato": {
-    "name": "보친체 엘 차토",
-    "desc": "가족이 운영하는 작은 식당입니다."
-  },
-  "las-palmas-gourie-41": {
-    "name": "구리에 41",
-    "desc": "선택지가 넓고 응대가 좋은 식당입니다."
-  },
-  "las-palmas-la-dolce-vita": {
-    "name": "라 돌체 비타",
-    "desc": "파스타로 이름난 이탈리아 식당입니다."
-  },
-  "las-palmas-pizzeria-pomodoro": {
-    "name": "피체리아 포모도로",
-    "desc": "값싸고 무난한 이탈리아 식당입니다."
-  },
-  "las-palmas-sakura-i": {
-    "name": "사쿠라 I",
-    "desc": "품질 좋은 일식당입니다."
   }
 }

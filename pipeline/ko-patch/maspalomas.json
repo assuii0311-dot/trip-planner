@@ -1,167 +1,127 @@
 {
   "maspalomas-samsara": {
-    "name": "삼사라",
     "summary": "독특한 콘셉트로 알려진 식당",
     "why": "장식과 콘셉트가 독특해 이 리조트 지역에서 눈에 띄는 식당입니다. 음식보다 공간이 먼저 기억에 남습니다."
   },
   "maspalomas-abrasa-grill": {
-    "name": "아브라사 그릴",
     "summary": "숯불 구이가 좋고 응대가 친절하다",
     "why": "숯불 구이가 좋고 주인과 직원의 응대가 친절합니다. 저녁을 제대로 쓸 때 무난합니다."
   },
   "maspalomas-madre-mia": {
-    "name": "마드레 미아",
     "summary": "길가의 작은 피자 가게",
     "why": "겉보기에는 평범한 길가 피자집인데 맛이 좋다는 평이 꾸준합니다. 값이 눅습니다."
   },
   "maspalomas-pantai-kuta": {
-    "name": "판타이 쿠타",
     "summary": "관광지에서 살짝 벗어난 인도네시아 식당",
     "why": "관광 구역에서 한 발 벗어난 곳에 숨은 인도네시아 식당입니다. 리조트 음식이 물릴 때 갑니다."
   },
   "maspalomas-meson-sonnenland": {
-    "name": "메손 손넨란트",
     "summary": "조용한 중식당",
     "why": "손넨란트 지역의 조용한 중식당입니다. 슈퍼마켓 옆이라 찾기 쉽습니다."
   },
   "maspalomas-asadero-de-pollos-pico-pico": {
-    "name": "피코 피코 로스트치킨",
     "summary": "로스트 치킨과 마늘 감자튀김으로 유명",
     "why": "숯불에 돌린 로스트 치킨과 마늘 감자튀김으로 유명합니다. 포장해서 숙소나 해변으로 가져가기 좋습니다."
   },
   "maspalomas-restaurante-escaleritas": {
-    "name": "에스칼레리타스",
     "summary": "재료가 신선하고 서비스가 좋은 식당",
     "why": "재료가 신선하고 응대가 좋은 식당입니다. 무난하고 실패가 적습니다."
   },
   "maspalomas-la-charca": {
-    "name": "라 차르카 석호",
     "summary": "모래언덕과 바다 사이의 기수호. 철새가 모인다",
     "why": "모래언덕과 바다 사이에 남은 기수호입니다. 사막 같은 모래언덕 끝에 갑자기 물과 갈대가 나타나고, 철새가 모입니다. 등대가 배경으로 들어와 사진이 좋습니다."
   },
   "maspalomas-faro-i": {
-    "name": "마스팔로마스 등대",
     "summary": "1890년에 세운 56m 등대. 모래언덕 사진의 기준점",
     "why": "1890년에 세운 56m 등대입니다. 모래언덕 사진에 늘 등장하는 기준점이고, 여기서부터 언덕을 걷기 시작합니다."
   },
   "maspalomas-faro-ii": {
-    "name": "캄포 인테르나시오날",
-    "theme": "landmark",
     "summary": "등대 안쪽 주거·상업 구역",
     "why": "등대 안쪽의 주거·상업 구역입니다. 식당과 상점이 모여 있어 실용적인 기준점이 됩니다."
   },
   "maspalomas-the-dunes-of-maspalomas": {
-    "name": "마스팔로마스 모래언덕",
-    "durationMin": 120,
-    "bestSlots": [
-      "morning",
-      "evening"
-    ],
     "summary": "사막처럼 펼쳐진 400헥타르 모래언덕",
     "why": "400헥타르에 이르는 모래언덕이 바다까지 이어집니다. 사하라에서 바람에 실려 왔다는 설이 있을 만큼 사막에 가까운 풍경이라, 유럽에서 이런 곳은 흔치 않습니다.",
     "caution": "보호구역이라 정해진 길로만 걸어야 합니다. 그늘이 전혀 없으니 물과 모자가 필요하고, 한낮 모래는 맨발로 걷기 어렵습니다."
   },
   "maspalomas-palmitos-park": {
-    "name": "팔미토스 파크",
-    "theme": "activity",
-    "durationMin": 240,
     "summary": "협곡에 자리한 조류·동물 공원. 맹금 비행 쇼",
     "why": "협곡 안에 자리한 조류·동물 공원입니다. 앵무새와 맹금 비행 쇼가 대표이고, 나비 온실과 수족관도 함께 있습니다.",
     "caution": "차나 셔틀버스로 산길을 올라야 합니다."
   },
   "maspalomas-parque-botanico": {
-    "name": "식물원",
     "summary": "500종이 넘는 식물을 모은 정원. 무료",
     "why": "500종이 넘는 식물을 모은 정원입니다. 무료이고 그늘이 있어, 모래언덕에서 달아오른 뒤 쉬기 좋습니다.",
     "caution": "평일에만 엽니다."
   },
   "maspalomas-holiday-world-maspalomas": {
-    "name": "홀리데이 월드",
     "summary": "볼링장과 놀이기구가 있는 가족형 놀이공원",
     "why": "볼링장과 놀이기구가 함께 있는 가족형 놀이공원입니다. 저녁에 열어 하루의 마무리로 쓸 수 있습니다."
   },
   "maspalomas-aqualand-maspalomas": {
-    "name": "아쿠아랜드",
-    "durationMin": 300,
     "summary": "슬라이드와 풀이 있는 워터파크",
     "why": "슬라이드와 풀이 있는 워터파크입니다. 아이 동반이면 하루가 채워집니다."
   },
   "maspalomas-snack-bar-surf-burger": {
-    "name": "서프 버거",
     "summary": "햇볕이 드는 테라스가 있는 작은 스낵바",
     "why": "햇볕이 드는 테라스가 있는 작은 스낵바입니다. 가볍게 한 끼를 때울 때 씁니다."
   },
   "maspalomas-varadero": {
-    "name": "바라데로",
     "summary": "등대 서쪽의 새로 지은 쇼핑몰",
     "why": "등대 서쪽, 멜로네라스 쪽의 새로 지은 쇼핑몰입니다. 상점과 식당이 모여 있습니다."
   },
   "maspalomas-mercado-maspalomas": {
-    "name": "마스팔로마스 시장",
     "summary": "지역 농산물과 잡화를 파는 장터",
     "why": "지역 농산물과 잡화를 파는 장터입니다. 일요일에는 벼룩시장으로 바뀝니다.",
     "caution": "수·토요일 오전과 일요일에만 섭니다."
   },
   "maspalomas-rancho-luna": {
-    "name": "란초 루나",
     "summary": "손넨란트 지역의 피자집",
     "why": "손넨란트 지역에서 아는 사람만 가는 피자집입니다. 주인이 친절하고 값이 눅습니다."
   },
   "maspalomas-ocean-s-view": {
-    "name": "오션스 뷰",
     "summary": "정통 스페인 요리. 양고기가 훌륭하다",
     "why": "리조트 음식이 아니라 정통 스페인 요리를 냅니다. 양고기 요리가 특히 평이 좋습니다."
   },
   "maspalomas-anfi-del-mar-beach": {
-    "name": "안피 델 마르 해변",
     "summary": "카리브에서 실어 온 흰 모래를 깐 인공 해변",
     "why": "카리브에서 흰 모래를 실어 와 깐 인공 해변입니다. 방파제로 막아 물이 잔잔하고, 회흑색 화산 모래가 대부분인 이 섬에서 유독 눈에 띕니다."
   },
   "maspalomas-piscina-municipal-de-san-fernando": {
-    "name": "산 페르난도 시립 수영장",
     "summary": "25m 레인이 두 개 있는 시립 수영장",
     "why": "25m 레인이 두 개 있는 시립 수영장입니다. 파도 없이 제대로 수영하고 싶을 때 씁니다."
   },
   "maspalomas-swim-in-the-piscina-locale-local-pool": {
-    "name": "해변 식당 수영장",
     "summary": "해변 식당 상당수가 손님에게 수영장을 내준다",
     "why": "바닷가 식당 상당수가 손님에게 수영장을 무료로 쓰게 해 줍니다. 밥을 먹고 그대로 물에 들어가는 방식이라, 따로 시설을 찾을 필요가 없습니다.",
     "caution": "가게마다 조건이 다릅니다. 주문 전에 물어보세요."
   },
   "maspalomas-playa-meloneras": {
-    "name": "멜로네라스 해변",
     "summary": "산책로를 따라 식당과 상점이 늘어선 해변",
     "why": "해변을 따라 산책로가 나 있고 그 옆으로 식당과 상점이 이어집니다. 저녁 산책 코스로 좋습니다."
   },
   "maspalomas-parque-urbano-del-sur": {
-    "name": "남부 도시공원",
-    "theme": "nature",
     "summary": "지역 주민이 쓰는 도시 공원",
     "why": "지역 주민이 쓰는 도시 공원입니다. 관광 구역에서 벗어난 일상 풍경을 보게 됩니다."
   },
   "maspalomas-skatepark-maspalomas": {
-    "name": "스케이트파크",
     "summary": "야외 스케이트 파크",
     "why": "야외 스케이트 파크입니다. 장비가 있다면 쓸 만합니다."
   },
   "maspalomas-mercadona": {
-    "name": "메르카도나",
     "summary": "스페인 대표 슈퍼마켓",
     "why": "스페인 대표 슈퍼마켓입니다. 숙소에서 해 먹거나 간식을 살 때 씁니다."
   },
   "maspalomas-salobre-golf-resort": {
-    "name": "살로브레 골프",
     "summary": "18홀 코스 두 개를 갖춘 골프 리조트",
     "why": "18홀 코스 두 개를 갖춘 골프 리조트입니다. 화산 지형을 그대로 살린 코스라 다른 곳과 인상이 다릅니다.",
     "booking": "티오프 예약이 필요합니다"
   },
   "maspalomas-dunaflor": {
-    "name": "두나플로르",
     "summary": "골프장과 식물원 사이의 작은 상가",
     "why": "골프장과 식물원 사이의 작은 상가입니다. 지나는 길에 들르는 정도입니다."
   },
   "maspalomas-wd-playa-del-ingles": {
-    "name": "플라야 델 잉글레스",
     "summary": "모래언덕과 이어지는 대형 해변",
     "why": "모래언덕과 그대로 이어지는 대형 해변으로, 그란카나리아 관광의 중심입니다. 해변 끝에서 언덕으로 걸어 들어갈 수 있습니다.",
     "busy": "성수기에는 매우 붐빕니다"
