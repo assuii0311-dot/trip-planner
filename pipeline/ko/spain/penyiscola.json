@@ -1,0 +1,18 @@
+{
+  "penyiscola-castell-de-peniscola": { "name": "페니스콜라 성", "desc": "바다로 튀어나온 바위 위의 성전기사단 요새. 교황 베네딕토 13세가 여기서 교황직을 주장하며 여생을 보냈습니다. '엘 시드' 촬영지이기도 합니다.", "durationMin": 90 },
+  "penyiscola-esglesia-de-santa-maria-de-peniscola": { "name": "산타 마리아 성당", "desc": "성 안 구시가의 14세기 성당입니다." },
+  "penyiscola-wd-church-of-our-lady-of-the-ermitana": { "name": "에르미타나 성모 성당", "desc": "성 옆에 붙은 17세기 성당입니다." },
+  "penyiscola-castell-de-polpis": { "name": "폴피스 성", "desc": "근교 산에 남은 이슬람 기원의 성 유적입니다." },
+  "penyiscola-torre-badum": { "name": "바둠 탑", "desc": "해안 절벽의 감시탑. 이르타 자연공원 안에 있습니다." },
+  "penyiscola-wd-peniscola-lighthouse": { "name": "페니스콜라 등대", "desc": "성 꼭대기에 선 등대입니다." },
+  "penyiscola-museu-de-la-mar": { "name": "바다 박물관", "desc": "어업과 항해 역사를 다루는 작은 박물관입니다." },
+  "penyiscola-parc-natural-de-la-serra-d-irta": { "name": "이르타 자연공원", "desc": "개발되지 않은 해안 산악 공원. 절벽길 트레킹과 인적 없는 자갈 해변이 있습니다.", "energy": 4 },
+  "penyiscola-platja-nord": { "name": "북쪽 해변", "desc": "구시가에서 이어지는 넓은 모래 해변입니다." },
+  "penyiscola-platja-sud": { "name": "남쪽 해변", "desc": "작지만 성이 정면으로 보이는 해변입니다." },
+  "penyiscola-wd-playa-de-la-caracola": { "name": "카라콜라 해변", "desc": "조용한 작은 해변입니다." },
+  "penyiscola-mercadillo": { "name": "주간 장터", "desc": "지역 농산물을 파는 노천 시장입니다." },
+  "penyiscola-restaurante-casa-jaime": { "name": "카사 하이메", "desc": "해산물 요리 전문점입니다." },
+  "penyiscola-restaurante-el-penon": { "name": "엘 페뇬", "desc": "성 아래의 오래된 식당입니다." },
+  "penyiscola-restaurante-casa-dorotea": { "name": "카사 도로테아", "desc": "골목에 숨은 향토 요리 식당입니다." },
+  "penyiscola-mandarina-restaurant": { "name": "만다리나", "desc": "바 겸 클럽에 딸린 식당입니다." }
+}

@@ -1,0 +1,27 @@
+{
+  "albufera-el-palmar": { "name": "엘 팔마르 마을", "desc": "석호 한가운데의 어촌 마을. 파에야 발렌시아나의 원형을 먹을 수 있는 곳이고, 배 타는 선착장이 여기 있습니다." },
+  "albufera-embarcadero-de-el-palmar": { "name": "엘 팔마르 선착장", "desc": "석호 유람선을 타는 곳. 해 지기 한 시간 전에 타는 것이 가장 좋습니다.", "bestSlots": ["evening"] },
+  "albufera-embarcador-de-la-gola-de-pujol": { "name": "고라 데 푸홀 선착장", "desc": "또 하나의 유람선 선착장. 발렌시아 시내에서 더 가깝습니다.", "bestSlots": ["evening"] },
+  "albufera-mirador-de-la-gola-del-pujol": { "name": "석호 전망대", "desc": "석호와 논이 한눈에 들어오는 전망 데크. 철새 관찰에 좋습니다." },
+  "albufera-centre-d-interpretacio-raco-de-l-olla": { "name": "라코 데 롤라 해설센터", "desc": "석호 생태를 설명하는 방문자 센터. 관찰탑에서 홍학을 볼 수 있습니다." },
+  "albufera-barraca-dels-arandes": { "name": "바라카(전통 가옥)", "desc": "갈대 지붕을 얹은 이 지역 전통 농가. 가장 오래된 건물입니다." },
+  "albufera-muntanyeta-dels-sants": { "name": "산츠 언덕", "desc": "평야에 솟은 낮은 언덕. 석호와 논 전체가 내려다보입니다." },
+  "albufera-bateria-republicana-de-el-saler": { "name": "엘 살레르 공화국 포대", "desc": "내전기에 만든 해안 포대 유적입니다." },
+  "albufera-platja-d-el-saler": { "name": "엘 살레르 해변", "desc": "소나무 숲을 지나 나오는 이 일대에서 가장 잘 정비된 해변입니다." },
+  "albufera-platja-de-la-devesa": { "name": "라 데베사 해변", "desc": "개발되지 않은 모래언덕 해변. 자연 그대로입니다." },
+  "albufera-platja-de-pinedo": { "name": "피네도 해변", "desc": "발렌시아 시내에서 가장 가까운 해변입니다." },
+  "albufera-platja-del-recati": { "name": "레카티 해변", "desc": "모래가 고운 도시형 해변입니다." },
+  "albufera-platja-de-la-garrofera": { "name": "가로페라 해변", "desc": "누드 구역이 있는 한적한 해변입니다." },
+  "albufera-platja-de-l-arbre-del-gos": { "name": "아르브레 델 고스 해변", "desc": "인적이 드문 긴 해변입니다." },
+  "albufera-mercadillo": { "name": "주간 장터", "desc": "주 1회 서는 노천 시장. 지역 농산물을 팝니다." },
+  "albufera-discoteca-spook-pinedo": { "name": "스푹 피네도", "desc": "오래된 해변 클럽입니다." },
+
+  "albufera-restaurante-el-palmar": { "name": "레스토랑 엘 팔마르", "desc": "엘 팔마르 마을의 파에야 식당입니다." },
+  "albufera-arroceria-duna": { "name": "아로세리아 두나", "desc": "해변에 면한 쌀 요리 전문점. 예약이 필요합니다." },
+  "albufera-arroceria-l-estibador": { "name": "아로세리아 레스티바도르", "desc": "해변의 쌀 요리 전문점입니다." },
+  "albufera-alqueria-de-brosquil": { "name": "알케리아 데 브로스킬", "desc": "오렌지 밭에 자리한 식당. 정통 파에야를 냅니다." },
+  "albufera-restaurante-l-establiment": { "name": "레스타블리멘트", "desc": "옛 농가를 개조한 쌀 요리 식당입니다." },
+  "albufera-alqueria-de-la-mar": { "name": "알케리아 데 라 마르", "desc": "석호 근처의 향토 요리 식당입니다." },
+  "albufera-llar-del-pescador": { "name": "야르 델 페스카도르", "desc": "어부 요리를 내는 식당입니다." },
+  "albufera-restaurante-l-illa": { "name": "레스토랑 리야", "desc": "엘 팔마르의 파에야 식당입니다." }
+}

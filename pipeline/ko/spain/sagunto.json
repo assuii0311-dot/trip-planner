@@ -1,0 +1,23 @@
+{
+  "sagunto-castell-de-sagunt": { "name": "사군토 성", "desc": "능선을 1km 따라 이어지는 거대한 성채. 이베리아·로마·이슬람·기독교 시대의 성벽이 구간마다 다릅니다. 입장이 무료입니다.", "durationMin": 120, "energy": 4 },
+  "sagunto-teatre-roma": { "name": "로마 극장", "theme": "history", "desc": "기원전 1세기에 언덕을 깎아 만든 극장. 논쟁적인 현대식 복원을 거쳤고 지금도 공연이 열립니다." },
+  "sagunto-temple-de-diana": { "name": "디아나 신전", "desc": "기원전 5~4세기 이베리아 시대 유구. 한니발의 공격에서도 살아남은 벽입니다." },
+  "sagunto-jueria": { "name": "유대인 지구", "desc": "추방 이전까지 유대인이 살던 골목. 좁은 계단길이 성으로 이어집니다." },
+  "sagunto-via-del-portic": { "name": "포르티코 로마 도로", "desc": "주택가 지하에 보존된 로마 시대 도로 유구입니다." },
+  "sagunto-torre-del-grau-vell": { "name": "그라우 베이 탑", "desc": "옛 항구 자리에 남은 감시탑입니다." },
+  "sagunto-museu-historic-de-sagunt-muhsag": { "name": "사군토 역사박물관", "desc": "성 아래 자리한 박물관. 이베리아와 로마 시대 유물이 중심입니다." },
+  "sagunto-fundacio-bancaixa": { "name": "반카이샤 문화센터", "desc": "기획 전시가 열리는 문화 공간입니다." },
+  "sagunto-marjal-dels-moros": { "name": "모로스 습지", "desc": "철새가 모이는 보호 습지. 관찰 데크가 있습니다." },
+  "sagunto-falles": { "name": "파야스 축제", "desc": "3월 조형물을 태우는 발렌시아 지방 축제. 사군토에서도 성대하게 열립니다." },
+  "sagunto-mercadillo-de-sagunto": { "name": "사군토 장터", "desc": "구시가에 서는 노천 시장입니다." },
+  "sagunto-mercadillo-de-puerto-de-sagunto": { "name": "항구 장터", "desc": "항구 쪽에 서는 노천 시장입니다." },
+  "sagunto-wd-petres-castle": { "name": "페트레스 성", "desc": "근교 마을의 성 유적입니다." },
+  "sagunto-wd-gilet-tower": { "name": "힐레트 탑", "desc": "근교의 옛 감시탑입니다." },
+  "sagunto-wd-moli-fortificat-torre-gausa": { "name": "토레 가우사 요새 방앗간", "desc": "요새를 겸한 옛 물레방앗간입니다." },
+  "sagunto-wd-sant-roc-tower-sagunt": { "name": "산 로크 탑", "desc": "구시가의 옛 탑입니다." },
+  "sagunto-wd-alqueria-de-l-aigua-fresca": { "name": "아이과 프레스카 농가", "desc": "보존된 전통 농가 건물입니다." },
+  "sagunto-wd-iglesia-de-la-natividad-de-nuestra-senora": { "name": "나티비닷 성당", "desc": "구시가의 고딕 성당입니다." },
+  "sagunto-restaurant-palau-del-duc": { "name": "팔라우 델 두크", "desc": "옛 저택 건물에 자리한 식당입니다." },
+  "sagunto-l-armeler": { "name": "라르멜레르", "desc": "유대인 지구의 프랑스 식당. 분위기가 아늑합니다." },
+  "sagunto-dining-old-town": { "name": "사군토 구시가 식당가", "desc": "구시가 광장 주변에 식당이 모여 있습니다. 항구 쪽으로 나가면 해산물 식당이 많습니다." }
+}
