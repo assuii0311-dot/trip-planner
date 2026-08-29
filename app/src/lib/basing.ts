@@ -1,5 +1,5 @@
 import type { City } from '../types';
-import { buildTransitTable, transitBetween, DAY_TRIP_LIMIT_MIN, type TransitLeg } from './transit';
+import { buildTransitTable, transitBetween, isDayTrippable, type TransitLeg } from './transit';
 import { josa, withJosa } from './korean';
 
 /** 한 거점과 거기서 다녀올 근교들. */
@@ -38,7 +38,7 @@ export function assignBases(selected: City[], all: City[], totalDays: number): B
   const selectedSlugs = new Set(selected.map((c) => c.slug));
 
   const reach = (base: City, target: City) =>
-    base.slug === target.slug || transitBetween(base, target, table).minutes <= DAY_TRIP_LIMIT_MIN;
+    base.slug === target.slug || isDayTrippable(transitBetween(base, target, table));
 
   const candidates = all.filter(canHost).map((city) => ({
     city,
@@ -88,7 +88,7 @@ export function assignBases(selected: City[], all: City[], totalDays: number): B
     if (groups.some((g) => g.base.slug === city.slug)) continue;
     const best = groups
       .map((g) => ({ g, leg: transitBetween(g.base, city, table) }))
-      .filter((x) => x.leg.minutes <= DAY_TRIP_LIMIT_MIN)
+      .filter((x) => isDayTrippable(x.leg))
       .sort((a, b) => a.leg.minutes - b.leg.minutes)[0];
     if (best) best.g.dayTrips.push({ city, leg: best.leg });
   }
