@@ -1,0 +1,118 @@
+// Gap fill for cities whose Wikivoyage article is thin.
+//
+// Overpass was the original plan, but Wikidata's own geospatial search turns
+// out to be the better source here: everything it returns is notable enough to
+// have its own item, it carries Korean labels where they exist, it hands back
+// the sitelink count the popularity score already uses, and it is CC0 — no
+// share-alike obligation, unlike OSM's ODbL.
+import { THEMES } from './extract.mjs';
+
+const SPARQL = 'https://query.wikidata.org/sparql';
+const UA = 'trip-planner-pipeline/1.0';
+
+/** Types that exist at a location but are not somewhere you visit. */
+const NOT_A_DESTINATION = /\b(municipality|city|town|village|human settlement|province|comarca|autonomous community|road|motorway|highway|street|railway station|metro station|bus station|airport|university|school|hospital|company|business|football club|newspaper|political|river|stream|reservoir|river basin|neighborhood|district|county|region|parish|diocese)\b/i;
+
+const query = (lat, lon, radiusKm, minSitelinks) => `
+SELECT ?item ?itemLabel ?koLabel ?desc ?lat ?lon ?typeLabel ?sitelinks WHERE {
+  SERVICE wikibase:around {
+    ?item wdt:P625 ?coord .
+    bd:serviceParam wikibase:center "Point(${lon} ${lat})"^^geo:wktLiteral .
+    bd:serviceParam wikibase:radius "${radiusKm}" .
+  }
+  ?item wikibase:sitelinks ?sitelinks .
+  FILTER(?sitelinks >= ${minSitelinks})
+  ?item wdt:P31 ?type .
+  ?item p:P625/psv:P625 ?cv .
+  ?cv wikibase:geoLatitude ?lat ; wikibase:geoLongitude ?lon .
+  OPTIONAL { ?item rdfs:label ?koLabel . FILTER(LANG(?koLabel)="ko") }
+  OPTIONAL { ?item schema:description ?desc . FILTER(LANG(?desc)="en") }
+  SERVICE wikibase:label { bd:serviceParam wikibase:language "en" . }
+}
+ORDER BY DESC(?sitelinks)
+LIMIT 200`;
+
+/** Theme implied by a Wikidata type label, or null when the type says nothing. */
+function themeFromType(typeLabel) {
+  const folded = typeLabel.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  for (const t of THEMES) if (new RegExp(t.re.source).test(folded)) return t.id;
+  return null;
+}
+
+const DURATION = { nature: 60, activity: 120, art: 90, history: 60, landmark: 30, nightlife: 60, shopping: 45, food: 75 };
+const slug = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 48);
+
+async function run(sparql, tries = 3) {
+  for (let i = 0; i < tries; i++) {
+    try {
+      const res = await fetch(`${SPARQL}?query=${encodeURIComponent(sparql)}`, {
+        headers: { Accept: 'application/sparql-results+json', 'User-Agent': UA },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch (err) {
+      if (i === tries - 1) throw err;
+      await new Promise((r) => setTimeout(r, 2000 * (i + 1)));
+    }
+  }
+}
+
+/**
+ * Extra items around a city centre. `exclude` holds names already taken from
+ * Wikivoyage so the two sources do not double up on the same cathedral.
+ */
+export async function fetchNearby(city, { radiusKm = 4, minSitelinks = 4, exclude = new Set(), limit = 30 } = {}) {
+  const data = await run(query(city.lat, city.lon, radiusKm, minSitelinks));
+  const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+  const taken = new Set([...exclude].map(norm));
+  const seen = new Set();
+  const items = [];
+
+  for (const row of data.results?.bindings ?? []) {
+    const name = row.itemLabel?.value;
+    const typeLabel = row.typeLabel?.value ?? '';
+    if (!name || name.startsWith('Q') === false && !name) continue;
+    if (/^Q\d+$/.test(name)) continue;                 // 라벨이 없는 항목
+    if (NOT_A_DESTINATION.test(typeLabel)) continue;
+    if (norm(name) === norm(city.nameEn) || norm(name) === norm(city.name)) continue;
+
+    const theme = themeFromType(typeLabel);
+    if (!theme) continue;
+
+    const key = row.item.value;
+    if (seen.has(key) || taken.has(norm(name))) continue;
+    seen.add(key);
+    taken.add(norm(name));
+
+    const sitelinks = Number(row.sitelinks.value);
+    items.push({
+      id: `${city.slug}-wd-${slug(name)}`,
+      name: row.koLabel?.value ?? name,
+      nameEn: name,
+      nameLocal: null,
+      city: city.slug,
+      district: null,
+      theme,
+      desc: row.desc?.value ?? typeLabel,
+      lat: +Number(row.lat.value).toFixed(6),
+      lon: +Number(row.lon.value).toFixed(6),
+      durationMin: DURATION[theme],
+      priceEur: null,
+      hours: null,
+      bestSlots: theme === 'food' ? ['lunch', 'dinner']
+        : theme === 'nightlife' ? ['evening', 'night']
+        : ['morning', 'afternoon'],
+      indoor: !['nature', 'landmark', 'activity'].includes(theme),
+      popularity: sitelinks >= 40 ? 5 : sitelinks >= 18 ? 4 : sitelinks >= 7 ? 3 : 2,
+      energy: theme === 'activity' ? 4 : theme === 'nature' ? 3 : 2,
+      tags: [],
+      url: null,
+      wikidata: key.split('/').pop(),
+      source: 'wikidata',
+      attribution: 'Wikidata, CC0',
+    });
+    if (items.length >= limit) break;
+  }
+  return items;
+}
