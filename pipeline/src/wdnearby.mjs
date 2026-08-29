@@ -11,7 +11,7 @@ const SPARQL = 'https://query.wikidata.org/sparql';
 const UA = 'trip-planner-pipeline/1.0';
 
 /** Types that exist at a location but are not somewhere you visit. */
-const NOT_A_DESTINATION = /\b(municipality|city|town|village|human settlement|province|comarca|autonomous community|road|motorway|highway|street|railway station|metro station|bus station|airport|university|school|hospital|company|business|football club|newspaper|political|river|stream|reservoir|river basin|neighborhood|district|county|region|parish|diocese)\b/i;
+const NOT_A_DESTINATION = /\b(municipality|city|town|village|human settlement|province|comarca|autonomous community|road|motorway|highway|street|railway station|metro station|bus station|airport|university|school|hospital|company|business|football club|newspaper|political|river|stream|reservoir|river basin|festival|award|competition|tournament|championship|neighborhood|district|county|region|parish|diocese)\b/i;
 
 const query = (lat, lon, radiusKm, minSitelinks) => `
 SELECT ?item ?itemLabel ?koLabel ?desc ?lat ?lon ?typeLabel ?sitelinks WHERE {
@@ -62,10 +62,15 @@ async function run(sparql, tries = 3) {
  * Extra items around a city centre. `exclude` holds names already taken from
  * Wikivoyage so the two sources do not double up on the same cathedral.
  */
-export async function fetchNearby(city, { radiusKm = 4, minSitelinks = 4, exclude = new Set(), limit = 30 } = {}) {
+export async function fetchNearby(city, { radiusKm = 4, minSitelinks = 4, exclude = new Set(), excludeIds = new Set(), otherCities = [], limit = 30 } = {}) {
   const data = await run(query(city.lat, city.lon, radiusKm, minSitelinks));
   const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
-  const taken = new Set([...exclude].map(norm));
+  const taken = [...exclude].map(norm).filter(Boolean);
+  /** "Royal Chapel" 과 "Royal Chapel of Granada" 는 같은 곳이다. 포함 관계까지 본다. */
+  const isDuplicate = (name) => {
+    const n = norm(name);
+    return taken.some((t) => t === n || (t.length >= 6 && n.length >= 6 && (t.includes(n) || n.includes(t))));
+  };
   const seen = new Set();
   const items = [];
 
@@ -77,13 +82,19 @@ export async function fetchNearby(city, { radiusKm = 4, minSitelinks = 4, exclud
     if (NOT_A_DESTINATION.test(typeLabel)) continue;
     if (norm(name) === norm(city.nameEn) || norm(name) === norm(city.name)) continue;
 
+    // Wikidata 좌표가 틀린 항목이 드물게 있다. 마드리드의 경기장이 빌바오
+    // 반경 6km 안에서 나오는 식이다. 설명에 다른 도시 이름이 박혀 있으면 버린다.
+    const blurb = `${name} ${row.desc?.value ?? ''}`;
+    if (otherCities.some((c) => new RegExp(`\\b${c}\\b`, 'i').test(blurb))) continue;
+
     const theme = themeFromType(typeLabel);
     if (!theme) continue;
 
     const key = row.item.value;
-    if (seen.has(key) || taken.has(norm(name))) continue;
+    const qid = key.split('/').pop();
+    if (excludeIds.has(qid) || seen.has(key) || isDuplicate(name)) continue;
     seen.add(key);
-    taken.add(norm(name));
+    taken.push(norm(name));
 
     const sitelinks = Number(row.sitelinks.value);
     items.push({
@@ -108,7 +119,7 @@ export async function fetchNearby(city, { radiusKm = 4, minSitelinks = 4, exclud
       energy: theme === 'activity' ? 4 : theme === 'nature' ? 3 : 2,
       tags: [],
       url: null,
-      wikidata: key.split('/').pop(),
+      wikidata: qid,
       source: 'wikidata',
       attribution: 'Wikidata, CC0',
     });

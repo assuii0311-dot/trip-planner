@@ -1,0 +1,49 @@
+{
+  "seville-cathedral": { "name": "세비야 대성당", "desc": "옛 이슬람 사원 자리에 세운 세계 최대 규모의 고딕 성당. 콜럼버스의 관을 네 명의 왕이 떠받치고 있습니다.", "durationMin": 120 },
+  "seville-wd-giralda": { "name": "히랄다 탑", "desc": "원래 이슬람 사원의 첨탑이었던 대성당 종탑. 계단이 아니라 34개의 완만한 경사로로 올라갑니다. 대성당 입장권에 포함됩니다." },
+  "seville-real-alcazar": { "name": "레알 알카사르", "desc": "12세기부터 증축을 거듭한 무데하르 양식 왕궁. 정원까지 보려면 두 시간은 필요하고, 온라인 예매하지 않으면 오래 줄을 섭니다.", "durationMin": 150 },
+  "seville-palacio-de-las-duenas": { "name": "두에냐스 저택", "desc": "알바 공작가의 15세기 저택. 안뜰과 정원이 아름답고 관광객이 훨씬 적습니다." },
+  "seville-palacio-de-la-condesa-de-lebrija": { "name": "레브리하 백작부인 저택", "desc": "바닥 전체가 인근 이탈리카에서 옮겨 온 로마 모자이크입니다. '유럽에서 바닥이 가장 좋은 저택'이라 불립니다." },
+  "seville-palacio-arzobispal": { "name": "대주교궁", "desc": "대성당 옆의 바로크 건물. 붉은 외벽과 정문 장식이 눈에 띕니다." },
+  "seville-hospital-de-los-venerables": { "name": "베네라블레스 오스피탈", "desc": "은퇴 사제를 위한 17세기 요양원. 벨라스케스 센터가 들어서 있고 안뜰이 조용합니다." },
+
+  "seville-museo-de-bellas-artes": { "name": "세비야 미술관", "desc": "프라도 다음가는 스페인 회화 컬렉션으로 꼽힙니다. 옛 수도원 건물이라 전시실 자체가 아름답습니다." },
+  "seville-museo-arqueologico-de-sevilla": { "name": "세비야 고고학 박물관", "desc": "인근 로마 도시 이탈리카에서 나온 유물이 중심입니다. 마리아 루이사 공원 안에 있습니다." },
+  "seville-museo-del-baile-flamenco": { "name": "플라멩코 무용 박물관", "desc": "플라멩코의 형식과 역사를 영상과 의상으로 설명합니다. 저녁에는 같은 건물에서 공연이 열립니다." },
+  "seville-museo-antiquarium": { "name": "안티쿠아리움", "desc": "메트로폴 파라솔을 짓다 발견된 로마·이슬람 시대 유구를 지하에 그대로 공개했습니다." },
+
+  "seville-metropol-parasol": { "name": "메트로폴 파라솔(라스 세타스)", "desc": "세계 최대 목조 구조물. 옥상 산책로에서 구시가 지붕이 내려다보이고, 일몰 시간대가 가장 좋습니다.", "bestSlots": ["evening"] },
+  "seville-plaza-de-espana": { "name": "에스파냐 광장", "desc": "1929년 박람회를 위해 지은 반원형 광장. 스페인 각 주를 타일 그림으로 새긴 벤치가 둘러싸고 있습니다." },
+  "seville-archivo-general-de-indias": { "name": "인디아스 고문서관", "desc": "신대륙 식민 통치 기록을 보관하는 르네상스 건물. 유네스코 세계유산이고 입장은 무료입니다." },
+  "seville-torre-del-oro": { "name": "황금의 탑", "desc": "과달키비르 강가의 13세기 감시탑. 해양 박물관이 들어서 있고 옥상에서 강이 보입니다." },
+  "seville-casa-de-pilatos": { "name": "필라토스의 집", "desc": "무데하르와 르네상스가 섞인 16세기 저택. 세비야에서 가장 아름다운 안뜰로 꼽힙니다." },
+  "seville-centro-andaluz-de-arte-contempraneo": { "name": "안달루시아 현대미술센터", "desc": "옛 카르투하 수도원을 개조한 현대미술관. 강 건너편이라 한산합니다." },
+  "seville-real-fabrica-de-tabacos": { "name": "옛 왕립 담배공장", "desc": "오페라 '카르멘'의 무대가 된 18세기 담배공장. 지금은 세비야 대학 본관입니다." },
+  "seville-alameda-de-hercules": { "name": "알라메다 데 에르쿨레스", "desc": "관광지에서 벗어난 넓은 광장. 저녁이면 현지인들이 테라스에 앉아 있습니다." },
+  "seville-wd-puente-del-alamillo": { "name": "알라미요 다리", "desc": "칼라트라바가 1992년 박람회에 맞춰 세운 사장교. 한쪽으로만 기울어진 형태가 특징입니다." },
+
+  "seville-parque-maria-luisa": { "name": "마리아 루이사 공원", "desc": "에스파냐 광장과 이어지는 대형 공원. 그늘이 많아 한여름 오후를 보내기 좋습니다." },
+
+  "seville-plaza-de-toros-de-la-real-maestranza": { "name": "레알 마에스트란사 투우장", "desc": "스페인에서 가장 오래된 투우장 중 하나. 경기를 보지 않아도 가이드 투어로 내부와 박물관을 볼 수 있습니다." },
+  "seville-la-carboneria": { "name": "라 카르보네리아", "desc": "매일 밤 무료 플라멩코 공연이 열리는 오래된 술집. 좋은 자리를 잡으려면 일찍 가야 합니다.", "bestSlots": ["evening", "night"] },
+  "seville-sevilla-fc": { "name": "세비야 FC", "desc": "라몬 산체스 피스후안 경기장을 쓰는 라리가 구단. 라이벌 베티스와의 더비가 유명합니다." },
+  "seville-real-betis": { "name": "레알 베티스", "desc": "베니토 비야마린 경기장을 쓰는 구단. 관중석 열기가 스페인에서 손꼽힙니다." },
+
+  "seville-la-casa-del-flamenco": { "name": "라 카사 델 플라멩코", "desc": "무데하르 안뜰에서 열리는 소규모 플라멩코 공연. 관광 쇼보다 밀도가 높습니다.", "bestSlots": ["evening", "night"] },
+  "seville-cafeteate": { "name": "카페테아테", "theme": "food", "desc": "트리아나 시장 안의 카페. 아침 샌드위치와 에스프레소가 좋습니다.", "bestSlots": ["morning"] },
+  "seville-delatribu": { "name": "델라트리부", "theme": "food", "desc": "유기농 커피와 직접 만든 페이스트리를 파는 작은 테이크아웃 카페입니다." },
+
+  "seville-el-rinconcillo": { "name": "엘 링콘시요", "desc": "1670년에 문을 연 세비야에서 가장 오래된 술집. 시금치 병아리콩과 살모레호를 시켜 보세요." },
+  "seville-los-coloniales": { "name": "로스 콜로니알레스", "desc": "늘 붐비는 인기 타파스 집. 자리가 없으면 입구 칠판에 이름을 적고 기다립니다." },
+  "seville-cafe-bar-las-teresas": { "name": "라스 테레사스", "desc": "천장에 하몽이 매달린 산타크루스 지구의 오래된 바. 이베리코 하몽이 간판입니다." },
+  "seville-bodeguita-romero": { "name": "보데기타 로메로", "desc": "현지인이 많이 찾는 동네 보데가. 돼지고기 요리 프링가가 유명합니다." },
+  "seville-el-librero-tapas-y-quesos": { "name": "엘 리브레로", "desc": "치즈와 하몽을 중심으로 한 타파스 집. 점심 정식이 가성비가 좋습니다." },
+  "seville-duo-tapas": { "name": "두오 타파스", "desc": "분위기가 편안한 타파스 바. 양이 넉넉하고 가격이 무난합니다." },
+  "seville-jaylu": { "name": "하일루", "desc": "트리아나의 해산물 전문점. 재료가 좋아 값은 있지만 실패가 적습니다." },
+  "seville-habanita": { "name": "아바니타", "desc": "채식·비건 선택지가 많은 중심가 식당. 야외 자리가 조용합니다." },
+  "seville-restaurante-fez": { "name": "레스토랑 페스", "desc": "모로코 요리 식당. 타파스가 물릴 때쯤 가면 좋습니다." },
+  "seville-naturalmente": { "name": "나투랄멘테", "desc": "아침과 점심을 여는 곳. 현지보다 이른 시간에 저녁을 먹고 싶을 때 유용합니다." },
+  "seville-parceria-cafe": { "name": "파르세리아 카페", "desc": "페리아 시장 근처의 작은 커피집. 노트북 사용은 금지입니다.", "bestSlots": ["morning"] },
+  "seville-utopia-cafe": { "name": "우토피아 카페", "desc": "골목에 숨은 테이크아웃 전용 커피집. 로스터리가 좋습니다.", "bestSlots": ["morning"] },
+  "seville-alianzas-breda": { "name": "알리안사스 브레다", "desc": "구시가의 작은 공예·기념품 가게입니다." }
+}

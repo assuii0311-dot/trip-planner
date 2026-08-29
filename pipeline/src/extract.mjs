@@ -91,8 +91,10 @@ function classify(type, name, content) {
 /**
  * Recurring festivals and fairs are dates, not places — dropping them into a
  * day plan produces an itinerary the traveller cannot actually follow.
+ * Exported and applied at selection time too, so widening this pattern does
+ * not mean re-crawling every city.
  */
-const EVENT_RE = /\b(annual|annually|festival|takes place (?:each|every)|held (?:each|every)|every (?:year|september|august|july)|three-day (?:music )?festival)\b/i;
+export const EVENT_RE = /\b(annual|annually|festival|takes place (?:each|every)|held (?:each|every)|every (?:year|september|august|july)|semana santa|holy week|feria de (?:abril|sevilla)|carnival|carnaval|las fallas|san fermin|corpus christi|feast day|processions)\b/i;
 
 /** "Go to Teatre del Liceu" is a sentence, not a name. */
 function cleanName(s) {

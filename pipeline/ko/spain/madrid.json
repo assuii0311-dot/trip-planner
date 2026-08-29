@@ -1,0 +1,335 @@
+{
+  "madrid-palacio-real": {
+    "name": "마드리드 왕궁",
+    "desc": "방 3400개를 가진 유럽 최대급 궁전. 왕실이 실제로 살지는 않고 국가 행사에만 씁니다. 수요일 오후 EU 시민 무료 시간대는 매우 붐빕니다."
+  },
+  "madrid-catedral-de-la-almudena": {
+    "name": "알무데나 대성당",
+    "desc": "왕궁 정면에 마주 선 대성당. 20세기 말에야 완공돼 천장 색채가 현대적입니다. 돔 전망대에 오를 수 있습니다."
+  },
+  "madrid-palacio-real-de-el-pardo": {
+    "name": "엘 파르도 궁전",
+    "desc": "왕실 사냥용 별궁이었다가 프랑코의 관저로 쓰인 곳. 시내에서 떨어져 있고 태피스트리 컬렉션이 볼 만합니다."
+  },
+  "madrid-palacio-de-la-moncloa": {
+    "name": "몬클로아 궁",
+    "desc": "1977년부터 스페인 총리 관저로 쓰이는 건물. 외부에서만 볼 수 있습니다."
+  },
+  "madrid-palacio-longoria": {
+    "name": "롱고리아 저택",
+    "desc": "1902년에 지은 마드리드에서 드문 아르누보 건물. 나선 계단과 스테인드글라스 천창이 압권입니다."
+  },
+  "madrid-real-ermita-de-san-antonio-de-la-florida": {
+    "name": "산 안토니오 데 라 플로리다 성당",
+    "desc": "고야가 천장 전체에 프레스코를 그린 작은 성당이자 그의 무덤. 무료이고 관광객이 적습니다."
+  },
+  "madrid-basilica-la-milagrosa": {
+    "name": "라 밀라그로사 성당",
+    "desc": "네오무데하르와 고딕이 섞인 20세기 초 성당. 조용히 들르기 좋습니다."
+  },
+  "madrid-palacio-de-hielo": {
+    "name": "팔라시오 데 이엘로",
+    "theme": "activity",
+    "desc": "마드리드 유일의 실내 아이스링크가 있는 복합몰. 한여름 더위를 피하는 선택지입니다."
+  },
+  "madrid-museo-del-prado": {
+    "name": "프라도 미술관",
+    "desc": "벨라스케스의 '시녀들'과 고야의 검은 그림이 있는 세계 최고 수준의 고전 회화관. 월~토 18시, 일 17시부터 무료입니다.",
+    "durationMin": 180
+  },
+  "madrid-museo-nacional-centro-de-arte-reina-sofia": {
+    "name": "레이나 소피아 미술관",
+    "desc": "피카소의 '게르니카'가 있는 현대미술관. 옛 병원 건물이라 동선이 길고, 달리와 미로 컬렉션도 큽니다.",
+    "durationMin": 150
+  },
+  "madrid-museo-thyssen-bornemisza": {
+    "name": "티센보르네미사 미술관",
+    "desc": "모네·고흐·피카소·몬드리안까지 서양미술사를 한 바퀴 훑는 개인 컬렉션. 세 미술관 중 가장 소화하기 편합니다."
+  },
+  "madrid-museo-de-america": {
+    "name": "아메리카 박물관",
+    "desc": "중남미 유물을 모은 박물관인데 관광객이 거의 없습니다. 마야 문서 원본이 여기 있습니다."
+  },
+  "madrid-museo-arqueologico-nacional": {
+    "name": "국립 고고학 박물관",
+    "desc": "이베리아 반도 선사부터 이슬람 시대까지. '엘체의 귀부인' 흉상이 대표 소장품입니다."
+  },
+  "madrid-museo-sorolla": {
+    "name": "소로야 미술관",
+    "desc": "빛의 화가 소로야가 살던 집과 정원을 그대로 미술관으로 만든 곳. 작지만 만족도가 높습니다."
+  },
+  "madrid-teatro-real": {
+    "name": "레알 극장",
+    "desc": "마드리드 오페라의 본거지. 공연이 없어도 가이드 투어로 무대 뒤를 볼 수 있습니다."
+  },
+  "madrid-caixaforum-madrid": {
+    "name": "카이샤포룸 마드리드",
+    "desc": "벽면 전체가 식물로 덮인 수직 정원으로 유명한 전시장. 프라도 대로 산책 중에 들르기 좋습니다."
+  },
+  "madrid-museo-naval-de-madrid": {
+    "name": "해군 박물관",
+    "desc": "무적함대부터 신대륙 항해까지 스페인 해양사를 모았습니다. 1500년경 제작된 세계지도 원본이 있습니다."
+  },
+  "madrid-museo-nacional-de-ciencias-naturales": {
+    "name": "국립 자연과학 박물관",
+    "desc": "화석과 광물 컬렉션이 큽니다. 아이 동반 여행에 적합합니다."
+  },
+  "madrid-museo-geominero": {
+    "name": "지질광물 박물관",
+    "desc": "3층 높이 유리 천장 아래 진열장이 늘어선 공간 자체가 볼거리입니다. 무료입니다."
+  },
+  "madrid-museo-de-historia-de-madrid": {
+    "name": "마드리드 역사박물관",
+    "desc": "1561년 수도가 된 이후의 도시 변천을 다룹니다. 바로크 정문 하나만으로도 눈에 띕니다."
+  },
+  "madrid-museo-del-traje": {
+    "name": "의상 박물관",
+    "desc": "13세기부터 현대까지의 복식을 통해 사회 변화를 읽는 박물관. 관람객이 적어 여유롭습니다."
+  },
+  "madrid-museo-lazaro-galdiano": {
+    "name": "라사로 갈디아노 미술관",
+    "desc": "사업가가 평생 모은 컬렉션을 저택째 공개한 곳. 고야와 엘 그레코가 있는데도 한산합니다."
+  },
+  "madrid-museo-nacional-de-antropologia": {
+    "name": "국립 인류학 박물관",
+    "desc": "필리핀과 아시아, 아프리카 유물을 모은 작은 박물관. 아토차 역 근처입니다."
+  },
+  "madrid-museo-de-ferrocarril-de-madrid": {
+    "name": "철도 박물관",
+    "desc": "옛 델리시아스 역사에 증기·디젤 기관차를 늘어놓았습니다. 역 건물의 철골 구조가 아름답습니다."
+  },
+  "madrid-real-academia-de-bellas-artes-de-san-fernando": {
+    "name": "산 페르난도 왕립미술아카데미",
+    "theme": "art",
+    "desc": "그란비아 근처의 미술관. 고야의 자화상을 포함한 걸작이 있는데도 사람이 적습니다."
+  },
+  "madrid-plaza-mayor": {
+    "name": "마요르 광장",
+    "desc": "사면이 건물로 둘러싸인 17세기 광장. 종교재판과 투우가 열리던 자리이고, 지금은 노천 카페가 채웁니다."
+  },
+  "madrid-templo-de-debod": {
+    "name": "데보드 신전",
+    "desc": "이집트가 선물한 기원전 2세기 신전을 공원 언덕에 옮겨 세웠습니다. 마드리드 최고의 일몰 명소입니다.",
+    "bestSlots": [
+      "evening"
+    ]
+  },
+  "madrid-plaza-de-cibeles": {
+    "name": "시벨레스 광장",
+    "desc": "분수와 우체국 궁전(현 시청)이 있는 도시의 상징. 레알 마드리드 우승 축하가 열리는 곳입니다."
+  },
+  "madrid-gran-via": {
+    "name": "그란비아",
+    "desc": "20세기 초 건물이 늘어선 마드리드의 대로. 밤에 조명이 켜지면 사진이 잘 나옵니다."
+  },
+  "madrid-plaza-de-espana": {
+    "name": "에스파냐 광장",
+    "desc": "돈키호테와 산초 동상이 있는 광장. 2021년 재정비로 녹지가 크게 늘었습니다."
+  },
+  "madrid-cuatro-torres": {
+    "name": "콰트로 토레스",
+    "desc": "224~249m 초고층 빌딩 네 채. 마드리드의 현대적인 얼굴을 보고 싶을 때 갑니다."
+  },
+  "madrid-casa-de-campo": {
+    "name": "카사 데 캄포",
+    "theme": "nature",
+    "desc": "왕실 사냥터였던 도심 최대 녹지. 케이블카로 건너가면 시내 전경이 펼쳐집니다."
+  },
+  "madrid-estacion-de-chamberi": {
+    "name": "참베리 유령역",
+    "desc": "1966년 폐쇄된 지하철역을 당시 광고 타일까지 그대로 복원해 공개했습니다. 무료입니다."
+  },
+  "madrid-plaza-de-castilla": {
+    "name": "카스티야 광장",
+    "desc": "기울어진 두 빌딩 '유럽의 문'이 있는 북부 업무지구의 광장입니다."
+  },
+  "madrid-nuevos-ministerios": {
+    "name": "누에보스 미니스테리오스",
+    "desc": "내전을 전후해 지은 정부청사 단지. 합리주의 건축의 사례입니다."
+  },
+  "madrid-plaza-de-la-villa": {
+    "name": "비야 광장",
+    "desc": "중세 마드리드의 중심 광장. 시대가 다른 세 건물이 한 광장을 둘러싸고 있습니다."
+  },
+  "madrid-parque-del-retiro": {
+    "name": "레티로 공원",
+    "desc": "마드리드의 대표 공원. 호수에서 배를 젓고, 유리 궁전에서 전시를 봅니다. 일요일 오후에는 드럼 서클이 열립니다."
+  },
+  "madrid-real-jardin-botanico-de-madrid": {
+    "name": "왕립 식물원",
+    "desc": "1755년에 만든 식물원. 프라도 바로 옆이라 미술관 관람 사이에 쉬어 가기 좋습니다."
+  },
+  "madrid-parque-madrid-rio": {
+    "name": "마드리드 리오",
+    "desc": "강변 고속도로를 지하로 넣고 만든 10km 선형 공원. 자전거로 달리기 좋습니다."
+  },
+  "madrid-parque-de-el-capricho": {
+    "name": "엘 카프리초 공원",
+    "desc": "18세기 낭만주의 정원. 주말에만 열고, 마드리드에서 가장 아름다운 공원으로 꼽힙니다."
+  },
+  "madrid-rosaleda-del-parque-del-oeste": {
+    "name": "장미 정원(로살레다)",
+    "desc": "데보드 신전과 같은 공원 안의 장미원. 5월에 절정입니다."
+  },
+  "madrid-real-madrid": {
+    "name": "산티아고 베르나베우 (레알 마드리드)",
+    "desc": "레알 마드리드의 홈구장. 최근 리모델링으로 개폐식 지붕이 생겼습니다. 경기가 없어도 투어가 있습니다."
+  },
+  "madrid-atletico-de-madrid": {
+    "name": "메트로폴리타노 (아틀레티코 마드리드)",
+    "desc": "라리가 강호 아틀레티코의 홈구장. 레알보다 표를 구하기 쉽습니다."
+  },
+  "madrid-rayo-vallecano": {
+    "name": "라요 바예카노",
+    "desc": "동네 밀착형 구단. 관중석과 그라운드가 가까워 분위기가 뜨겁습니다."
+  },
+  "madrid-plaza-de-toros-de-las-ventas": {
+    "name": "라스 벤타스 투우장",
+    "desc": "스페인 최대 투우장. 투우를 보지 않더라도 무데하르 양식 건물과 박물관 투어만으로 갈 만합니다."
+  },
+  "madrid-zoo-aquarium-de-madrid": {
+    "name": "마드리드 동물원·수족관",
+    "desc": "판다와 돌고래 쇼가 있는 대형 동물원. 카사 데 캄포 안에 있습니다."
+  },
+  "madrid-circulo-de-bellas-artes": {
+    "name": "벨라스아르테스 서클 옥상",
+    "theme": "landmark",
+    "desc": "옥상 전망대에서 그란비아와 시내가 한눈에 들어옵니다. 해 질 무렵이 가장 좋습니다.",
+    "bestSlots": [
+      "evening"
+    ]
+  },
+  "madrid-madrid-open": {
+    "name": "마드리드 오픈 테니스",
+    "desc": "5월 중순 라 카하 마히카에서 열리는 ATP·WTA 대회입니다."
+  },
+  "madrid-el-rastro": {
+    "name": "엘 라스트로 벼룩시장",
+    "desc": "일요일 오전에만 서는 마드리드 최대 벼룩시장. 라 라티나 골목 전체가 시장이 됩니다.",
+    "bestSlots": [
+      "morning"
+    ]
+  },
+  "madrid-mercado-de-san-miguel": {
+    "name": "산 미겔 시장",
+    "desc": "마요르 광장 옆 철골 시장 건물. 장을 보는 곳이라기보다 서서 한 접시씩 맛보는 곳입니다."
+  },
+  "madrid-caleido": {
+    "name": "칼레이도",
+    "desc": "콰트로 토레스 아래의 신축 쇼핑몰. 비 오는 날 대피처로 쓸 만합니다."
+  },
+  "madrid-restaurante-botin": {
+    "name": "보틴",
+    "desc": "1725년에 문을 연 기네스 공인 세계 최古 식당. 새끼돼지 통구이가 대표 메뉴이고 예약이 필요합니다."
+  },
+  "madrid-chocolateria-san-gines": {
+    "name": "산 히네스 초콜라테리아",
+    "desc": "24시간 여는 추로스 가게. 밤새 놀고 새벽에 초콜라테 콘 추로스로 마무리하는 것이 현지식입니다.",
+    "bestSlots": [
+      "morning",
+      "night"
+    ]
+  },
+  "madrid-cafe-gijon": {
+    "name": "카페 히혼",
+    "desc": "1888년부터 작가들이 모이던 문학 카페. 여름에는 테라스가 좋습니다."
+  },
+  "madrid-casa-lucio": {
+    "name": "카사 루시오",
+    "desc": "달걀 프라이에 감자를 섞은 '우에보스 로토스'로 유명한 노포. 왕실도 손님을 데려오는 집입니다."
+  },
+  "madrid-la-trainera": {
+    "name": "라 트라이네라",
+    "desc": "수십 년 된 해산물 전문점. 값은 비싸지만 재료가 확실합니다."
+  },
+  "madrid-la-casa-del-abuelo": {
+    "name": "라 카사 델 아부엘로",
+    "desc": "100년 넘은 새우 요리 전문 바. 마늘 새우와 달콤한 와인 한 잔이 정석입니다."
+  },
+  "madrid-el-tigre": {
+    "name": "엘 티그레",
+    "desc": "음료를 시키면 타파스가 접시째 나오는 것으로 유명한 바. 늘 붐비고 시끄럽습니다.",
+    "theme": "food"
+  },
+  "madrid-bar-jaen-iii": {
+    "name": "바르 하엔 III",
+    "desc": "값싸고 푸짐한 동네 타파스 바. 현지 분위기를 겪기 좋습니다."
+  },
+  "madrid-freiduria-de-gallinejas-embajadores": {
+    "name": "가이네하스 엠바하도레스",
+    "desc": "내장 튀김을 내는 마드리드 전통 타파스 바. 도전적인 메뉴이지만 현지색이 가장 진합니다."
+  },
+  "madrid-restaurante-casa-benigna": {
+    "name": "카사 베니그나",
+    "desc": "차마르틴의 소박한 식당. 쌀 요리를 잘하기로 소문났습니다."
+  },
+  "madrid-restaurante-bar-rodrigo": {
+    "name": "바르 로드리고",
+    "desc": "마라비야스 시장 뒤편의 숨은 집. 가격 대비 파에야 수준이 높습니다."
+  },
+  "madrid-bacchus": {
+    "name": "바쿠스",
+    "desc": "식당과 바가 모인 론하 지구 한복판. 시내에서 가까워 저녁 자리로 무난합니다."
+  },
+  "madrid-taperia-de-malasana": {
+    "name": "말라사냐 타페리아",
+    "desc": "말라사냐의 캐주얼한 타파스 집. 점심 정식이 특히 괜찮습니다."
+  },
+  "madrid-la-cocina-del-desierto": {
+    "name": "라 코시나 델 데시에르토",
+    "desc": "동굴 같은 모로코 식당. 바닥에 앉아 먹는 자리가 있고 북아프리카 요리 수준이 높습니다."
+  },
+  "madrid-churreria-la-andaluza": {
+    "name": "추레리아 라 안달루사",
+    "desc": "1930년대부터 이어온 추로스 가게. 산 히네스보다 줄이 짧고 현지인 비율이 높습니다."
+  },
+  "madrid-pasteleria-la-duquesita": {
+    "name": "라 두케시타",
+    "desc": "1914년에 문을 연 제과점. 타르트가 특히 아름답고 포장도 예쁩니다."
+  },
+  "madrid-kapital": {
+    "name": "카피탈",
+    "desc": "7개 층이 각각 다른 음악을 트는 대형 클럽. 규모로는 마드리드 최대입니다."
+  },
+  "madrid-foggbar-birras-burgers": {
+    "name": "포그바 버거",
+    "desc": "생맥주와 상그리아를 2리터 단위로 파는 캐주얼한 바입니다."
+  },
+  "madrid-areia": {
+    "name": "아레이아",
+    "desc": "모로코풍으로 꾸민 어둑한 라운지 바. 쿠션 자리에서 느긋하게 마시기 좋습니다."
+  },
+  "madrid-wd-bernabeu": {
+    "name": "산티아고 베르나베우",
+    "desc": "레알 마드리드의 홈구장. 개폐식 지붕과 이동식 잔디를 갖춘 리모델링을 마쳤습니다."
+  },
+  "madrid-wd-royal-spanish-academy": {
+    "name": "스페인 왕립 학술원",
+    "desc": "스페인어의 표준을 정하는 기관. 건물 외관과 도서관이 볼거리이고 방문은 예약제입니다."
+  },
+  "madrid-wd-puerta-del-sol": {
+    "name": "푸에르타 델 솔",
+    "desc": "스페인 도로망의 0km 지점이 바닥에 새겨진 광장. 곰과 마드로뇨 나무 동상이 만남의 장소입니다."
+  },
+  "madrid-wd-gate-of-europe": {
+    "name": "유럽의 문",
+    "desc": "서로 마주 보며 15도 기울어진 쌍둥이 빌딩. 카스티야 광장의 표지입니다."
+  },
+  "madrid-wd-forest-of-remembrance": {
+    "name": "기억의 숲",
+    "desc": "2004년 마드리드 열차 테러 희생자를 기리는 레티로 공원 안의 조용한 숲입니다."
+  },
+  "madrid-wd-paseo-del-prado": {
+    "name": "프라도 대로",
+    "desc": "프라도·티센·레이나 소피아를 잇는 가로수 대로. 유네스코 세계유산으로 등재된 도시 경관입니다."
+  },
+  "madrid-wd-plaza-de-colon": {
+    "name": "콜론 광장",
+    "desc": "거대한 스페인 국기가 걸린 광장. 지하에 공연장이 있습니다."
+  },
+  "madrid-wd-madrid-arena": {
+    "name": "마드리드 아레나",
+    "theme": "activity",
+    "desc": "카사 데 캄포 안의 실내 경기장. 콘서트와 스포츠 경기가 열립니다."
+  }
+}

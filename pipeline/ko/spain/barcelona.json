@@ -1,0 +1,312 @@
+{
+  "barcelona-cathedral-of-santa-eulalia": {
+    "name": "바르셀로나 대성당",
+    "desc": "고딕 지구 한복판의 대성당. 회랑 안뜰에 거위 열세 마리를 기르는 것으로 유명하고, 옥상에 올라가면 구시가 지붕이 내려다보입니다."
+  },
+  "barcelona-palau-guell": {
+    "name": "구엘 저택",
+    "desc": "가우디가 후원자 구엘을 위해 지은 초기작. 지하 마구간부터 굴뚝이 늘어선 옥상까지 올라가는 구성이 인상적입니다."
+  },
+  "barcelona-basilica-of-santa-maria-del-mar": {
+    "name": "산타 마리아 델 마르 성당",
+    "desc": "항구 노동자들이 돌을 날라 지은 카탈루냐 고딕의 정수. 장식을 걷어낸 기둥과 빛이 만드는 공간감이 압도적입니다."
+  },
+  "barcelona-barri-gotic": {
+    "name": "고딕 지구 걷기",
+    "desc": "로마 시대 성벽 위에 중세 골목이 얹힌 구시가. 목적지 없이 걷다 광장을 만나는 것이 이 동네의 방식입니다.",
+    "durationMin": 90
+  },
+  "barcelona-ancient-synagogue": {
+    "name": "고대 시나고그",
+    "desc": "유대인 지구에서 발굴된 유럽에서 가장 오래된 시나고그 중 하나. 규모는 작지만 오전에만 문을 엽니다."
+  },
+  "barcelona-monestir-de-pedralbes": {
+    "name": "페드랄베스 수도원",
+    "desc": "3층 회랑이 아름다운 14세기 고딕 수도원. 시내에서 떨어져 있어 조용하고, 수녀들의 생활 공간이 그대로 남아 있습니다."
+  },
+  "barcelona-the-montjuic-castle": {
+    "name": "몬주익 성",
+    "desc": "언덕 꼭대기의 옛 요새. 항구와 도시 전경이 한눈에 들어오고, 케이블카로 올라가는 길 자체가 볼거리입니다."
+  },
+  "barcelona-archaeology-museum-of-catalonia": {
+    "name": "카탈루냐 고고학 박물관",
+    "theme": "art",
+    "desc": "몬주익 언덕에 있는 고고학 박물관. 이베리아 반도의 선사 시대부터 로마 시대까지의 출토품을 모아 두었습니다."
+  },
+  "barcelona-palau-de-la-musica-catalana": {
+    "name": "카탈라나 음악당",
+    "desc": "도메네크 이 몬타네르가 지은 모데르니스메 음악당. 스테인드글라스 천창이 공연장 한가운데로 빛을 쏟아붓습니다. 유네스코 세계유산."
+  },
+  "barcelona-picasso-museum": {
+    "name": "피카소 미술관",
+    "desc": "입체파 이전, 바르셀로나에서 보낸 젊은 피카소의 작품이 중심입니다. 대표작을 기대하면 어긋나지만 화가의 성장 과정을 볼 수 있습니다."
+  },
+  "barcelona-futbol-club-barcelona-museum": {
+    "name": "FC 바르셀로나 박물관",
+    "desc": "구단의 트로피와 역사를 모은 박물관. 연 120만 명이 찾는 스페인에서 가장 붐비는 박물관 중 하나입니다."
+  },
+  "barcelona-national-art-museum-of-catalonia": {
+    "name": "카탈루냐 국립미술관",
+    "desc": "로마네스크 벽화 컬렉션은 세계 최고 수준입니다. 몬주익 언덕 위 국립궁전 건물이라 전망도 함께 얻습니다."
+  },
+  "barcelona-museu-d-historia-de-la-ciutat-de-barcelona": {
+    "name": "바르셀로나 도시역사박물관",
+    "desc": "지하로 내려가면 로마 시대 바르셀로나의 거리와 포도주 공장이 그대로 남아 있습니다. 고딕 지구를 이해하는 데 가장 좋은 출발점입니다."
+  },
+  "barcelona-fundacio-joan-miro": {
+    "name": "호안 미로 미술관",
+    "desc": "미로가 직접 설립에 관여한 미술관. 밝은 자연광 아래 놓인 조각과 회화, 그리고 몬주익 전망이 함께 옵니다."
+  },
+  "barcelona-barcelona-museum-of-contemporary-art": {
+    "name": "바르셀로나 현대미술관(MACBA)",
+    "desc": "리처드 마이어가 설계한 백색 건물. 앞 광장은 스케이트보더들의 성지라 미술관에 들어가지 않아도 볼거리입니다."
+  },
+  "barcelona-maritime-museum": {
+    "name": "해양 박물관",
+    "desc": "중세 왕립 조선소(드라사네스) 건물 자체가 전시물입니다. 실물 크기 갤리선 복원품이 놓여 있습니다."
+  },
+  "barcelona-museu-de-ciencies-naturals-de-barcelona": {
+    "name": "자연사 박물관",
+    "desc": "지구의 역사와 생물 진화를 다루는 박물관. 아이 동반 여행이라면 우선순위를 올려 볼 만합니다."
+  },
+  "barcelona-cosmocaixa": {
+    "name": "코스모카이샤 과학관",
+    "theme": "art",
+    "desc": "유럽에서 손꼽히는 과학관. 실내에 아마존 우림을 통째로 재현해 놓았습니다. 온라인 예매로 줄을 피하세요."
+  },
+  "barcelona-dhub-disseny-hub-barcelona": {
+    "name": "디자인 박물관(DHub)",
+    "theme": "art",
+    "desc": "디즈니가 아니라 카탈루냐어로 '디자인'입니다. 의상·가구·그래픽 컬렉션을 한 건물에 모았습니다."
+  },
+  "barcelona-sagrada-familia": {
+    "name": "사그라다 파밀리아",
+    "desc": "가우디가 40년을 매달렸고 아직 짓고 있는 성당. 오후 빛이 스테인드글라스를 통과할 때가 절정입니다. 시간 지정 예매 필수."
+  },
+  "barcelona-casa-batllo": {
+    "name": "카사 바트요",
+    "desc": "용의 등뼈를 얹은 듯한 지붕과 뼈 모양 발코니. 그라시아 거리에서 가장 눈에 띄는 가우디 건물입니다."
+  },
+  "barcelona-la-pedrera": {
+    "name": "카사 밀라(라 페드레라)",
+    "desc": "직선이 하나도 없는 외벽과 전사 투구 같은 굴뚝이 늘어선 옥상. 야간 개장 때 옥상에서 보는 도시가 특히 좋습니다."
+  },
+  "barcelona-torre-glories": {
+    "name": "글로리에스 타워",
+    "desc": "옛 이름은 아그바 타워. 밤이 되면 외벽 전체가 색을 바꾸며 빛나 바르셀로나 스카이라인의 표지가 됩니다."
+  },
+  "barcelona-universitat": {
+    "name": "바르셀로나 대학 본관",
+    "desc": "19세기 신무데하르 양식 본관. 안뜰과 도서관을 자유롭게 둘러볼 수 있고 사람이 적어 조용합니다."
+  },
+  "barcelona-hospital-de-la-santa-creu-i-sant-pau": {
+    "name": "산 파우 병원",
+    "desc": "병동 하나하나가 독립된 모데르니스메 건축물인 옛 병원 단지. 사그라다 파밀리아에서 걸어갈 수 있고 훨씬 한산합니다."
+  },
+  "barcelona-barcelona-pavilion": {
+    "name": "바르셀로나 파빌리온",
+    "desc": "미스 반 데어 로에가 1929년에 지은 근대건축의 교과서. 작지만 대리석과 물, 유리가 만드는 공간을 직접 겪어 볼 가치가 있습니다."
+  },
+  "barcelona-la-rambla": {
+    "name": "람블라스 거리",
+    "desc": "카탈루냐 광장에서 항구까지 이어지는 보행자 대로. 소매치기가 가장 많은 구간이니 가방은 앞으로 메세요."
+  },
+  "barcelona-placa-de-catalunya": {
+    "name": "카탈루냐 광장",
+    "desc": "구시가와 신시가가 만나는 도시의 중심. 지하철·공항버스가 모이는 곳이라 이동의 기준점이 됩니다."
+  },
+  "barcelona-el-poble-espanyol": {
+    "name": "포블레 에스파뇰",
+    "desc": "1929년 만국박람회 때 스페인 각 지역 건축을 축소 재현한 마을. 공예 공방이 모여 있어 기념품을 사기 좋습니다."
+  },
+  "barcelona-casa-vicens": {
+    "name": "카사 비센스",
+    "desc": "가우디의 첫 주택 작품. 이슬람과 동양 문양이 섞인 초기 스타일이라 후기작과 결이 다릅니다."
+  },
+  "barcelona-casa-amatller": {
+    "name": "카사 아마트예르",
+    "desc": "카사 바트요 바로 옆, 계단식 박공지붕이 인상적인 모데르니스메 저택. 1층 초콜릿 가게도 유명합니다."
+  },
+  "barcelona-placa-d-espanya": {
+    "name": "에스파냐 광장",
+    "desc": "1929년 만국박람회의 관문. 여기서 국립미술관까지 이어지는 분수 대로가 밤에 조명 쇼를 합니다."
+  },
+  "barcelona-placa-sant-jaume": {
+    "name": "산 자우메 광장",
+    "desc": "로마 시대부터 도시의 정치 중심. 카탈루냐 자치정부 청사와 시청이 마주 보고 서 있습니다."
+  },
+  "barcelona-placa-reial": {
+    "name": "레이알 광장",
+    "desc": "야자수와 가우디가 설계한 가로등이 있는 광장. 밤에는 바와 재즈 클럽으로 붐빕니다."
+  },
+  "barcelona-placa-del-rei": {
+    "name": "레이 광장",
+    "desc": "중세 왕궁에 둘러싸인 작은 광장. 콜럼버스가 항해에서 돌아와 왕을 알현한 계단이 여기 있습니다."
+  },
+  "barcelona-placa-sant-felip-neri": {
+    "name": "산 펠립 네리 광장",
+    "desc": "가장 조용하고 아름다운 광장이지만, 벽에 남은 자국은 스페인 내전 폭격의 흔적입니다."
+  },
+  "barcelona-port-vell": {
+    "name": "포트 벨(구항)",
+    "desc": "올림픽을 앞두고 완전히 새로 만든 옛 항구. 나무 데크 다리를 건너 바다 위를 걷습니다."
+  },
+  "barcelona-gaudi-house-museum": {
+    "name": "가우디 하우스 박물관",
+    "desc": "구엘 공원 안, 가우디가 20년 가까이 살았던 분홍 집. 그가 직접 디자인한 가구가 남아 있습니다."
+  },
+  "barcelona-park-guell": {
+    "name": "구엘 공원",
+    "desc": "타일 모자이크 벤치와 과자 같은 문지기 집이 있는 가우디의 공원. 유료 구역은 시간 지정 예매가 필요합니다."
+  },
+  "barcelona-parc-de-la-ciutadella": {
+    "name": "시우타데야 공원",
+    "desc": "도심에서 가장 큰 공원. 거대한 폭포 분수와 호수, 동물원, 의회 건물이 함께 있습니다."
+  },
+  "barcelona-parc-del-laberint-d-horta": {
+    "name": "오르타 미로 공원",
+    "desc": "실제로 길을 잃을 수 있는 사이프러스 미로가 있는 18세기 정원. 관광객이 거의 없습니다."
+  },
+  "barcelona-barceloneta-beach": {
+    "name": "바르셀로네타 해변",
+    "desc": "지하철로 갈 수 있는 도심 해변. 해변을 따라 늘어선 치링기토(해변 식당)에서 파에야를 먹습니다."
+  },
+  "barcelona-parc-diagonal-mar": {
+    "name": "디아고날 마르 공원",
+    "desc": "옛 공장 부지를 바꾼 14헥타르 도시 공원. 조형물과 물길이 이어지고 관광객이 적습니다."
+  },
+  "barcelona-camp-nou": {
+    "name": "캄 노우",
+    "desc": "FC 바르셀로나의 홈구장. 경기 일정이 맞지 않으면 스타디움 투어만으로도 규모를 실감할 수 있습니다."
+  },
+  "barcelona-olympic-stadium": {
+    "name": "올림픽 주경기장",
+    "desc": "1992년 바르셀로나 올림픽의 무대. 몬주익 언덕 위에 있어 미술관·성과 함께 묶어 돌기 좋습니다."
+  },
+  "barcelona-tibidabo": {
+    "name": "티비다보",
+    "desc": "해발 512m 산 정상. 도시 전체와 지중해가 한눈에 들어오고, 100년 된 놀이공원과 성당이 함께 있습니다."
+  },
+  "barcelona-aquarium-de-barcelona": {
+    "name": "바르셀로나 아쿠아리움",
+    "desc": "유럽에서 두 번째로 큰 수족관. 상어가 헤엄치는 80m 해저 터널이 핵심입니다."
+  },
+  "barcelona-parc-zoologic-de-barcelona": {
+    "name": "바르셀로나 동물원",
+    "desc": "시우타데야 공원 안에 있는 동물원. 아이 동반이라면 공원 산책과 묶어 반나절을 잡습니다."
+  },
+  "barcelona-razzmatazz": {
+    "name": "라스마타스",
+    "desc": "방마다 장르가 다른 대형 클럽. 새벽까지 이어지고, 라이브 공연장으로도 유명합니다."
+  },
+  "barcelona-el-dorado": {
+    "name": "엘 도라도",
+    "desc": "넓은 댄스 플로어에 당구대와 테이블 축구까지 있는 편한 분위기의 바입니다."
+  },
+  "barcelona-bodevici": {
+    "name": "보데비시 젤라토",
+    "theme": "food",
+    "desc": "유기농 우유와 과일로 만드는 아이스크림 가게. 망고·레몬 소르베가 특히 좋습니다."
+  },
+  "barcelona-maumau": {
+    "name": "마우마우 라운지",
+    "desc": "느긋한 라운지 바. 단편영화 상영이나 설치 전시를 함께 여는 날이 많습니다."
+  },
+  "barcelona-check-out-a-flamenco-show-at-los-torantos": {
+    "name": "로스 타란토스 플라멩코",
+    "desc": "레이알 광장의 작은 공연장. 30분짜리 짧은 공연이라 부담 없이 플라멩코를 처음 접하기 좋습니다."
+  },
+  "barcelona-la-boqueria": {
+    "name": "보케리아 시장",
+    "desc": "람블라스 거리에 붙은 재래시장. 즉석 주스와 하몽, 해산물 바가 있습니다. 정오 이후엔 인파로 걷기 어렵습니다."
+  },
+  "barcelona-mercat-del-born": {
+    "name": "보른 문화센터(옛 시장)",
+    "desc": "시장을 철거하려다 지하에서 1700년대 거리가 통째로 나와 유적 전시장이 된 곳입니다."
+  },
+  "barcelona-mercat-de-la-libertat": {
+    "name": "리베르타트 시장",
+    "desc": "그라시아 동네의 1888년 시장. 관광객이 적고 현지 장보기 풍경이 그대로입니다."
+  },
+  "barcelona-els-quatre-gats": {
+    "name": "엘스 콰트레 가츠",
+    "desc": "피카소가 첫 개인전을 열고 가우디가 드나들던 카페의 후신. 음식보다 공간과 내력을 보러 가는 곳입니다."
+  },
+  "barcelona-can-culleretes": {
+    "name": "칸 쿠예레테스",
+    "desc": "1786년 문을 연 스페인에서 두 번째로 오래된 식당. 전통 카탈루냐 요리를 중간 가격대로 냅니다."
+  },
+  "barcelona-7-portes": {
+    "name": "셋 포르테스",
+    "desc": "1836년부터 이어온 노포. 요일마다 다른 파에야를 내는 것으로 유명합니다. 예약을 권합니다."
+  },
+  "barcelona-alkimia": {
+    "name": "알키미아",
+    "desc": "조르디 빌라 셰프의 미슐랭 레스토랑. 카탈루냐 전통 요리를 현대적으로 재해석합니다.",
+    "energy": 1
+  },
+  "barcelona-somodo": {
+    "name": "소모도",
+    "desc": "테이블 19개뿐인 작은 식당. 일본인 셰프가 지중해 요리를 냅니다. 예약이 사실상 필수입니다."
+  },
+  "barcelona-restaurant-gaig": {
+    "name": "레스토랑 가이그",
+    "desc": "신선한 재료로 이름난 카탈루냐 요리 노포. 가정식의 맥을 잇는 곳입니다."
+  },
+  "barcelona-can-xurrades": {
+    "name": "칸 추라데스",
+    "desc": "숯불 고기 요리가 중심인 동네 카탈루냐 식당. 양이 넉넉합니다."
+  },
+  "barcelona-taberna-blai-tonight": {
+    "name": "타베르나 블라이 투나잇",
+    "desc": "포블레섹의 핀초스 골목에 있는 타파스 바. 치즈·토르티야·해산물을 조금씩 맛보기 좋습니다."
+  },
+  "barcelona-la-flauta": {
+    "name": "라 플라우타",
+    "desc": "현지 직장인들이 점심을 먹는 집. 매일 바뀌는 오늘의 메뉴가 가성비가 좋습니다."
+  },
+  "barcelona-flash-flash": {
+    "name": "플래시 플래시",
+    "desc": "1970년대 인테리어가 그대로인 토르티야 전문점. 오믈렛 종류만 수십 가지입니다."
+  },
+  "barcelona-la-porteria": {
+    "name": "라 포르테리아",
+    "desc": "조용한 골목의 소박한 동네 식당. 화려하지 않지만 현지인 비율이 높습니다."
+  },
+  "barcelona-the-clubhouse-laietana-nikki-s": {
+    "name": "더 클럽하우스 라이에타나",
+    "desc": "미국식 소울푸드를 내는 캐주얼한 곳. 스페인 음식이 물릴 때 선택지가 됩니다."
+  },
+  "barcelona-fres-co": {
+    "name": "프레스 코",
+    "desc": "마레마그눔 쇼핑센터의 뷔페. 가격이 정해져 있어 예산을 지키기 쉽습니다."
+  },
+  "barcelona-bo-de-b": {
+    "name": "보 데 베",
+    "desc": "즉석에서 만드는 바게트 샌드위치 가게. 값싸고 빠르지만 점심때는 줄이 깁니다."
+  },
+  "barcelona-wd-gran-teatre-del-liceu": {
+    "name": "리세우 대극장",
+    "desc": "람블라스 거리의 오페라 극장. 두 차례 화재를 딛고 복원했습니다. 공연이 없는 날에도 내부 투어가 있습니다."
+  },
+  "barcelona-wd-magic-fountain-of-montjuic": {
+    "name": "몬주익 마법의 분수",
+    "desc": "음악에 맞춰 물과 조명이 움직이는 분수 쇼. 무료이고 저녁에만 가동하며, 겨울에는 운영일이 줄어듭니다.",
+    "bestSlots": [
+      "evening",
+      "night"
+    ]
+  },
+  "barcelona-wd-columbus-monument": {
+    "name": "콜럼버스 기념탑",
+    "desc": "람블라스 거리가 바다와 만나는 지점의 60m 탑. 꼭대기 전망대까지 엘리베이터로 오릅니다."
+  },
+  "barcelona-wd-torre-de-collserola": {
+    "name": "콜세롤라 타워",
+    "desc": "노먼 포스터가 설계한 통신탑. 티비다보 산 위라 전망대에서 도시 전체가 보입니다."
+  },
+  "barcelona-wd-montjuic-communications-tower": {
+    "name": "몬주익 통신탑",
+    "desc": "칼라트라바가 올림픽에 맞춰 세운 흰 탑. 그림자가 해시계 역할을 하도록 설계했습니다."
+  }
+}
