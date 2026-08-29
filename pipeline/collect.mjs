@@ -65,6 +65,8 @@ const DROP_IDS = new Set([
   'salamanca-wd-salamanca-old-cathedral', // = salamanca-new-old-cathedrals 에 포함
   'cordoba-wd-puente-romano',       // = cordoba-roman-bridge
   'cadiz-wd-roman-theatre-of-cadiz', // = cadiz-teatro-romano
+  'granada-wd-banos-arabes-del-banuelo',   // = granada-hamman-el-banuelo
+  'granada-wd-basilica-of-saint-john-of-god', // = granada-basilica-san-juan-de-dios
 ]);
 const isSight = (it) => it.theme !== 'food' && it.theme !== 'nightlife';
 
