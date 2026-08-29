@@ -1,5 +1,6 @@
 import type { City, Item, Priorities } from '../types';
 import { mapsPlaceUrl } from '../lib/deeplinks';
+import { ItemDetail } from './ItemDetail';
 
 const STAR_LABEL = ['', '관심', '가고 싶다', '꼭 간다'];
 
@@ -45,8 +46,12 @@ export function ItemRow({
       <div className="body">
         <div className="title">{item.name}</div>
         <div className="sub">{item.nameLocal ?? item.nameEn}{item.city !== city?.slug ? '' : ''}</div>
-        {item.desc && <div className="desc">{item.desc}</div>}
+        {item.summary && <div className="desc">{item.summary}</div>}
         <ItemMeta item={item} />
+        <details className="more">
+          <summary>자세히</summary>
+          <ItemDetail item={item} />
+        </details>
         {selectable && star > 0 && (
           <div className="stars" role="group" aria-label="우선순위">
             {[1, 2, 3].map((v) => (

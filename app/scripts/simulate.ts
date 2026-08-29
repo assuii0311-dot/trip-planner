@@ -61,7 +61,7 @@ function trim(items: Item[], ratio: number): Item[] {
   }
   const out: Item[] = [];
   for (const list of byCity.values()) {
-    const sorted = [...list].sort((a, b) => b.popularity - a.popularity || b.desc.length - a.desc.length);
+    const sorted = [...list].sort((a, b) => b.popularity - a.popularity || b.why.length - a.why.length);
     out.push(...sorted.slice(0, Math.max(1, Math.round(sorted.length * ratio))));
   }
   return out;

@@ -122,6 +122,12 @@ export default function Step5Plans({
                     )}
                     <div className="title">{THEME_ICON[e.item.theme]} {e.item.name}</div>
                     <div className="sub">{e.item.nameLocal ?? e.item.nameEn}</div>
+                    {e.item.summary && <div className="entry-summary">{e.item.summary}</div>}
+                    {(e.item.practical.booking || e.item.caution) && (
+                      <div className="entry-flag">
+                        {e.item.practical.booking ? `예약 · ${e.item.practical.booking}` : `주의 · ${e.item.caution}`}
+                      </div>
+                    )}
                     {!e.returnLeg && e.travelMin > 0 && (
                       <div className="travel">↑ 앞 일정에서 약 {e.travelMin}분 이동</div>
                     )}

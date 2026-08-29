@@ -18,6 +18,7 @@ import { collectCity, EVENT_RE } from './src/extract.mjs';
 import { enrichItem, popularityByWikidata } from './src/enrich.mjs';
 import { fetchNearby } from './src/wdnearby.mjs';
 import { selectBalanced } from './src/select.mjs';
+import { describe } from './src/practical.mjs';
 
 const [, , countrySlug = 'spain', ...rest] = process.argv;
 const flag = (n) => { const i = rest.indexOf(`--${n}`); return i === -1 ? null : rest[i + 1]; };
@@ -288,9 +289,30 @@ for (const [i, city] of selected.entries()) {
   const foodCount = finalItems.filter((it) => it.theme === 'food').length;
   if (foodCount < 3) {
     const areas = [
-      { key: 'old-town', name: `${city.name} 구시가 식당가`, desc: '구시가 광장 주변에 식당이 모여 있습니다. 현지 기준 점심은 14시, 저녁은 21시에 시작합니다.', slots: ['lunch'] },
-      { key: 'menu-del-dia', name: `${city.name} 오늘의 메뉴(Menú del día)`, desc: '평일 점심에 전채·메인·후식·음료가 함께 나오는 정식입니다. 대부분의 동네 식당이 12~15유로에 내놓습니다.', slots: ['lunch'] },
-      { key: 'dinner-area', name: `${city.name} 저녁 식사`, desc: '중심가 보행자 거리에서 타파스나 정식으로. 예약 없이 가려면 20시 전후가 자리 잡기 쉽습니다.', slots: ['dinner'] },
+      {
+        key: 'old-town',
+        name: `${city.name} 구시가 식당가`,
+        summary: '구시가 광장 주변 식당가에서 한 끼',
+        desc: '가게를 하나 정해두기보다, 광장 둘레를 한 바퀴 돌며 사람이 앉아 있는 집으로 들어가는 편이 실패가 적습니다. 관광지 한복판보다 한 골목 안쪽이 값도 맛도 낫습니다.',
+        busy: '현지 기준 점심은 14시, 저녁은 21시에 시작합니다',
+        slots: ['lunch'],
+      },
+      {
+        key: 'menu-del-dia',
+        name: `${city.name} 오늘의 메뉴(Menú del día)`,
+        summary: '평일 점심 정식. 12~15유로에 세 접시',
+        desc: '평일 점심에 전채·메인·후식·음료가 함께 나오는 정식입니다. 스페인에서 가장 싸게 제대로 먹는 방법이고, 동네 식당 대부분이 내놓습니다.',
+        busy: '보통 13~16시에만 주문할 수 있습니다',
+        slots: ['lunch'],
+      },
+      {
+        key: 'dinner-area',
+        name: `${city.name} 저녁 식사`,
+        summary: '중심가 보행자 거리에서 타파스나 정식',
+        desc: '저녁은 타파스를 두세 접시 나눠 먹거나 정식 한 상을 시킵니다. 스페인의 저녁 시간은 늦어서, 21시 전에는 손님이 거의 없습니다.',
+        busy: '예약 없이 가려면 20시 전후가 자리 잡기 쉽습니다',
+        slots: ['dinner'],
+      },
     ];
     for (const area of areas.slice(0, 3 - foodCount)) {
       finalItems.push({
@@ -301,7 +323,9 @@ for (const [i, city] of selected.entries()) {
         city: city.slug,
         district: null,
         theme: 'food',
+        summary: area.summary,
         desc: area.desc,
+        busy: area.busy,
         lat: city.lat,
         lon: city.lon,
         durationMin: 75,
@@ -318,6 +342,20 @@ for (const [i, city] of selected.entries()) {
         attribution: '직접 작성',
       });
     }
+  }
+
+  // 설명은 여기서 한 번에 4부분으로 만든다.
+  // 자리마다 override 를 섞으면 대표 명소·보강으로 들어온 아이템이 빠지기 쉬워서,
+  // 최종 목록을 통째로 한 번 훑는 쪽이 안전하다.
+  for (const it of finalItems) {
+    const own = it.source === 'manual' ? { summary: it.summary, busy: it.busy } : {};
+    const { summary, why, practical, caution } = describe(it, { ...own, ...(ko[it.id] ?? {}) });
+    it.summary = summary;
+    it.why = why;
+    it.practical = practical;
+    it.caution = caution;
+    delete it.desc;
+    delete it.busy;
   }
 
   const themes = {};

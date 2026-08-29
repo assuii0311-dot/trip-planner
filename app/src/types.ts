@@ -5,6 +5,26 @@ export type ThemeId =
 
 export type Slot = 'morning' | 'lunch' | 'afternoon' | 'evening' | 'dinner' | 'night';
 
+/**
+ * 아이템의 실무 정보.
+ * duration/price/closed 는 수집한 구조화 필드에서 계산하고,
+ * booking/busy 는 출처가 실제로 말해준 경우에만 채운다.
+ */
+export interface Practical {
+  /** 예약·시간 지정 입장이 필요한 경우. */
+  booking: string | null;
+  /** 휴관일. 영업시간 문자열에서 역산한다. */
+  closed: string | null;
+  /** 붐비는 시간. */
+  busy: string | null;
+  /** 예상 소요. 항상 있다. */
+  duration: string;
+  /** 요금. 정보가 없으면 null. */
+  price: string | null;
+  /** 원문 영업시간. */
+  hours: string | null;
+}
+
 /** 여행 아이템 — 하나의 완결된 활동. */
 export interface Item {
   id: string;
@@ -14,7 +34,14 @@ export interface Item {
   city: string;
   district: string | null;
   theme: ThemeId;
-  desc: string;
+  /** 목록에서 한 줄로 보이는 요약. 40자 안팎. */
+  summary: string;
+  /** 왜 가는가 — 이 장소의 핵심 가치. 1~2문장. */
+  why: string;
+  /** 실무 정보. 지어내지 않는다. 모르는 항목은 null 로 비워 둔다. */
+  practical: Practical;
+  /** 주의점. 있을 때만. */
+  caution: string | null;
   lat: number | null;
   lon: number | null;
   /** 예상 소요 시간(분). 이동 시간은 포함하지 않는다. */

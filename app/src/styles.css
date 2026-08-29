@@ -347,3 +347,30 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
 .base-switch select { min-height: 40px; }
 
 .return-leg { color: var(--accent); font-weight: 600; margin-bottom: 4px; }
+
+/* 아이템 설명 — 요약 한 줄, 펼치면 왜 가는가 / 실무 정보 / 주의점 */
+.item .more { margin-top: 8px; }
+.item .more > summary {
+  cursor: pointer; font-size: 12px; color: var(--muted);
+  list-style: none; padding: 2px 0;
+}
+.item .more > summary::-webkit-details-marker { display: none; }
+.item .more > summary::after { content: ' ▾'; }
+.item .more[open] > summary::after { content: ' ▴'; }
+
+.detail { font-size: 13px; line-height: 1.6; }
+.detail .why { margin: 6px 0 10px; color: var(--text); }
+.detail .practical {
+  margin: 0; display: grid; grid-template-columns: 56px 1fr;
+  gap: 2px 10px; font-size: 12.5px;
+}
+.detail .practical > div { display: contents; }
+.detail .practical dt { color: var(--muted); }
+.detail .practical dd { margin: 0; color: var(--text); }
+.detail .caution {
+  margin: 10px 0 0; padding: 8px 10px; border-radius: 8px;
+  background: rgba(220, 120, 20, 0.12); color: var(--text); font-size: 12.5px;
+}
+
+.entry-summary { font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
+.entry-flag { font-size: 12px; margin-top: 4px; color: #b45309; font-weight: 600; }
