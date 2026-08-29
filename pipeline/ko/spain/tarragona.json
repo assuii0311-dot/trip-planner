@@ -1,0 +1,37 @@
+{
+  "tarragona-amphitheatre": { "name": "로마 원형극장", "desc": "바다를 등지고 앉은 2세기 원형극장. 검투사 경기가 열리던 자리에 나중에 성당이 세워졌습니다. 위치 하나로 기억에 남는 유적입니다." },
+  "tarragona-circ-roma": { "name": "로마 전차 경기장", "desc": "1세기 말에 만든 전차 경기장. 지하 회랑이 도시 밑으로 이어지고, 탑에 오르면 원형극장과 바다가 보입니다." },
+  "tarragona-colonial-forum": { "name": "식민시 포룸", "desc": "로마 도시 타라코의 시민 광장 유구입니다." },
+  "tarragona-teatre-roma": { "name": "로마 극장", "theme": "history", "desc": "항구 쪽에 남은 로마 극장 유적입니다." },
+  "tarragona-passeig-arqueologic": { "name": "고고 산책로", "desc": "가장 잘 보존된 로마 성벽 구간을 따라 걷는 길. 성벽 안쪽으로 정원이 이어집니다." },
+  "tarragona-ferreres-aquaduct": { "name": "페레레스 수도교(악마의 다리)", "desc": "2층 아치가 217m 이어지는 로마 수도교. 시내에서 4km 떨어져 있고 위를 걸어 건널 수 있습니다." },
+  "tarragona-necropolis": { "name": "초기 기독교 네크로폴리스", "desc": "3~5세기 공동묘지 유적. 모자이크 석관이 함께 전시돼 있습니다." },
+  "tarragona-villa-of-centcelles": { "name": "센트세예스 로마 별장", "desc": "4세기 별장의 돔 모자이크가 남아 있습니다. 초기 기독교 도상으로 중요합니다." },
+  "tarragona-wd-colonia-iulia-urbs-triumphalis-tarraco": { "name": "고대 도시 타라코", "desc": "로마 히스파니아 속주의 수도였던 도시. 유적군 전체가 유네스코 세계유산입니다." },
+  "tarragona-marqueta-de-tarraco": { "name": "타라코 축소 모형", "desc": "로마 시대 도시 전체를 축소한 모형. 유적을 보기 전에 들르면 이해가 쉽습니다." },
+  "tarragona-casa-canals": { "name": "카날스 저택", "desc": "성벽에 붙은 19세기 저택. 당시 실내가 그대로 남아 있습니다." },
+  "tarragona-casa-castellarnau": { "name": "카스테야르나우 저택", "desc": "15세기에 지어 19세기에 화려하게 꾸민 귀족 저택입니다." },
+
+  "tarragona-museu-nacional-arqueologic-de-tarragona": { "name": "국립 고고학 박물관", "desc": "타라코에서 나온 모자이크와 조각을 모았습니다. 유적을 돌기 전 출발점으로 좋습니다." },
+  "tarragona-museo-de-arte-moderno": { "name": "현대미술관", "desc": "20세기 이후 지역 회화와 조각. 무료입니다." },
+  "tarragona-museu-del-port": { "name": "항만 박물관", "desc": "타라고나 항구의 역사를 다룹니다." },
+
+  "tarragona-platja-del-miracle": { "name": "미라클레 해변", "desc": "원형극장 바로 아래 500m 해변. 유적을 보고 바로 물에 들어갈 수 있습니다." },
+  "tarragona-platja-llarga": { "name": "야르가 해변", "desc": "3km에 이르는 긴 해변. 식당과 편의시설이 갖춰져 있습니다." },
+  "tarragona-platja-del-l-arrabassada": { "name": "아라바사다 해변", "desc": "시내에서 가까운 500m 모래 해변입니다." },
+  "tarragona-platja-savinosa": { "name": "사비노사 해변", "desc": "블루플래그 인증을 받은 작은 해변입니다." },
+  "tarragona-platja-de-tamarit": { "name": "타마리트 해변", "desc": "성이 내려다보는 북쪽 끝 해변. 시내에서 조금 멉니다." },
+
+  "tarragona-mercat-central-de-tarragona": { "name": "중앙시장", "desc": "1915년 모데르니스메 건물을 되살린 시장. 지하에 로마 유구가 드러나 있습니다.", "bestSlots": ["morning"] },
+  "tarragona-bonavista-market": { "name": "보나비스타 일요시장", "desc": "일요일에 서는 큰 노천 장터입니다.", "bestSlots": ["morning"] },
+
+  "tarragona-aq": { "name": "AQ", "desc": "대성당 옆 골목의 현대 카탈루냐 요리. 테이스팅 메뉴가 좋습니다." },
+  "tarragona-arcs-restaurante": { "name": "아르크스", "desc": "돌 아치 아래에서 지중해 요리를 냅니다." },
+  "tarragona-tarraco-taberna": { "name": "타라코 타베르나", "desc": "편안한 타파스 집입니다." },
+  "tarragona-el-pulvinar": { "name": "엘 풀비나르", "desc": "원형극장 근처의 이탈리아 식당입니다." },
+  "tarragona-filosofia-restaurante": { "name": "필로소피아", "desc": "숯불 고기와 버거를 내는 캐주얼한 식당입니다." },
+  "tarragona-a-tocar-ferro": { "name": "아 토카르 페로", "desc": "커피가 좋은 바. 음식은 평이 갈립니다." },
+  "tarragona-istanbul": { "name": "이스탄불", "desc": "터키 음식점. 대기가 있을 수 있습니다." },
+  "tarragona-restaurant-tanger": { "name": "탕헤르", "desc": "값싸고 정직한 모로코 식당입니다." },
+  "tarragona-snack-speed-bar": { "name": "스낵 스피드 바", "desc": "이름과 달리 늦게까지 여는 동네 바입니다." }
+}

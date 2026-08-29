@@ -28,11 +28,14 @@ function quality(item) {
  * Girona's article is mostly restaurants; without a ceiling it shipped 25 food
  * items out of 40 and the planner had nothing to put between the meals.
  */
-const THEME_SHARE_CEILING = 0.35;
+const THEME_SHARE_CEILING = 0.3;
 
 export function selectBalanced(items, cap, isHub) {
   const floors = FLOORS[isHub ? 'hub' : 'satellite'];
-  const ceiling = Math.max(4, Math.round(cap * THEME_SHARE_CEILING));
+  // 상한이 아니라 실제로 뽑히는 개수를 기준으로 잡는다. 카다케스처럼
+  // 후보가 28개뿐인 도시에서 상한 40을 기준으로 삼으면 한 테마가 절반을
+  // 차지해도 걸리지 않는다.
+  const ceiling = Math.max(4, Math.round(Math.min(cap, items.length) * THEME_SHARE_CEILING));
   const byTheme = new Map();
   for (const item of items) {
     const list = byTheme.get(item.theme) ?? [];

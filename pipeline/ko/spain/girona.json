@@ -1,0 +1,42 @@
+{
+  "girona-catedral-de-girona": { "name": "지로나 대성당", "desc": "90개 계단 위에 선 대성당. 세계에서 가장 넓은 고딕 단일 신랑을 가졌고, 왕좌의 게임 촬영지로도 알려졌습니다." },
+  "girona-basilica-de-sant-feliu": { "name": "산 펠리우 성당", "desc": "대성당 아래쪽의 옛 주교좌 성당. 로마 시대 석관이 벽에 박혀 있습니다." },
+  "girona-monestir-de-sant-pere-de-galligants": { "name": "산 페레 데 갈리간츠 수도원", "desc": "12세기 로마네스크 수도원. 회랑 기둥머리 조각이 정교합니다." },
+  "girona-wd-monastery-of-sant-daniel": { "name": "산 다니엘 수도원", "desc": "성벽 밖 계곡의 조용한 수녀원입니다." },
+  "girona-wd-convent-de-sant-domenec-de-girona": { "name": "산 도메네크 수녀원", "desc": "13세기 고딕 수녀원. 지금은 대학 건물로 쓰입니다." },
+  "girona-wd-sant-nicolau-de-girona": { "name": "산 니콜라우 성당", "desc": "삼엽형 평면이 특이한 로마네스크 성당입니다." },
+  "girona-wd-palau-sacosta-castle": { "name": "팔라우 사코스타 성", "desc": "시 외곽의 옛 영주 저택입니다." },
+
+  "girona-museu-d-historia-dels-jueus": { "name": "유대 역사 박물관", "desc": "유럽에서 가장 잘 보존된 유대인 지구(엘 칼) 한복판. 추방 이전 지로나 유대 공동체의 삶을 다룹니다." },
+  "girona-museu-del-cinema": { "name": "영화 박물관", "desc": "영화 이전의 광학 장난감부터 초기 영사기까지. 직접 조작해 보는 전시가 많습니다." },
+  "girona-museu-d-historia-de-girona": { "name": "지로나 역사박물관", "desc": "옛 카푸친회 수도원 건물. 시신을 말리던 건조실이 그대로 남아 있습니다." },
+  "girona-wd-museo-de-historia-de-girona": { "name": "지로나 역사박물관 별관", "desc": "도시의 시대별 변화를 다루는 전시입니다." },
+  "girona-museu-d-art": { "name": "지로나 미술관", "desc": "옛 주교궁의 미술관. 중세와 르네상스 회화가 중심입니다." },
+  "girona-wd-archaeology-museum-of-catalonia-girona": { "name": "카탈루냐 고고학 박물관 지로나관", "desc": "산 페레 수도원 안의 고고학 전시입니다." },
+
+  "girona-banys-arabs": { "name": "아랍 목욕탕", "desc": "이름과 달리 12세기 기독교 시대에 이슬람 양식으로 지은 목욕탕. 팔각 채광탑이 아름답습니다." },
+  "girona-casa-maso": { "name": "카사 마소", "desc": "오냐르 강변 색색 집 가운데 유일하게 내부를 공개하는 집. 건축가 라파엘 마소의 생가입니다." },
+
+  "girona-girona-fc": { "name": "지로나 FC", "desc": "몬틸리비 경기장을 홈으로 쓰는 축구 구단입니다." },
+  "girona-eat-sleep-cycle": { "name": "이트 슬립 사이클", "desc": "자전거 대여와 가이드 라이딩. 지로나는 프로 사이클 선수들이 훈련지로 삼는 도시입니다." },
+
+  "girona-el-celler-de-can-roca": { "name": "엘 세예르 데 칸 로카", "desc": "로카 삼형제의 미슐랭 3스타. 세계 1위 레스토랑에 두 번 오른 곳이고, 예약은 11개월 전에 열립니다." },
+  "girona-la-massana": { "name": "라 마사나", "desc": "현대적인 스페인 요리를 내는 미슐랭 1스타입니다." },
+  "girona-divinum": { "name": "디비눔", "desc": "지역 재료로 만든 수준 높은 요리. 자리가 적어 예약이 필요합니다." },
+  "girona-arros-i-peix": { "name": "아로스 이 페이시", "desc": "쌀 요리와 해산물 전문점입니다." },
+  "girona-vintages": { "name": "빈티지스", "desc": "제철 재료와 와인 목록이 좋은 식당입니다." },
+  "girona-bionbo": { "name": "비온보", "desc": "카탈루냐 색이 남은 편안한 현대 요리집입니다." },
+  "girona-8de7": { "name": "8de7", "desc": "타파스 종류가 많은 작은 바. 야외 자리가 있습니다." },
+  "girona-casal-independentista-el-forn": { "name": "엘 포른", "desc": "독립적인 분위기의 문화 공간 겸 식당. 값이 착합니다." },
+  "girona-l-antiga": { "name": "란티가", "desc": "따뜻한 초콜라테와 커피를 파는 전통 카페입니다.", "bestSlots": ["morning"] },
+  "girona-le-bistrot": { "name": "르 비스트로", "desc": "대성당 계단 근처의 카페. 야외 자리가 좋습니다." },
+  "girona-cafeteria-canigo": { "name": "카니고", "desc": "양이 넉넉하고 값이 싼 동네 식당입니다." },
+  "girona-crepdeque": { "name": "크렙데케", "desc": "크레페 전문점. 글루텐프리와 락토프리 선택지가 있습니다." },
+  "girona-b-12": { "name": "B-12", "desc": "채식·비건 요리와 수제 맥주를 내는 바입니다." },
+  "girona-konig": { "name": "쾨니히", "desc": "카탈루냐 지역 햄버거 체인입니다." },
+
+  "girona-sunset-jazz-club": { "name": "선셋 재즈 클럽", "desc": "라이브 재즈를 들을 수 있는 클럽. 공연 일정이 촘촘합니다.", "bestSlots": ["evening", "night"] },
+  "girona-la-garrina": { "name": "라 가리나", "desc": "내추럴 와인을 전문으로 하는 바입니다." },
+  "girona-mckiernan-s": { "name": "맥키어넌스", "desc": "스포츠 중계를 트는 아이리시 펍입니다." },
+  "girona-cu-cut": { "name": "쿠쿠트", "desc": "중앙 광장의 늦은 밤 술집입니다." }
+}

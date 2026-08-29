@@ -92,6 +92,11 @@ export async function fetchNearby(city, { radiusKm = 4, minSitelinks = 4, exclud
     const blurb = `${name} ${row.desc?.value ?? ''}`;
     if (otherCities.some((c) => new RegExp(`\\b${c}\\b`, 'i').test(blurb))) continue;
 
+    // 이름 없는 봉우리와 언덕이 무더기로 딸려 온다. 시체스 한 곳에서만
+    // "mountain in Spain" 이 열다섯 개 나왔다. 널리 알려진 산만 남긴다.
+    const sitelinks = Number(row.sitelinks.value);
+    if (/^(mountain|hill|peak|summit|elevation)\b/i.test(typeLabel) && sitelinks < 8) continue;
+
     const theme = themeFromType(typeLabel);
     if (!theme) continue;
 
@@ -101,7 +106,6 @@ export async function fetchNearby(city, { radiusKm = 4, minSitelinks = 4, exclud
     seen.add(key);
     taken.push(norm(name));
 
-    const sitelinks = Number(row.sitelinks.value);
     items.push({
       id: `${city.slug}-wd-${slug(name)}`,
       name: row.koLabel?.value ?? name,
