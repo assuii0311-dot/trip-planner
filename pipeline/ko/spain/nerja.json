@@ -1,0 +1,28 @@
+{
+  "nerja-caves-of-nerja": { "name": "네르하 동굴", "desc": "5km에 이르는 종유동굴. 세계에서 가장 큰 종유석 기둥(32m)이 있고, 안에서 콘서트가 열립니다. 마을에서 4km 떨어져 있습니다.", "durationMin": 90 },
+  "nerja-el-salvador-church": { "name": "엘 살바도르 성당", "desc": "유럽의 발코니 옆 17세기 성당. 무데하르와 바로크가 섞여 있습니다." },
+  "nerja-nuestra-senora-de-las-angustias-hermitage": { "name": "라스 앙구스티아스 예배당", "desc": "마을 수호성모를 모신 17세기 예배당입니다." },
+  "nerja-el-puente-de-aguila": { "name": "아길라 수도교", "desc": "4층 아치가 이어지는 19세기 수도교. 사탕수수 농장에 물을 대던 시설입니다." },
+  "nerja-burriana-beach": { "name": "부리아나 해변", "desc": "네르하에서 가장 유명한 해변. 블루플래그 인증을 받았고 해변 식당이 늘어서 있습니다." },
+  "nerja-torrecilla-beach": { "name": "토레시야 해변", "desc": "마을에서 가까운 넓은 모래 해변입니다." },
+  "nerja-calahonda-beach": { "name": "칼라온다 해변", "desc": "유럽의 발코니 아래 절벽에 낀 자갈 해변입니다." },
+  "nerja-carabeo-beach": { "name": "카라베오 해변", "desc": "절벽 아래 계단으로 내려가는 조용한 자갈 해변입니다." },
+  "nerja-carabeillo-beach": { "name": "카라베이요 해변", "desc": "절벽 밑의 작고 한적한 모래 해변입니다." },
+  "nerja-del-salon-beach": { "name": "엘 살론 해변", "desc": "모래가 곱고 마을에서 가까워 가장 붐빕니다." },
+  "nerja-el-playazo": { "name": "엘 플라야소", "theme": "nature", "desc": "마을 서쪽의 인적 드문 긴 해변. 걸어가면 20분쯤 걸립니다." },
+  "nerja-the-rio-chillar-waterfall": { "name": "치야르 강 계곡 트레킹", "theme": "activity", "desc": "강물 속을 걸어 폭포까지 올라가는 여름 인기 코스. 신발이 젖는 것을 감수해야 합니다.", "energy": 5, "durationMin": 240 },
+  "nerja-senderismo-de-nerja": { "name": "네르하 트레킹", "desc": "근교 산과 해안 절벽을 잇는 도보 코스가 여럿입니다.", "energy": 4 },
+  "nerja-jeep-tours-in-nerja": { "name": "지프 투어", "desc": "산길과 백색 마을을 도는 오프로드 투어입니다." },
+  "nerja-smiffs-bookstore": { "name": "스미프스 서점", "desc": "영어책을 파는 동네 서점입니다." },
+
+  "nerja-marisqueria-la-marina": { "name": "라 마리나", "desc": "작은 광장에 면한 해산물 식당입니다." },
+  "nerja-el-pulgilla": { "name": "엘 풀기야", "desc": "상점가 한복판의 인기 해산물 타파스 집입니다." },
+  "nerja-el-sotano-viejo": { "name": "엘 소타노 비에호", "desc": "현지인이 운영하는 오래된 식당입니다." },
+  "nerja-posada-iberica-restaurant": { "name": "포사다 이베리카", "desc": "이베리코 돼지고기 요리를 냅니다." },
+  "nerja-meson-jose-y-victoria": { "name": "메손 호세 이 빅토리아", "desc": "신선한 가정식으로 평이 좋습니다." },
+  "nerja-cibeles": { "name": "시벨레스", "desc": "가성비 좋은 스페인 음식을 내는 카페 겸 식당입니다." },
+  "nerja-restaurante-california": { "name": "칼리포르니아", "desc": "국제식 메뉴를 내는 식당입니다." },
+  "nerja-scarletta-s": { "name": "스칼레타스", "desc": "미국식과 국제식 요리를 냅니다." },
+  "nerja-el-cielito-lindo": { "name": "엘 시엘리토 린도", "desc": "멕시코 음식점입니다." },
+  "nerja-coach-and-horses": { "name": "코치 앤 호시스", "desc": "영국인 관광객이 많이 찾는 펍 스타일 식당입니다." }
+}

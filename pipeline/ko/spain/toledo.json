@@ -1,0 +1,31 @@
+{
+  "toledo-cathedral": { "name": "톨레도 대성당", "desc": "스페인 가톨릭의 총본산. 성구실에 엘 그레코와 고야의 그림이 걸려 있고, 천장을 뚫어 빛을 들인 '트란스파렌테' 조각이 압권입니다.", "durationMin": 120 },
+  "toledo-the-alcazar": { "name": "알카사르", "desc": "언덕 꼭대기의 사각 요새. 내전 격전지였고 지금은 군사 박물관입니다. 어디서든 보이는 도시의 표지입니다." },
+  "toledo-synagogue-of-santa-maria-la-blanca": { "name": "산타 마리아 라 블랑카 시나고그", "desc": "이슬람 장인이 유대교 회당으로 지었다가 성당이 된 건물. 톨레도의 세 종교가 겹친 역사를 한 공간에서 보여 줍니다." },
+  "toledo-synagogue-of-el-transito": { "name": "엘 트란시토 시나고그", "desc": "14세기 시나고그. 벽면 가득한 무데하르 석고 장식이 남아 있고 세파르디 박물관이 들어서 있습니다." },
+  "toledo-mosque-of-cristo-de-la-luz": { "name": "크리스토 데 라 루스 모스크", "desc": "999년에 지은 스페인에서 가장 온전한 이슬람 사원 중 하나. 아홉 개 돔이 각각 다른 형태입니다." },
+  "toledo-monastery-of-san-juan-de-los-reyes": { "name": "산 후안 데 로스 레예스 수도원", "desc": "가톨릭 양왕이 세운 이사벨 고딕 양식 수도원. 회랑 안뜰이 아름답고, 외벽에 풀려난 포로들의 쇠사슬이 걸려 있습니다." },
+  "toledo-iglesia-del-salvador": { "name": "엘 살바도르 성당", "desc": "이슬람 사원 위에 세운 성당. 서고트 시대 기둥이 그대로 남아 있습니다." },
+  "toledo-iglesia-de-los-jesuitas": { "name": "예수회 성당", "desc": "쌍둥이 종탑에 올라 톨레도 지붕 전체를 내려다볼 수 있습니다. 대성당이 정면으로 보입니다." },
+  "toledo-wd-roman-catholic-archdiocese-of-toledo": { "name": "톨레도 대교구", "desc": "스페인 가톨릭의 수좌 교구. 대성당이 그 중심입니다." },
+
+  "toledo-el-greco-museum": { "name": "엘 그레코 미술관", "desc": "화가가 살던 동네에 꾸민 저택형 미술관. '톨레도 전경과 지도'가 여기 있습니다." },
+  "toledo-the-burial-of-the-count-of-orgaz": { "name": "오르가스 백작의 매장", "theme": "art", "desc": "산토 토메 성당 벽에 걸린 엘 그레코의 대표작. 그림 한 점을 보러 들어가는 곳이고 그럴 값어치가 있습니다.", "durationMin": 45 },
+  "toledo-museum-of-the-army": { "name": "군사 박물관", "desc": "알카사르 안의 대형 군사 박물관. 지하에 로마·서고트 유구가 드러나 있습니다." },
+
+  "toledo-fly-toledo": { "name": "플라이 톨레도 짚라인", "desc": "타호 강 협곡을 가로지르는 유럽에서 가장 긴 도심 짚라인입니다.", "energy": 4 },
+
+  "toledo-meson-de-la-orza": { "name": "메손 데 라 오르사", "desc": "음식과 서비스가 좋은 카스티야 식당. 값은 조금 있습니다." },
+  "toledo-la-cuesta-de-toledo": { "name": "라 쿠에스타", "desc": "전형적인 카스티야 요리를 냅니다." },
+  "toledo-restaurante-trebedes-toledo": { "name": "트레베데스", "desc": "지역 요리 수준이 고른 식당입니다." },
+  "toledo-malpica-retro": { "name": "말피카 레트로", "desc": "분위기와 응대가 좋은 아담한 식당입니다." },
+  "toledo-la-casa-de-damasco": { "name": "라 카사 데 다마스코", "desc": "골목에 숨은 중동 요리 식당입니다." },
+  "toledo-madre-tierra": { "name": "마드레 티에라", "desc": "유기농 재료의 채식·비건 식당입니다." },
+  "toledo-el-rinconcito": { "name": "엘 린콘시토", "desc": "수제 타파스가 좋은 작은 집. 크로케타를 추천합니다." },
+  "toledo-patata-y-ole": { "name": "파타타 이 올레", "desc": "구운 감자에 여러 토핑을 얹어 파는 간이 식당입니다." },
+  "toledo-la-ramona-toledo": { "name": "라 라모나", "desc": "테라스가 넓은 카페테리아입니다." },
+  "toledo-bar-ludena": { "name": "바르 루데냐", "desc": "가족이 운영하는 선술집. 카르카물사(향신 돼지고기)가 간판입니다." },
+  "toledo-la-mona-bar": { "name": "라 모나 바", "desc": "아늑한 바. 메뉴 구성이 좋습니다." },
+  "toledo-bar-skala": { "name": "바르 스칼라", "desc": "소박하고 맛있는 지역 음식과 와인을 냅니다." },
+  "toledo-o-brien": { "name": "오브라이언", "desc": "톨레도에서 만드는 도마스 맥주를 마실 수 있는 펍입니다." }
+}

@@ -1,0 +1,23 @@
+{
+  "alcala-de-henares-wd-colegio-mayor-de-san-ildefonso": { "name": "산 일데폰소 학사(대학 본관)", "desc": "1499년에 세운 대학의 본관. 플라테레스크 정면과 무데하르 천장 강당이 있고, 세르반테스상 시상식이 매년 여기서 열립니다." },
+  "alcala-de-henares-casa-natal-de-cervantes": { "name": "세르반테스 생가", "desc": "돈키호테를 쓴 세르반테스가 태어난 집. 16세기 카스티야 가정을 그대로 재현했고 무료입니다." },
+  "alcala-de-henares-cathedral": { "name": "마히스트랄 대성당", "desc": "15세기에 지은 성당. 세계에 두 곳뿐인 '마히스트랄' 등급 성당 중 하나입니다." },
+  "alcala-de-henares-archbishop-s-palace": { "name": "대주교궁", "desc": "콜럼버스가 이사벨 여왕을 처음 알현한 자리로 전해집니다. 성벽이 인상적입니다." },
+  "alcala-de-henares-castillo-de-alcala-la-vieja": { "name": "알칼라 라 비에하 성터", "desc": "강 건너 언덕의 이슬람 시대 성 유적입니다." },
+  "alcala-de-henares-archaeological-museum": { "name": "지역 고고학 박물관", "theme": "art", "desc": "옛 수녀원 건물의 고고학 박물관. 콤플루툼 유적 출토품이 중심이고 무료입니다." },
+  "alcala-de-henares-wd-complutum": { "name": "콤플루툼 로마 유적", "desc": "로마 도시 콤플루툼의 발굴 현장. 저택 바닥 모자이크가 남아 있습니다." },
+  "alcala-de-henares-house-of-hippolytus": { "name": "히폴리투스의 집", "desc": "3세기 로마 청년회관 유적. 바다 생물을 그린 모자이크가 유명합니다." },
+  "alcala-de-henares-hospital-de-antezana": { "name": "안테사나 구빈원", "desc": "1483년부터 지금까지 운영 중인 유럽 최고(最古) 병원 중 하나. 세르반테스의 아버지가 여기서 일했습니다." },
+  "alcala-de-henares-corral-de-comedias": { "name": "코랄 데 코메디아스", "desc": "1601년에 지은 유럽에서 가장 오래된 상설 극장 중 하나. 지금도 공연이 올라갑니다." },
+  "alcala-de-henares-wd-palace-of-laredo": { "name": "라레도 저택", "desc": "네오무데하르 양식의 19세기 저택. 실내 장식이 화려합니다." },
+  "alcala-de-henares-wd-convento-de-las-bernardas": { "name": "베르나르다스 수녀원", "desc": "타원형 돔이 인상적인 바로크 수녀원입니다." },
+  "alcala-de-henares-wd-museo-de-escultura-al-aire-libre-de-alcala-de-he": { "name": "야외 조각 미술관", "desc": "옛 성벽을 따라 현대 조각을 늘어놓은 산책로. 무료입니다." },
+  "alcala-de-henares-wd-hermitage-of-san-isidro": { "name": "산 이시드로 예배당", "desc": "시 외곽의 작은 예배당입니다." },
+  "alcala-de-henares-wd-ermita-de-la-virgen-del-val": { "name": "비르헨 델 발 예배당", "desc": "강가 숲에 자리한 순례 예배당입니다." },
+  "alcala-de-henares-wd-cerro-del-viso": { "name": "세로 델 비소", "desc": "도시가 내려다보이는 언덕. 산책로가 있습니다." },
+  "alcala-de-henares-wd-los-cerros-de-alcala": { "name": "로스 세로스 자연공원", "desc": "도시를 감싼 구릉 지대. 걷기와 자전거에 좋습니다." },
+  "alcala-de-henares-wd-estadio-municipal-el-val": { "name": "엘 발 경기장", "desc": "시립 축구 경기장입니다." },
+  "alcala-de-henares-barataria": { "name": "바라타리아", "desc": "구이 요리가 좋은 식당 겸 타파스 바입니다." },
+  "alcala-de-henares-dining-old-town": { "name": "알칼라 구시가 식당가", "desc": "대학 본관과 세르반테스 광장 주변에 식당이 모여 있습니다. 회랑 아래 테라스가 많습니다." },
+  "alcala-de-henares-dining-menu-del-dia": { "name": "알칼라 오늘의 메뉴", "desc": "대학 도시라 점심 정식이 12유로 안팎으로 저렴합니다." }
+}
