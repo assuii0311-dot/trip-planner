@@ -59,6 +59,10 @@ const DROP_IDS = new Set([
   'jerez-damajuana',           // = jerez-damajuana-cafe-bar
   'girona-wd-museo-de-historia-de-girona', // = girona-museu-d-historia-de-girona
   'madrid-wd-bernabeu',        // = madrid-real-madrid
+  'toledo-wd-church-of-santo-tome', // = toledo-the-burial-of-the-count-of-orgaz
+  'salamanca-wd-monterrey-palace',  // = salamanca-palacio-de-monterey
+  'salamanca-wd-museo-de-art-nouveau-y-art-deco', // = salamanca-casa-lis
+  'salamanca-wd-salamanca-old-cathedral', // = salamanca-new-old-cathedrals 에 포함
 ]);
 const isSight = (it) => it.theme !== 'food' && it.theme !== 'nightlife';
 
