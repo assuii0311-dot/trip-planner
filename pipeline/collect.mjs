@@ -74,6 +74,10 @@ const DROP_IDS = new Set([
   'vitoria-wd-fournier-museum-of-playing-cards', // = vitoria-fournier-playing-card-museum
   'vitoria-wd-museo-de-bellas-artes-de-alava',   // = vitoria-fine-arts-museum
   'pamplona-wd-museum-of-navarre',  // = pamplona-museo-de-navarra
+  'santander-wd-botin-centre',      // = santander-centro-botin
+  'santander-wd-museo-de-arte-moderno-y-contemporaneo-de-santand', // = santander-museum-of-modern-contemporary-art
+  'santander-wd-museo-de-prehistoria-y-arqueologia-de-cantabria',  // = santander-museum-of-prehistory-and-archaeology-of-cantabri
+  'santander-wd-faro-de-cabo-mayor', // = santander-faro-cabo-mayor-art-centre
 ]);
 const isSight = (it) => it.theme !== 'food' && it.theme !== 'nightlife';
 

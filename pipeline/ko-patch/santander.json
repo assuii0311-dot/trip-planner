@@ -1,135 +1,105 @@
 {
   "santander-taj-mahal": {
-    "name": "타지마할",
     "summary": "시내 유일의 인도 식당",
     "why": "산탄데르에 하나뿐인 인도 식당입니다. 타파스와 해산물이 물릴 때 확실한 전환이 됩니다."
   },
   "santander-la-mulata": {
-    "name": "라 물라타",
     "summary": "붐비는 해산물 식당. 응대가 친절하다",
     "why": "해산물을 중심으로 한 인기 식당입니다. 값이 조금 있지만 응대가 좋고 재료가 확실합니다.",
     "booking": "저녁은 예약을 권합니다"
   },
   "santander-la-bombi": {
-    "name": "라 봄비",
     "summary": "고급 해산물 식당. 안쪽 자리가 좋다",
     "why": "고급 해산물 식당으로, 바 쪽보다 안쪽 홀 자리가 낫습니다. 칸타브리아 바다의 재료를 제대로 씁니다."
   },
   "santander-el-serbal": {
-    "name": "엘 세르발",
     "summary": "미슐랭 1스타. 해변이 내려다보이는 자리",
     "why": "미슐랭 1스타로, 칸타브리아 해산물을 현대적으로 다룹니다. 해변이 내려다보이는 자리가 있습니다.",
     "booking": "예약이 필요합니다"
   },
   "santander-tatami": {
-    "name": "타타미",
     "summary": "초밥과 일본 요리",
     "why": "초밥과 사시미를 내는 일본 식당입니다. 항구 도시라 생선이 좋습니다."
   },
   "santander-posada-del-mar": {
-    "name": "포사다 델 마르",
     "summary": "해산물이 훌륭한 식당",
     "why": "해산물이 훌륭한 식당입니다. 점심과 저녁 시간이 짧으니 시간을 맞춰 가세요."
   },
   "santander-gelin": {
-    "name": "헬린",
     "summary": "소박한 전통 요리",
     "why": "소박한 전통 칸타브리아 요리를 냅니다. 아침 일찍부터 열어 하루의 시작으로도 씁니다."
   },
   "santander-cathedral": {
-    "name": "산탄데르 대성당",
     "summary": "위아래 두 층으로 나뉜 고딕 성당. 아래에 로마 유구",
     "why": "성당이 위아래 두 층으로 나뉘어 있고, 아래층 바닥에 로마 시대 유구가 유리 아래로 드러나 있습니다. 1941년 대화재에서 살아남은 몇 안 되는 건물이기도 합니다."
   },
   "santander-museum-of-prehistory-and-archaeology-of-cantabri": {
-    "name": "선사·고고학 박물관(MUPAC)",
-    "theme": "art",
     "summary": "알타미라 지역의 선사 유물을 모았다",
     "why": "알타미라 동굴을 비롯해 칸타브리아 일대에서 나온 선사 유물을 모았습니다. 동굴 원본에 들어갈 수 없는 지금, 그 시대를 이해하는 가장 좋은 출발점입니다."
   },
   "santander-palacio-de-festivales-de-cantabria": {
-    "name": "칸타브리아 페스티벌 궁",
-    "theme": "art",
     "summary": "국제 음악 축제가 열리는 대형 공연장",
     "why": "여름 국제 음악 축제가 열리는 대형 공연장입니다. 일정이 맞으면 값어치가 큽니다."
   },
   "santander-ethnography-museum": {
-    "name": "민속 박물관",
     "summary": "17세기 건물의 지역 생활사 박물관",
     "why": "17세기 건물을 쓰는 지역 생활사 박물관입니다. 칸타브리아 사람들이 산과 바다 사이에서 어떻게 살았는지를 보여 주고, 무료입니다."
   },
   "santander-museum-of-modern-contemporary-art": {
-    "name": "현대미술관(MAS)",
     "summary": "칸타브리아 지역 현대미술. 무료",
     "why": "칸타브리아 지역 현대미술을 모은 미술관입니다. 무료이고 규모가 작아 부담이 없습니다."
   },
   "santander-maritime-museum-of-cantabria": {
-    "name": "해양 박물관",
     "summary": "바다 생태와 어업사를 함께 다룬다",
     "why": "칸타브리아 바다의 생태와 어업의 역사를 함께 다룹니다. 수족관과 고래 뼈대가 있어 아이 동반에도 맞습니다."
   },
   "santander-faro-cabo-mayor-art-centre": {
-    "name": "카보 마요르 등대 아트센터",
     "summary": "절벽 위 등대에 들어선 전시 공간. 무료",
     "why": "절벽 위 등대 건물에 들어선 전시 공간입니다. 전시보다 거기까지 이어지는 해안 절벽길과 등대에서 보는 바다가 목적이 됩니다.",
     "caution": "시내에서 떨어져 있습니다. 버스나 차가 필요합니다."
   },
   "santander-centro-botin": {
-    "name": "센트로 보틴",
     "summary": "렌초 피아노가 바다 위로 띄워 지은 미술관",
     "why": "렌초 피아노가 만 위로 건물을 띄우고 그 아래를 비워, 공원과 바다가 그대로 이어지도록 지었습니다. 전시를 보지 않아도 건물 아래 데크를 걷는 것만으로 값어치가 있습니다."
   },
   "santander-bodega-fuente-de": {
-    "name": "보데가 푸엔테 데",
-    "theme": "food",
     "summary": "칸타브리아 가정식을 내는 보데가",
     "why": "칸타브리아 가정식을 내는 보데가입니다. 꾸밈이 없고 값이 정직합니다."
   },
   "santander-naves-de-gamazo": {
-    "name": "가마소 창고",
     "summary": "옛 항만 창고를 개조한 현대미술 공간",
     "why": "옛 항만 창고를 개조한 현대미술 공간입니다. 무료이고 센트로 보틴 근처라 함께 보게 됩니다."
   },
   "santander-el-jardin-del-paraiso": {
-    "name": "파라이소 정원",
-    "theme": "nature",
     "summary": "평이 좋은 도심 정원",
     "why": "도심에 있는 정원으로 평이 좋습니다. 늦게까지 열어 저녁에도 갈 수 있습니다."
   },
   "santander-centro-cultural-doctor-madrazo": {
-    "name": "마드라소 문화센터",
     "summary": "전시와 공연이 열리는 문화 공간",
     "why": "전시와 영화 상영이 열리는 문화 공간입니다. 그날 프로그램에 따라 정하면 됩니다."
   },
   "santander-snack-bar-el-sardi": {
-    "name": "엘 사르디",
     "summary": "간단히 한잔하기 좋은 동네 바",
     "why": "친근한 동네 바입니다. 늦게까지 열어 저녁 마무리로 씁니다."
   },
   "santander-casona-del-judio": {
-    "name": "카소나 델 후디오",
     "summary": "외곽의 고급 식당",
     "why": "시 외곽에 있는 고급 식당입니다. 조용히 한 끼를 제대로 쓰고 싶을 때 갑니다.",
     "caution": "시 외곽이라 택시가 필요합니다."
   },
   "santander-il-piccolino": {
-    "name": "일 피콜리노",
     "summary": "인기 이탈리아 식당. 하루 종일 연다",
     "why": "인기 이탈리아 식당으로 아침부터 자정까지 엽니다. 시간이 애매할 때 확실한 선택지입니다."
   },
   "santander-restaurante-del-puerto": {
-    "name": "레스토랑 델 푸에르토",
     "summary": "항구에 면한 해산물 식당",
     "why": "항구에 면한 해산물 식당입니다. 배가 드나드는 것을 보며 먹게 됩니다."
   },
   "santander-fundacion-caja-cantabria": {
-    "name": "카하 칸타브리아 재단",
     "summary": "연극과 콘서트, 전시가 열리는 공간",
     "why": "연극과 팝·재즈 공연, 전시가 열리는 공간입니다. 일정에 따라 정하면 됩니다."
   },
   "santander-wd-palacio-de-la-magdalena": {
-    "name": "마그달레나 궁",
-    "durationMin": 90,
     "summary": "반도 끝 언덕의 왕실 여름 별궁. 삼면이 바다",
     "why": "시민들이 돈을 모아 왕실에 바친 여름 별궁으로, 반도 끝 언덕에 서 있습니다. 영국풍 저택이고 둘러싼 공원에서 삼면이 바다인 풍경을 보게 됩니다."
   },
