@@ -1,280 +1,206 @@
 {
   "alicante-monastrell": {
-    "name": "모나스트렐",
     "summary": "미슐랭 스타. 쌀 요리와 사프란에 집중",
     "why": "셰프 마리아 호세 산 로만의 미슐랭 식당입니다. 쌀과 사프란을 직접 재배·연구할 만큼 파고들어, 알리칸테의 쌀 요리를 가장 높은 수준으로 보여 줍니다.",
     "booking": "예약이 필요합니다"
   },
   "alicante-nou-manolin": {
-    "name": "노우 마놀린",
     "summary": "알리칸테 대표 식당. 1층 바 타파스가 특히 좋다",
     "why": "알리칸테를 대표하는 식당입니다. 위층 정식보다 1층 바 카운터에 앉아 타파스를 시키는 쪽이 이 집을 쓰는 방법입니다.",
     "busy": "바 자리는 저녁에 금방 찹니다"
   },
   "alicante-darsena": {
-    "name": "다르세나",
     "summary": "항구에 면한 노포. 쌀 요리가 200가지 넘는다",
     "why": "항구에 면한 오래된 식당으로, 쌀 요리 종류가 200가지가 넘습니다. 파에야가 하나가 아니라는 것을 여기서 알게 됩니다."
   },
   "alicante-unik-asiatico-restaurante": {
-    "name": "우닉 아시아티코",
     "summary": "중식과 아시아 요리",
     "why": "제대로 된 중식을 내는 집입니다. 스페인 음식이 물릴 때 선택지가 됩니다."
   },
   "alicante-100-montaditos": {
-    "name": "100 몬타디토스",
     "summary": "작은 샌드위치를 싸게 파는 체인",
     "why": "작은 샌드위치를 100가지 가까이 아주 싼 값에 파는 체인입니다. 빠르게 한 끼를 때우고 다음 일정으로 넘어갈 때 씁니다."
   },
   "alicante-restaurante-convistas": {
-    "name": "콘비스타스",
     "summary": "고층 호텔 식당. 도시 전망이 함께 온다",
     "why": "알리칸테에서 가장 높은 건물 중 하나에 있는 식당입니다. 음식과 함께 해안선과 성이 한눈에 들어옵니다.",
     "booking": "창가 자리는 예약을 권합니다"
   },
   "alicante-meson-de-labradores": {
-    "name": "메손 데 라브라도레스",
     "summary": "1693년에 문을 연 구시가 선술집",
     "why": "1693년에 문을 연 선술집으로 구시가 한복판에 있습니다. 낮부터 자정 넘게까지 열어 시간을 가리지 않습니다."
   },
   "alicante-la-tasca-del-barrio": {
-    "name": "라 타스카 델 바리오",
     "summary": "음식과 응대가 좋은 동네 식당",
     "why": "관광 동선에서 벗어난 동네 식당으로 음식과 응대가 좋습니다. 값이 예측 가능합니다."
   },
   "alicante-restaurante-the-garden": {
-    "name": "더 가든",
     "summary": "숯불 구이가 좋은 식당",
     "why": "숯불에 구운 고기가 좋은 집입니다. 해산물과 쌀 요리가 물릴 때 갑니다."
   },
   "alicante-restaurante-la-matanza-castellana": {
-    "name": "라 마탄사 카스테야나",
     "summary": "카스티야식 고기 요리. 점심 정식이 있다",
     "why": "카스티야식 고기 요리를 내는 집으로 고기 품질이 좋습니다. 점심 정식이 있어 낮에 쓰기 좋습니다."
   },
   "alicante-one-one": {
-    "name": "원 원",
     "summary": "창작 요리를 내는 아늑한 식당",
     "why": "아늑한 공간에서 창작 요리를 냅니다. 노포와 미슐랭 사이의 중간값을 찾을 때 맞습니다.",
     "caution": "8월 중순부터 9월 중순까지 휴업합니다."
   },
   "alicante-restaurante-la-ereta": {
-    "name": "라 에레타",
     "summary": "산 중턱의 창작 요리. 도시가 내려다보인다",
     "why": "성으로 오르는 산 중턱에 있어 도시와 바다가 내려다보입니다. 창작 요리를 코스로 내는데, 전망과 요리를 함께 쓰는 구성입니다.",
     "booking": "영업일이 계절마다 달라 예약이 필요합니다"
   },
   "alicante-piripi": {
-    "name": "피리피",
     "summary": "노우 마놀린 계열. 쌀 요리와 타파스",
     "why": "노우 마놀린과 같은 계열의 집으로 쌀 요리와 타파스로 이름났습니다. 본점이 붐빌 때의 대안이 됩니다."
   },
   "alicante-la-taberna-del-gourmet": {
-    "name": "타베르나 델 구르메",
     "summary": "타파스와 델리를 겸한 인기 집. 와인 목록이 좋다",
     "why": "타파스 바와 델리를 겸합니다. 와인 목록이 넓고 하루 종일 열어, 시간대를 가리지 않고 쓸 수 있습니다."
   },
   "alicante-castell-de-la-santa-barbara": {
-    "name": "산타 바르바라 성",
-    "durationMin": 120,
     "summary": "베나칸틸 바위산 정상의 성. 엘리베이터로 오른다",
     "why": "166m 바위산 정상의 성으로, 도시와 지중해가 한 바퀴로 보입니다. 해변 쪽에서 바위를 뚫은 엘리베이터로 단숨에 오를 수 있어 접근이 쉽습니다.",
     "caution": "엘리베이터는 유료입니다. 성 자체는 무료입니다."
   },
   "alicante-basilica-de-santa-maria": {
-    "name": "산타 마리아 성당",
     "summary": "이슬람 사원 자리의 알리칸테 최고령 성당",
     "why": "이슬람 사원 자리에 세운 알리칸테에서 가장 오래된 성당입니다. 고딕 몸체에 화려한 바로크 정문이 나중에 붙어, 두 시대가 정면에서 만납니다."
   },
   "alicante-lucentum-archaeological-site": {
-    "name": "루센툼 유적",
     "summary": "알리칸테의 뿌리인 로마 도시 유적",
     "why": "지금 도시 이름의 뿌리인 로마 도시 루센툼의 유적입니다. 성벽과 목욕탕, 거리가 남아 있어 도심에서 조금만 나가면 2000년 전을 걷게 됩니다."
   },
   "alicante-castell-de-sant-ferran": {
-    "name": "산 페르난도 성",
     "summary": "19세기 요새. 공원과 이어지고 사람이 적다",
     "why": "19세기 초에 지은 요새로, 산타 바르바라 성 반대편 언덕에 있습니다. 공원과 이어져 있고 관광객이 거의 없어 조용합니다."
   },
   "alicante-museu-arqueologic-provincial-d-alacant": {
-    "name": "고고학 박물관(MARQ)",
     "summary": "'올해의 유럽 박물관'을 받은 고고학관",
     "why": "유럽 박물관상을 받은 고고학 박물관입니다. 전시를 영상과 재현으로 구성해, 유물만 늘어놓은 곳들과 인상이 크게 다릅니다."
   },
   "alicante-museu-de-la-ciutat-d-alacant": {
-    "name": "알리칸테 시립 박물관",
     "summary": "성 안에 있는 도시 역사 전시",
     "why": "산타 바르바라 성 안에 있는 도시 역사 전시입니다. 성 관람에 포함되니 따로 시간을 낼 필요가 없습니다."
   },
   "alicante-museu-d-aigues-d-alacant": {
-    "name": "물 박물관",
     "summary": "지하 물탱크를 그대로 쓰는 물 박물관",
     "why": "건조한 이 도시가 물을 어떻게 확보했는지를 다룹니다. 옛 지하 물탱크를 그대로 전시 공간으로 써, 내려가면 서늘합니다."
   },
   "alicante-museu-de-belles-arts-gravina": {
-    "name": "그라비나 미술관",
     "summary": "18세기 저택의 지역 미술관. 무료",
     "why": "18세기 저택을 쓰는 미술관으로, 16~20세기 지역 회화가 중심입니다. 무료이고 구시가 안이라 동선에 넣기 쉽습니다."
   },
   "alicante-museu-de-la-universitat-d-alacant": {
-    "name": "대학 미술관",
     "summary": "현대미술 기획전. 트램으로 간다",
     "why": "대학 캠퍼스 안의 미술관으로 현대미술 기획전이 열립니다. 시내에서 트램으로 가야 합니다.",
     "caution": "시내에서 떨어져 있습니다."
   },
   "alicante-teatre-principal": {
-    "name": "프린시팔 극장",
     "summary": "19세기 중반에 지은 시내 중심 극장",
     "why": "19세기 중반에 지은 알리칸테의 주 극장입니다. 공연 일정이 맞으면 건물과 무대를 함께 볼 수 있습니다."
   },
   "alicante-coves-del-canelobre": {
-    "name": "카넬로브레 동굴",
-    "theme": "nature",
     "summary": "천장이 70m인 거대 동굴. 콘서트가 열린다",
     "why": "천장 높이가 70m에 이르는 거대한 종유동굴입니다. 음향이 좋아 안에서 콘서트가 열리고, 촛대를 닮은 종유석에서 이름이 나왔습니다.",
     "caution": "시내에서 24km 떨어져 있어 차가 필요합니다. 안이 서늘합니다."
   },
   "alicante-auditori-de-la-diputacio-d-alacant": {
-    "name": "ADDA 오디토리움",
-    "theme": "art",
     "summary": "음향이 좋기로 이름난 공연장",
     "why": "음향이 좋기로 이름난 공연장입니다. 클래식 공연 일정이 맞으면 값어치가 큽니다.",
     "booking": "매표소가 평일에만 열립니다. 온라인 예매가 편합니다"
   },
   "alicante-kinepolis": {
-    "name": "키네폴리스",
     "summary": "최신작을 상영하는 멀티플렉스",
     "why": "최신 개봉작을 더빙과 원어로 상영하는 멀티플렉스입니다. 비 오는 날 시간을 보내기 좋습니다."
   },
   "alicante-yelmo-cines": {
-    "name": "옐모 시네마",
     "summary": "더빙과 원어를 함께 상영하는 극장",
     "why": "더빙과 원어 상영을 함께 하는 또 하나의 멀티플렉스입니다."
   },
   "alicante-horchateria-azul": {
-    "name": "오르차테리아 아술",
-    "theme": "food",
     "summary": "옛 알리칸테의 맛이 남은 오르차타 가게",
     "why": "작고 오래된 오르차타 가게입니다. 발렌시아 쪽보다 알려지지 않아, 관광객 없이 이 지역 음료를 마실 수 있습니다."
   },
   "alicante-bira": {
-    "name": "비라",
     "summary": "생맥주 열 종을 파는 작은 수제 맥주집",
     "why": "생맥주 열 종을 갖춘, 이 도시에서 수제 맥주를 마시기에 가장 나은 곳입니다. 공간이 작아 금방 찹니다.",
     "busy": "저녁에는 매우 붐빕니다"
   },
   "alicante-mercat-babel": {
-    "name": "바벨 시장",
     "summary": "현지 농수산물을 파는 동네 시장",
     "why": "현지 사람들이 장을 보는 동네 시장입니다. 관광객이 없어 값과 분위기가 다릅니다."
   },
   "alicante-mercat-central": {
-    "name": "중앙시장",
-    "bestSlots": [
-      "morning"
-    ],
     "summary": "1921년 모데르니스메 시장. 2층 규모",
     "why": "1921년에 지은 모데르니스메 시장 건물입니다. 2층 규모로 해산물과 육류가 층을 나눠 있고, 건물 자체가 이 도시의 랜드마크입니다.",
     "busy": "오전에만 제대로 돌아갑니다"
   },
   "alicante-mercat-benalua": {
-    "name": "베날루아 시장",
     "summary": "동네 시장. 옆에 노천 장터가 선다",
     "why": "동네 식료품 시장으로, 옆에 노천 장터가 함께 섭니다.",
     "caution": "화요일에 쉽니다."
   },
   "alicante-mercat-carolinas": {
-    "name": "카롤리나스 시장",
     "summary": "동네 시장. 옆에 노천 장터가 선다",
     "why": "또 하나의 동네 식료품 시장으로 옆에 노천 장터가 섭니다. 오전에만 엽니다."
   },
   "alicante-mercado-artesano": {
-    "name": "수공예 시장",
     "summary": "수제 장신구와 가죽 제품 장터",
     "why": "손으로 만든 장신구와 가죽 제품을 파는 장터입니다. 기념품 가게와는 물건이 다릅니다.",
     "caution": "여름에는 금~일, 겨울에는 일요일 오전에만 섭니다."
   },
   "alicante-passeig-esplanada-d-espanya-market": {
-    "name": "에스플라나다 야시장",
-    "bestSlots": [
-      "evening"
-    ],
     "summary": "야자수와 물결무늬 바닥의 산책로 야시장",
     "why": "660만 개 대리석 조각으로 물결무늬를 깐 산책로에 서는 시장입니다. 야자수 아래를 걸으며 좌판을 훑는 것이 알리칸테의 저녁 풍경입니다.",
     "caution": "화요일에는 서지 않습니다."
   },
   "alicante-mercado-de-filatelia-y-numismatica": {
-    "name": "우표·주화 시장",
     "summary": "일요일 오전 우표·주화 수집품 장터",
     "why": "우표와 주화를 파는 수집품 장터입니다. 관심 분야가 아니면 굳이 갈 이유는 없습니다.",
     "caution": "일요일과 공휴일 오전에만 섭니다."
   },
   "alicante-wd-estadio-jose-rico-perez": {
-    "name": "호세 리코 페레스 경기장",
     "summary": "에르쿨레스 CF의 홈구장",
     "why": "에르쿨레스 CF의 홈구장입니다. 1982년 월드컵 경기가 열렸던 경기장입니다."
   },
   "alicante-wd-benacantil": {
-    "name": "베나칸틸 산",
     "summary": "옆에서 보면 사람 얼굴을 닮은 166m 바위산",
     "why": "성을 이고 있는 166m 바위산입니다. 해변 쪽에서 옆으로 보면 이마와 코, 턱이 뚜렷한 사람 얼굴처럼 보여 '무어인의 얼굴'이라 불립니다."
   },
   "alicante-wd-co-cathedral-of-st-nicholas-of-bari": {
-    "name": "산 니콜라스 공동주교좌성당",
     "summary": "푸른 돔과 절제된 내부의 17세기 성당",
     "why": "17세기에 지은 공동주교좌성당입니다. 스페인 성당치고 장식이 절제돼 있어, 화려한 바로크에 지쳤을 때 오히려 인상적입니다."
   },
   "alicante-wd-platja-del-postiguet": {
-    "name": "포스티게트 해변",
     "summary": "성 아래 도심 해변. 걸어서 갈 수 있다",
     "why": "성 아래 도심 해변으로, 구시가에서 걸어서 갑니다. 야자수가 늘어서 있고 성이 올려다보여 배경이 좋습니다.",
     "busy": "여름에는 매우 붐빕니다"
   },
   "alicante-wd-playa-de-la-albufereta": {
-    "name": "알부페레타 해변",
     "summary": "만이 아늑해 파도가 잔잔한 해변",
     "why": "만이 아늑하게 감싸 파도가 거의 없습니다. 아이와 함께라면 도심 해변보다 안전합니다."
   },
   "alicante-wd-parque-lo-morant": {
-    "name": "로 모란트 공원",
     "summary": "시내 북쪽의 넓은 도시 공원",
     "why": "시내 북쪽의 넓은 도시 공원입니다. 관광객이 없고 그늘이 있어 쉬기 좋습니다."
   },
   "alicante-wd-lagunas-de-rabasa": {
-    "name": "라바사 습지",
     "summary": "새를 관찰할 수 있는 근교 습지",
     "why": "도시 근교의 습지로 새를 관찰할 수 있습니다. 도시 한복판에 이런 곳이 남아 있다는 것이 의외입니다."
   },
   "alicante-wd-plaza-de-toros-de-alicante": {
-    "name": "알리칸테 투우장",
     "summary": "1888년에 지은 투우장",
     "why": "1888년에 지은 투우장입니다. 축제 기간에만 경기가 열립니다."
   },
   "alicante-wd-lonja-del-pescado-alicante": {
-    "name": "옛 어시장(론하)",
-    "theme": "landmark",
     "summary": "네오무데하르 옛 수산시장. 지금은 전시장",
     "why": "네오무데하르 양식으로 지은 옛 수산시장 건물입니다. 지금은 전시장으로 쓰여, 그날 전시에 따라 들어가 볼 수 있습니다."
   },
   "alicante-wd-estadio-antonio-solana": {
-    "name": "안토니오 솔라나 경기장",
     "summary": "시내의 소규모 축구 경기장",
     "why": "시내의 소규모 축구 경기장입니다. 경기가 없으면 볼 것이 없습니다."
-  },
-  "alicante-restaurante-capri": {
-    "name": "카프리",
-    "desc": "타파스 수준이 높은 식당입니다."
-  },
-  "alicante-el-nou-cisne": {
-    "name": "엘 노우 시스네",
-    "desc": "타파스와 라시온을 냅니다."
-  },
-  "alicante-tapeo-manila-bar-de-tapas-restaurante": {
-    "name": "타페오 마닐라",
-    "desc": "분위기 좋은 타파스 바입니다."
-  },
-  "alicante-lemongrass-explanada": {
-    "name": "레몬그라스",
-    "desc": "해변 산책로의 태국 음식점입니다."
   }
 }
