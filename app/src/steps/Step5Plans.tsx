@@ -1,30 +1,32 @@
 import { useMemo } from 'react';
-import type { City, Item, Plan, PlanStyle, Preferences, Priorities } from '../types';
+import type { City, Item, LastDayPlan, Plan, PlanStyle, Preferences, Priorities } from '../types';
+import type { BaseGroup } from '../lib/basing';
 import { buildPlans, formatTime, SLOT_LABEL } from '../lib/planner';
 import { THEME_ICON, THEME_LABEL } from '../lib/themes';
 
 /** 5단계 — 우선순위를 바탕으로 밀도가 다른 3가지 안을 만든다. */
 export default function Step5Plans({
-  items, cities, baseCities, startDate, days, prefs, priorities, chosen, onChoose, onPlans,
+  items, cities, groups, startDate, days, lastDayPlan, prefs, priorities, chosen, onChoose, onPlans,
 }: {
   items: Item[];
   cities: City[];
-  baseCities: string[];
+  groups: BaseGroup[];
   startDate: string;
   days: number;
+  lastDayPlan: LastDayPlan;
   prefs: Preferences;
   priorities: Priorities;
   chosen: PlanStyle | null;
   onChoose: (style: PlanStyle) => void;
   onPlans: (plans: Plan[]) => void;
 }) {
-  const plans = useMemo(() => {
-    const built = buildPlans({ items, cities, baseCities, startDate, days, prefs, priorities });
-    onPlans(built);
+  const { plans, dropped } = useMemo(() => {
+    const built = buildPlans({ items, groups, startDate, days, lastDayPlan, prefs, priorities });
+    onPlans(built.plans);
     return built;
     // onPlans 는 저장만 하므로 의존성에서 제외한다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, cities, baseCities, startDate, days, prefs, priorities]);
+  }, [items, groups, startDate, days, lastDayPlan, prefs, priorities]);
 
   const active = plans.find((p) => p.style === chosen) ?? plans[0];
   const cityName = (slug: string) => cities.find((c) => c.slug === slug)?.name ?? slug;
@@ -45,6 +47,12 @@ export default function Step5Plans({
     <>
       <h2>계획 3가지</h2>
       <p className="lede">같은 우선순위로 하루 밀도만 다르게 짰습니다. 탭으로 비교해 보세요.</p>
+
+      {dropped.length > 0 && (
+        <div className="notice" style={{ marginBottom: 16 }}>
+          날짜가 모자라 {dropped.join(' · ')}은 넣지 못했습니다. 일정을 늘리거나 1단계에서 도시를 줄여 보세요.
+        </div>
+      )}
 
       <div className="plan-tabs" role="group">
         {plans.map((p) => (

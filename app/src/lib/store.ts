@@ -7,13 +7,16 @@ export const DEFAULT_THEMES: Record<ThemeId, number> = {
 };
 
 export function defaultState(): TripState {
-  const today = new Date();
-  today.setDate(today.getDate() + 30);
+  const start = new Date();
+  start.setDate(start.getDate() + 30);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
   const basics: Basics = {
     country: 'spain',
-    baseCities: [],
-    startDate: today.toISOString().slice(0, 10),
-    days: 5,
+    cities: [],
+    startDate: start.toISOString().slice(0, 10),
+    endDate: end.toISOString().slice(0, 10),
+    lastDayPlan: 'morning',
     partySize: 2,
   };
   const prefs: Preferences = {
@@ -31,7 +34,7 @@ export function defaultState(): TripState {
     transport: ['walk', 'metro'],
     dayTripAppetite: 2,
   };
-  return { version: 1, step: 1, basics, prefs, priorities: {}, chosenPlan: null, savedPlans: [] };
+  return { version: 1, step: 1, basics, prefs, priorities: {}, chosenPlan: null, savedPlans: [], baseOverrides: {} };
 }
 
 /** localStorage 는 사파리 프라이빗 모드 등에서 던질 수 있으므로 항상 감싼다. */
@@ -40,7 +43,10 @@ export function loadState(): TripState {
     const raw = localStorage.getItem(KEY);
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw) as TripState;
-    if (parsed?.version !== 1) return defaultState();
+    // 1단계 구조가 바뀌어 예전 저장분은 복원하지 않는다.
+    if (parsed?.version !== 1 || !Array.isArray((parsed.basics as Basics | undefined)?.cities)) {
+      return defaultState();
+    }
     const base = defaultState();
     return {
       ...base,

@@ -1,4 +1,5 @@
-import type { City, Item, Plan, PlanDay, PlanEntry, PlanStyle, Preferences, Priorities, Slot, ThemeId } from '../types';
+import type { Item, LastDayPlan, Plan, PlanDay, PlanEntry, PlanStyle, Preferences, Priorities, Slot, ThemeId } from '../types';
+import type { BaseGroup } from './basing';
 import { rankItems } from './scoring';
 import { distanceKm, hasCoords, travelMinutes, walkKmOf } from './geo';
 
@@ -103,6 +104,7 @@ function buildDay(
   dayIndex: number,
   city: string,
   isDayTrip: boolean,
+  morningOnly = false,
 ): PlanDay {
   const inCity = pool.filter((p) => !used.has(p.item.id) && p.item.city === city);
   const anchor = inCity.find((p) => p.item.theme !== 'food' && p.item.theme !== 'nightlife');
@@ -116,8 +118,9 @@ function buildDay(
 
   // 당일치기는 오가는 시간이 있어 하루가 늦게 시작하고 일찍 끝난다.
   const start = DAY_START[prefs.dayStart] + (isDayTrip ? 75 : 0);
-  const specs = spec.slots(start);
-  const lastCall = isDayTrip ? 20 * 60 : 24 * 60 + 30;
+  // 도착일 오전만 쓰는 경우 점심 전에 끝낸다.
+  const specs = spec.slots(start).filter((s) => (morningOnly ? s.slot === 'morning' : true));
+  const lastCall = morningOnly ? 13 * 60 : isDayTrip ? 20 * 60 : 24 * 60 + 30;
 
   const entries: PlanEntry[] = [];
   let clock = start;
@@ -146,58 +149,70 @@ function buildDay(
 
 export interface PlanInput {
   items: Item[];
-  cities: City[];
-  baseCities: string[];
+  /** 1단계에서 판정한 거점과 근교. 근교는 사용자가 직접 고른 곳이므로 반드시 넣는다. */
+  groups: BaseGroup[];
   startDate: string;
   days: number;
+  lastDayPlan: LastDayPlan;
   prefs: Preferences;
   priorities: Priorities;
 }
 
+/** 고른 근교를 다 넣지 못했을 때 알려 주기 위한 값. */
+export interface PlanWarning { kind: 'daytrip-dropped'; cities: string[] }
+
 /**
- * 여행 일수를 도시에 배분한다.
- * 거점 도시를 순서대로 채우고, 당일치기 의향이 있으면 3일차 이후 하루를
- * 근교 도시에 내준다.
+ * 일자별로 어느 도시에 있을지 정한다.
+ *
+ * 근교 도시는 사용자가 직접 고른 곳이므로 "여유가 되면"이 아니라 반드시 넣는다.
+ * 거점에 최소 하루는 남겨야 하므로, 날이 모자라면 들어가지 못한 근교를 알려 준다.
  */
-function assignCities(input: PlanInput): { city: string; isDayTrip: boolean }[] {
-  const { baseCities, days, prefs, cities, items } = input;
-  const byCity = new Map(cities.map((c) => [c.slug, c]));
-  const itemCityCount = new Map<string, number>();
-  for (const it of items) itemCityCount.set(it.city, (itemCityCount.get(it.city) ?? 0) + 1);
-
+function assignCities(groups: BaseGroup[], totalDays: number): {
+  schedule: { city: string; isDayTrip: boolean }[];
+  dropped: string[];
+} {
   const schedule: { city: string; isDayTrip: boolean }[] = [];
-  const perCity = Math.max(1, Math.floor(days / baseCities.length));
-  for (const slug of baseCities) {
-    for (let i = 0; i < perCity && schedule.length < days; i++) schedule.push({ city: slug, isDayTrip: false });
-  }
-  while (schedule.length < days) schedule.push({ city: baseCities[baseCities.length - 1], isDayTrip: false });
+  const dropped: string[] = [];
 
-  if (prefs.dayTripAppetite >= 2 && days >= 3) {
-    const swaps = prefs.dayTripAppetite >= 3 ? Math.min(2, Math.floor(days / 3)) : 1;
-    let done = 0;
-    for (let i = 2; i < schedule.length && done < swaps; i++) {
-      const hub = byCity.get(schedule[i].city);
-      const trip = hub?.dayTrips
-        .filter((t) => (itemCityCount.get(t.city) ?? 0) >= 8)
-        .sort((a, b) => (itemCityCount.get(b.city) ?? 0) - (itemCityCount.get(a.city) ?? 0))[0];
-      if (!trip) continue;
-      if (schedule.some((s) => s.city === trip.city)) continue;
-      schedule[i] = { city: trip.city, isDayTrip: true };
-      done++;
-    }
+  for (const g of groups) {
+    const nights = Math.max(1, g.nights);
+    // 거점에 최소 하루는 남긴다. 근교만 다니다 끝나면 묵는 의미가 없다.
+    const tripSlots = Math.max(0, Math.min(g.dayTrips.length, nights - 1));
+    const trips = g.dayTrips.slice(0, tripSlots);
+    dropped.push(...g.dayTrips.slice(tripSlots).map((t) => t.city.name));
+
+    const baseDays = nights - trips.length;
+    // 첫날은 거점에서 시작한다. 도착 직후 먼 이동을 시키지 않기 위해서다.
+    for (let i = 0; i < baseDays; i++) schedule.push({ city: g.base.slug, isDayTrip: false });
+    const inserted = trips.map((t) => ({ city: t.city.slug, isDayTrip: true }));
+    // 근교를 거점 일정 사이에 끼워 넣어 이동이 몰리지 않게 한다.
+    inserted.forEach((d, i) => schedule.splice(Math.min(1 + i * 2, schedule.length), 0, d));
   }
-  return schedule;
+
+  while (schedule.length > totalDays) schedule.pop();
+  while (schedule.length < totalDays && schedule.length > 0) {
+    schedule.push(schedule[schedule.length - 1]);
+  }
+  return { schedule, dropped };
 }
 
-export function buildPlans(input: PlanInput): Plan[] {
+export function buildPlans(input: PlanInput): { plans: Plan[]; dropped: string[] } {
   const ranked = rankItems(input.items, input.prefs, input.priorities).filter((r) => r.score > -20);
-  const schedule = assignCities(input);
+  const { schedule, dropped } = assignCities(input.groups, input.days);
 
-  return STYLES.map((spec) => {
+  const plans = STYLES.map((spec) => {
     const used = new Set<string>();
-    const days: PlanDay[] = schedule.map((s, i) =>
-      buildDay(ranked, used, spec, input.prefs, addDays(input.startDate, i), i + 1, s.city, s.isDayTrip),
-    );
+    const days: PlanDay[] = schedule.map((s, i) => {
+      const isLast = i === schedule.length - 1;
+      const lastDay = isLast ? input.lastDayPlan : 'full';
+      if (lastDay === 'none') {
+        return { date: addDays(input.startDate, i), dayIndex: i + 1, city: s.city, isDayTrip: s.isDayTrip, entries: [], walkKm: 0 };
+      }
+      return buildDay(
+        ranked, used, spec, input.prefs, addDays(input.startDate, i), i + 1,
+        s.city, s.isDayTrip, lastDay === 'morning',
+      );
+    });
 
     const all = days.flatMap((d) => d.entries.map((e) => e.item));
     const themeMix: Partial<Record<ThemeId, number>> = {};
@@ -216,6 +231,8 @@ export function buildPlans(input: PlanInput): Plan[] {
       },
     };
   });
+
+  return { plans, dropped };
 }
 
 export function formatTime(min: number): string {

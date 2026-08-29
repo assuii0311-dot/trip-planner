@@ -26,6 +26,11 @@ const has = (n) => rest.includes(`--${n}`);
 const registry = await import(`./registry/${countrySlug}.mjs`);
 const { COUNTRY, CITIES, ATTRIBUTION } = registry;
 
+/** 도시 성격 프로필과 사진. 1단계 카드와 취향 역산에 쓴다. */
+const { CHARACTER, MACRO_REGIONS } = await import(`./registry/${countrySlug}-character.mjs`);
+const media = JSON.parse(await readFile(new URL(`./out/${countrySlug}-media.json`, import.meta.url), 'utf8').catch(() => '{}'));
+const macroOf = (region) => MACRO_REGIONS.find((m) => m.regions.includes(region))?.id ?? 'other';
+
 /** 도시당 아이템 상한. 거점은 더 많이, 근교는 하루치면 충분하다. */
 const CAP = { hub: Number(flag('cap-hub') ?? 70), satellite: Number(flag('cap-sat') ?? 40) };
 const MIN_ITEMS = 12;
@@ -315,11 +320,36 @@ for (const [i, city] of selected.entries()) {
     JSON.stringify(finalItems),
   );
 
+  const ch = CHARACTER[city.slug] ?? {};
   outCities.push({
-    slug: city.slug, name: city.name, nameEn: city.nameEn, region: city.region,
-    lat: city.lat, lon: city.lon, isHub: !!city.isHub, hub: city.hub ?? null,
+    slug: city.slug, name: city.name, nameEn: city.nameEn,
+    region: city.region, macroRegion: macroOf(city.region),
+    lat: city.lat, lon: city.lon,
+    // isHub/hub 는 '보통 이렇게 묵는다'는 참고값이다.
+    // 실제 거점은 사용자가 고른 도시 조합을 보고 앱이 다시 정한다.
+    isHub: !!city.isHub, hub: city.hub ?? null,
     dayTrips: city.dayTrips ?? [], itemCount: finalItems.length, themes,
-    blurb: city.blurb, transitGuide: city.transitGuide,
+    transitGuide: city.transitGuide,
+    // 도시 성격 — 취향 역산과 1단계 카드의 재료
+    tagline: ch.tagline ?? city.blurb,
+    suitedFor: ch.suitedFor ?? null,
+    highlights: ch.highlights ?? [],
+    season: ch.season ?? null,
+    profile: ch.profile ?? null,
+    nights: ch.nights ?? [1, 2],
+    firstTimer: !!ch.firstTimer,
+    tags: ch.tags ?? [],
+    // 앱에 함께 넣은 사진을 쓴다. 원격 링크로 두면 오프라인에서 비고,
+    // 위키미디어에 닿지 못하는 망에서는 아예 안 보인다.
+    photo: media[city.slug] ? `city/${city.slug}.jpg` : null,
+    photoCredit: media[city.slug]
+      ? {
+          author: media[city.slug].photoAuthor,
+          license: media[city.slug].photoLicense,
+          source: media[city.slug].photo,
+        }
+      : null,
+    wikidata: media[city.slug]?.wikidata ?? null,
   });
   report.push({ city: city.name, slug: city.slug, sights: finalItems.filter(isSight).length, items: finalItems.length, headline: headlines.get(city.slug) ?? 0, themes: Object.keys(themes).length, translated: finalItems.filter((e) => ko[e.id]).length, filled: filled.get(city.slug) ?? 0 });
 }
@@ -331,6 +361,7 @@ await writeFile(
     country: COUNTRY.slug, name: COUNTRY.name,
     generatedAt: new Date().toISOString().slice(0, 10),
     attribution: ATTRIBUTION,
+    macroRegions: MACRO_REGIONS,
     cities: outCities,
   }),
 );

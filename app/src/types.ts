@@ -44,22 +44,42 @@ export interface DayTrip {
   note: string;
 }
 
+export interface Season { best: string; note: string }
+
 export interface City {
   slug: string;
   name: string;
   nameEn: string;
   region: string;
+  /** 목록을 훑을 수 있게 15개 지역을 6개 권역으로 묶은 값. */
+  macroRegion: string;
   lat: number;
   lon: number;
-  /** 거점 도시면 true. 근교 도시는 hub 에 거점 slug 가 들어간다. */
+  /** '보통 이렇게 묵는다'는 참고값. 실제 거점은 선택 조합을 보고 다시 정한다. */
   isHub: boolean;
   hub: string | null;
   dayTrips: DayTrip[];
   itemCount: number;
   themes: Partial<Record<ThemeId, number>>;
-  blurb: string;
   transitGuide: TransitGuide;
+
+  /** ── 도시 성격. 1단계 카드와 취향 역산에 쓴다. ── */
+  tagline: string;
+  suitedFor: string | null;
+  highlights: string[];
+  season: Season | null;
+  /** 사람이 판단해 적은 테마별 성격 점수 0~3. 수집된 아이템 수가 아니다. */
+  profile: Record<ThemeId, number> | null;
+  /** [최소, 권장] 박수. 0 이면 당일치기로 충분하다는 뜻. */
+  nights: [number, number];
+  firstTimer: boolean;
+  tags: string[];
+  photo: string | null;
+  photoCredit: { author: string | null; license: string | null; source: string } | null;
+  wikidata: string | null;
 }
+
+export interface MacroRegion { id: string; name: string; regions: string[] }
 
 export interface TransitGuide {
   passes: { name: string; price: string; note: string }[];
@@ -67,12 +87,17 @@ export interface TransitGuide {
   tips: string[];
 }
 
+/** 도착일에 일정을 얼마나 넣을지. 오후 비행기가 가장 흔해 기본은 오전만. */
+export type LastDayPlan = 'none' | 'morning' | 'full';
+
 /** 1단계 — 기초 정보. */
 export interface Basics {
   country: string;
-  baseCities: string[];
+  /** 사용자가 고른 도시. 거점인지 근교인지는 앱이 판정한다. */
+  cities: string[];
   startDate: string;
-  days: number;
+  endDate: string;
+  lastDayPlan: LastDayPlan;
   partySize: number;
 }
 
@@ -133,4 +158,8 @@ export interface TripState {
   priorities: Priorities;
   chosenPlan: PlanStyle | null;
   savedPlans: Plan[];
+  /** 앱이 제안한 거점을 사용자가 바꿨을 때. 그룹 인덱스 → 도시 slug. */
+  baseOverrides: Record<number, string>;
+  /** 2단계에서 역산 결과를 한 번이라도 확인했는지. */
+  tasteConfirmed?: boolean;
 }
