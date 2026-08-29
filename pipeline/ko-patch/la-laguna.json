@@ -1,207 +1,160 @@
 {
   "la-laguna-ca-zona": {
-    "name": "카 소나",
     "summary": "카나리아 전통 요리를 내는 인기 식당",
     "why": "카나리아 전통 요리를 내는 인기 식당입니다. 값이 눅어 학생 도시인 이 마을과 잘 맞습니다."
   },
   "la-laguna-los-tarajales": {
-    "name": "로스 타라할레스",
     "summary": "천연 수영장 근처의 파인다이닝",
     "why": "바하마르 천연 수영장 근처의 파인다이닝 식당입니다. 해안까지 나간 김에 한 끼를 제대로 쓸 때 갑니다."
   },
   "la-laguna-guanchinche-paraiso": {
-    "name": "관친체 파라이소",
     "summary": "'관친체'는 카나리아식 소박한 밥집",
     "why": "'관친체'는 원래 와인을 팔던 집에서 밥까지 내주던 카나리아식 식당을 말합니다. 주름감자에 모호 소스를 찍어 먹는 것이 여기서는 기본입니다."
   },
   "la-laguna-tasca-la-venta-de-la-esquina": {
-    "name": "라 벤타 데 라 에스키나",
     "summary": "활기찬 타파스 집. 카나리아 향토 안주",
     "why": "활기찬 타파스 집으로 카나리아 향토 안주를 냅니다. 자정까지 열어 저녁 마무리로 씁니다."
   },
   "la-laguna-cafe-7": {
-    "name": "카페 7",
     "summary": "뒷마당이 조용한 대안적 분위기의 바",
     "why": "대안적인 분위기의 바로, 뒷마당이 조용합니다. 학생 도시답게 밤늦게까지 사람이 있습니다."
   },
   "la-laguna-cathedral-of-san-cristobal-de-la-laguna": {
-    "name": "라 라구나 대성당",
     "summary": "신고전 정면에 네오고딕 내부",
     "why": "정면은 신고전, 안은 네오고딕으로 시대가 갈립니다. 라 라구나가 이 섬의 첫 수도였다는 사실이 이 성당의 규모로 설명됩니다."
   },
   "la-laguna-church-of-the-immaculate-conception": {
-    "name": "라 콘셉시온 성당",
     "summary": "섬 최초의 성당. 무데하르 목조 천장과 종탑",
     "why": "이 섬에서 처음 세운 성당입니다. 무데하르 목조 천장이 남아 있고, 종탑에 오르면 격자로 반듯한 구시가가 발밑에 깔립니다."
   },
   "la-laguna-church-of-st-dominic-of-guzman": {
-    "name": "산토 도밍고 성당",
     "summary": "16세기에 시작된 성당",
     "why": "16세기에 짓기 시작한 성당입니다. 구시가 골목을 걷다 지나갑니다."
   },
   "la-laguna-convent-of-santa-clara-of-assisi": {
-    "name": "산타 클라라 수녀원",
     "summary": "지금도 수녀들이 사는 프란치스코회 수녀원",
     "why": "지금도 봉쇄 수녀들이 사는 수녀원입니다. 정해진 요일에만 일부를 공개하고, 무데하르 목조 천장이 남아 있습니다.",
     "caution": "화·목·토요일에만 엽니다."
   },
   "la-laguna-convent-of-santa-catalina-de-siena": {
-    "name": "산타 카탈리나 수녀원",
     "summary": "목조 발코니가 인상적인 도미니코회 수녀원",
     "why": "아델란타도 광장에 면한 도미니코회 수녀원입니다. 길게 뻗은 목조 발코니가 카나리아 건축의 특징을 그대로 보여 줍니다."
   },
   "la-laguna-museum-of-science-and-the-cosmos": {
-    "name": "과학·우주 박물관",
     "summary": "직접 만지며 배우는 과학관. 무료",
     "why": "직접 만지고 조작하는 전시가 중심인 과학관입니다. 테네리페는 세계적인 천문 관측지라 우주 전시가 특히 충실하고, 무료입니다."
   },
   "la-laguna-cabrera-pinto-institute-museum": {
-    "name": "카브레라 핀토 학교 박물관",
     "summary": "카나리아에서 가장 오래된 대학이 있던 건물",
     "why": "카나리아 제도 최초의 대학이 있던 건물입니다. 옛 강의실과 자연사 표본실이 그대로 남아, 19세기 교육 현장을 볼 수 있습니다."
   },
   "la-laguna-casa-lercaro-museum-of-the-history-of-tenerife": {
-    "name": "테네리페 역사박물관(레르카로 저택)",
     "summary": "16세기 저택의 테네리페 역사박물관",
     "why": "16세기 제노바 상인의 저택을 쓰는 역사박물관입니다. 정복 이후 이 섬이 대서양 무역의 중간 기착지가 된 과정을 다룹니다."
   },
   "la-laguna-royal-sanctuary-of-the-christ-of-la-laguna": {
-    "name": "크리스토 데 라 라구나 성지",
-    "theme": "history",
     "summary": "섬 사람들이 가장 각별히 여기는 그리스도상",
     "why": "16세기 플랑드르에서 온 그리스도상을 모신 성지입니다. 테네리페 사람들이 가장 각별히 여기는 신앙의 중심이라, 9월 축제 때 섬 전체가 여기로 모입니다."
   },
   "la-laguna-casa-salazar": {
-    "name": "살라사르 저택",
     "summary": "라 라구나에서 손꼽히는 바로크 저택",
     "why": "라 라구나에서 손꼽히는 바로크 저택으로, 지금은 주교관입니다. 화재 뒤 복원해 정면이 깨끗합니다."
   },
   "la-laguna-mesa-mota-monument": {
-    "name": "메사 모타 기념비",
     "summary": "1977년 공항 참사 기념물. 도시 전경도 보인다",
     "why": "1977년 테네리페 공항에서 여객기 두 대가 충돌해 583명이 숨진 항공 사고를 기리는 기념물입니다. 언덕 위라 라 라구나 평원이 함께 내려다보입니다."
   },
   "la-laguna-st-juan-bautista-cemetery": {
-    "name": "산 후안 바우티스타 묘지",
     "summary": "공항 참사 희생자들을 모신 묘지",
     "why": "1977년 공항 참사 희생자들을 급히 모신 묘지입니다. 관광지가 아니라 조용히 다녀오는 자리입니다."
   },
   "la-laguna-anaga-national-park-visitor-centre": {
-    "name": "아나가 방문자 센터",
     "summary": "월계수 원시림 아나가 공원의 안내소",
     "why": "빙하기 이전 월계수 원시림이 남은 아나가 자연공원의 안내소입니다. 지도와 코스 정보를 받을 수 있어, 숲에 들어가기 전에 들르는 것이 순서입니다."
   },
   "la-laguna-mirador-de-jardina": {
-    "name": "하르디나 전망대",
     "summary": "아나가 산줄기에서 가장 좋은 전망 중 하나",
     "why": "아나가 산줄기에서 손꼽히는 전망대입니다. 라 라구나 평원과 산 사이에 구름이 걸리는 날이 특히 좋습니다."
   },
   "la-laguna-mirador-de-aguaide": {
-    "name": "아과이데 전망대",
     "summary": "아나가 해안선이 내려다보이는 전망대",
     "why": "아나가 해안선이 발밑으로 내려다보이는 전망대입니다. 주차 지점에서 조금만 걸으면 됩니다."
   },
   "la-laguna-palmelita": {
-    "name": "팔멜리타",
-    "theme": "food",
-    "bestSlots": [
-      "morning"
-    ],
     "summary": "야외 자리에서 종탑이 보이는 카페",
     "why": "야외 자리에서 성당 종탑이 정면으로 보이는 카페입니다. 구시가 산책 중간에 앉기 좋습니다."
   },
   "la-laguna-kactus": {
-    "name": "칵투스",
     "summary": "시내에서 가장 큰 기념품 가게",
     "why": "시내에서 가장 큰 기념품 가게입니다. 화산재를 넣은 엽서 같은 이 섬다운 물건이 있습니다."
   },
   "la-laguna-pampling": {
-    "name": "팜플링",
     "summary": "작가들이 디자인한 티셔츠 가게",
     "why": "여러 나라 작가들이 디자인한 티셔츠를 파는 가게입니다. 부피가 작아 기념품으로 쓰기 좋습니다."
   },
   "la-laguna-church-of-the-dolores-hospital": {
-    "name": "돌로레스 병원 성당",
     "summary": "옛 수도원과 병원 사이의 성당",
     "why": "옛 수도원과 병원 사이에 있는 성당입니다. 구시가 골목을 걷다 지나갑니다."
   },
   "la-laguna-leal-theater": {
-    "name": "레알 극장",
     "summary": "절충주의 극장. 영화와 공연이 열린다",
     "why": "절충주의 양식 극장으로, 영화 상영과 공연이 함께 열립니다. 안의 천장화가 볼거리입니다."
   },
   "la-laguna-fundacion-cristino-de-vera": {
-    "name": "크리스티노 데 베라 재단",
     "summary": "테네리페 출신 화가의 작품을 모은 재단. 무료",
     "why": "테네리페 출신 화가 크리스티노 데 베라의 작품을 모은 재단입니다. 무료이고 규모가 작습니다."
   },
   "la-laguna-convent-of-st-agustin": {
-    "name": "산 아구스틴 수도원",
     "summary": "화재로 지붕이 무너진 성당. 폐허 그대로",
     "why": "화재로 지붕이 무너진 성당에 붙은 수도원입니다. 하늘이 그대로 보이는 폐허 상태로 두어, 복원한 건물들 사이에서 유독 인상적입니다."
   },
   "la-laguna-dialprix": {
-    "name": "디알프릭스",
     "summary": "간식과 음료를 파는 작은 슈퍼마켓",
     "why": "간식과 음료를 파는 작은 슈퍼마켓입니다."
   },
   "la-laguna-spar": {
-    "name": "스파르",
     "summary": "과일과 채소를 파는 작은 슈퍼마켓",
     "why": "과일과 채소, 빵을 파는 작은 슈퍼마켓입니다. 숙소에서 해 먹을 때 씁니다."
   },
   "la-laguna-mercado-municipal-de-la-laguna": {
-    "name": "시립 시장",
-    "bestSlots": [
-      "morning"
-    ],
     "summary": "과일과 채소, 수공예품을 파는 시립 시장",
     "why": "과일과 채소, 수공예품을 파는 시립 시장입니다. 열대 과일이 본토와 달라 구경만으로도 재미가 있습니다.",
     "caution": "오전에만 엽니다. 8월 목요일 저녁 개장은 쉽니다."
   },
   "la-laguna-ale-hop": {
-    "name": "알레홉",
     "summary": "젖소 인형이 서 있는 잡화·기념품 체인",
     "why": "문 앞에 커다란 젖소 인형이 튀어나와 있는 것으로 알아보는 잡화·기념품 체인입니다."
   },
   "la-laguna-church-of-st-juan-bautista": {
-    "name": "산 후안 바우티스타 성당",
     "summary": "무데하르 천장이 남은 단랑식 성당",
     "why": "본당이 한 칸으로 된 단랑식 성당으로, 무데하르 목조 천장이 남아 있습니다. 카나리아 초기 성당의 형태입니다."
   },
   "la-laguna-adrian-aleman-de-armas-library": {
-    "name": "아드리안 알레만 도서관",
     "summary": "역사적 건물에 자리한 공공 도서관",
     "why": "역사적 건물을 쓰는 공공 도서관입니다. 무료이고 조용해 잠깐 쉬기 좋습니다."
   },
   "la-laguna-royal-economic-society-of-friends-of-the-country": {
-    "name": "왕립 경제협회",
     "summary": "18세기 후반에 세운 학술 단체",
     "why": "18세기 계몽주의 시기에 세운 학술 단체입니다. 이 섬의 근대 교육과 출판이 여기서 시작됐습니다."
   },
   "la-laguna-natural-pools-of-bajamar": {
-    "name": "바하마르 천연 수영장",
     "summary": "해안 화산암에 만든 바닷물 수영장 세 곳",
     "why": "해안 화산암 지대에 만든 바닷물 수영장 세 곳입니다. 파도는 막고 바닷물은 드나들어, 대서양의 거친 파도를 피해 헤엄칠 수 있습니다.",
     "caution": "파도가 센 날에는 물이 넘어옵니다. 안내를 따르세요."
   },
   "la-laguna-sexboutique": {
-    "name": "섹스 부티크",
     "summary": "성인용품 가게",
     "why": "성인용품 가게입니다."
   },
   "la-laguna-momentos": {
-    "name": "모멘토스",
     "summary": "선물용 소품을 파는 가게",
     "why": "선물용 소품을 파는 가게입니다."
   },
   "la-laguna-house-of-the-general-captains": {
-    "name": "총사령관의 집",
     "summary": "17세기 초 저택. 카나리아 전통 목조 안뜰",
     "why": "17세기 초에 지은 저택으로, 카나리아 전통 목조 안뜰이 남아 있습니다. 이 지역 저택이 어떤 구조였는지 보여 줍니다."
   },
   "la-laguna-mirador-cruz-del-carmen": {
-    "name": "크루스 델 카르멘 전망대",
     "summary": "해발 920m 전망대. 평원과 아나가 숲이 함께",
     "why": "해발 920m 전망대로, 라 라구나 평원과 아나가 월계수 숲이 한 화면에 들어옵니다. 방문자 센터가 붙어 있어 트레킹 출발점으로도 씁니다.",
     "caution": "구름이 걸리는 날이 잦습니다. 날씨를 확인하고 가세요."

@@ -91,6 +91,7 @@ const DROP_IDS = new Set([
   'palma-wd-arab-baths-of-palma-de-mallorca',   // = palma-banys-arabs
   'palma-wd-poble-espanyol-de-palma',           // = palma-pueblo-espanol
   'palma-wd-museu-fundacio-juan-march',         // = palma-fundacion-juan-march-palma
+  'santa-cruz-tenerife-wd-museum-of-science-and-the-cosmos', // 실제로는 라라구나에 있다
 ]);
 const isSight = (it) => it.theme !== 'food' && it.theme !== 'nightlife';
 
