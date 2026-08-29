@@ -78,6 +78,10 @@ const DROP_IDS = new Set([
   'santander-wd-museo-de-arte-moderno-y-contemporaneo-de-santand', // = santander-museum-of-modern-contemporary-art
   'santander-wd-museo-de-prehistoria-y-arqueologia-de-cantabria',  // = santander-museum-of-prehistory-and-archaeology-of-cantabri
   'santander-wd-faro-de-cabo-mayor', // = santander-faro-cabo-mayor-art-centre
+  'santiago-wd-galicia-contemporary-art-center', // = santiago-cgac-galician-centre-for-contemporary-art
+  'a-coruna-wd-casa-del-hombre-la-coruna',       // = a-coruna-domus
+  'a-coruna-wd-iglesia-de-santiago',             // = a-coruna-church-of-santiago
+  'a-coruna-wd-casa-de-las-ciencias-la-coruna',  // = a-coruna-casa-das-ciencias
 ]);
 const isSight = (it) => it.theme !== 'food' && it.theme !== 'nightlife';
 

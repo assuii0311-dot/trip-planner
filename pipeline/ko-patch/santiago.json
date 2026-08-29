@@ -1,267 +1,201 @@
 {
   "santiago-restaurante-petiscos": {
-    "name": "페티스코스",
     "summary": "점심 정식이 특히 가성비가 좋다",
     "why": "점심 정식이 값 대비 구성이 좋습니다. 순례를 마치고 배가 고픈 상태로 가기 좋습니다."
   },
   "santiago-don-quijote": {
-    "name": "돈키호테",
     "summary": "관광지에서 살짝 벗어난 정갈한 스페인 식당",
     "why": "관광 동선에서 한 발 벗어난 정갈한 식당입니다. 순례객 붐빔에서 벗어나고 싶을 때 갑니다."
   },
   "santiago-taberna-o-gato-negro": {
-    "name": "오 가토 네그로",
     "summary": "꾸밈없는 전통 선술집. 문어와 피멘토스",
     "why": "메뉴판도 제대로 없는 꾸밈없는 선술집입니다. 삶은 문어(풀포)와 파드론 고추 볶음을 시키는 것이 이 집의 순서입니다."
   },
   "santiago-casa-marcelo": {
-    "name": "카사 마르셀로",
     "summary": "갈리시아 재료에 일본식 감각을 더한 미슐랭 1스타",
     "why": "갈리시아 재료를 일본식 감각으로 다루는 미슐랭 1스타입니다. 공용 테이블에 앉아 나눠 먹는 방식이라 격식이 없습니다.",
     "booking": "예약을 권합니다"
   },
   "santiago-mama-peixe-taberna": {
-    "name": "마마 페이세",
     "summary": "해산물이 좋은 아담한 선술집",
     "why": "아담한 선술집인데 해산물 수준이 높습니다. 갈리시아는 스페인에서 해산물이 가장 좋은 지역입니다."
   },
   "santiago-restaurante-terra-nosa": {
-    "name": "테라 노사",
     "summary": "인테리어는 소박하지만 해산물이 훌륭하다",
     "why": "실내는 밋밋하지만 해산물이 훌륭합니다. 겉모습으로 판단하면 놓치는 집입니다."
   },
   "santiago-restaurante-pedro-roca": {
-    "name": "페드로 로카",
     "summary": "음식과 서비스 수준이 높은 갈리시아 요리",
     "why": "갈리시아 요리를 높은 수준으로 내는 식당입니다. 영업일이 들쭉날쭉하니 확인하고 가세요.",
     "caution": "월·수·목요일에 쉽니다."
   },
   "santiago-los-caracoles": {
-    "name": "로스 카라콜레스",
     "summary": "전통 갈리시아 음식을 내는 집",
     "why": "전통 갈리시아 음식을 제대로 내는 집입니다. 무난하고 실패가 적습니다."
   },
   "santiago-o-sendeiro": {
-    "name": "오 센데이로",
     "summary": "꾸준한 품질의 동네 식당",
     "why": "품질이 꾸준한 동네 식당입니다. 주말에는 아침부터 열어 시간을 맞추기 쉽습니다."
   },
   "santiago-don-gaiferos": {
-    "name": "돈 가이페로스",
     "summary": "음식과 응대가 좋은 식당",
     "why": "음식과 응대가 모두 좋은 식당입니다. 낮 시간대가 길어 늦은 점심에도 갈 수 있습니다."
   },
   "santiago-curro-da-parra": {
-    "name": "쿠로 다 파라",
     "summary": "현대적인 갈리시아 요리를 내는 작은 식당",
     "why": "전통 재료를 현대적으로 다루는 작은 식당입니다. 노포와는 다른 감각을 보고 싶을 때 갑니다."
   },
   "santiago-a-noiesa": {
-    "name": "아 노이에사",
     "summary": "아늑한 비스트로",
     "why": "아늑한 비스트로입니다. 하루 종일 열어 시간을 가리지 않습니다."
   },
   "santiago-restaurante-tarara": {
-    "name": "타라라",
     "summary": "값싸게 해산물을 먹을 수 있는 집",
     "why": "값싸게 해산물을 먹을 수 있는 집입니다. 예산을 아끼면서 갈리시아 바다를 맛보고 싶을 때 씁니다."
   },
   "santiago-a-horta-d-obradoiro": {
-    "name": "아 오르타 도브라도이로",
     "summary": "대성당 뒤편의 향토 요리 식당. 평이 좋다",
     "why": "대성당 뒤편 조용한 골목에 있는 향토 요리 식당입니다. 위치가 좋으면서 관광지 값이 아닙니다."
   },
   "santiago-catedral-de-santiago-de-compostela": {
-    "name": "산티아고 대성당",
-    "durationMin": 120,
     "summary": "순례길의 종착지. 사도 야고보의 무덤",
     "why": "유럽 전역에서 걸어온 순례자들이 도착하는 종착지입니다. 사도 야고보의 유해를 모셨다는 지하 묘소가 있고, 배낭을 멘 사람들이 광장에 주저앉는 그 장면이 이 도시의 본체입니다.",
     "booking": "지붕 투어와 영광의 문은 예약이 따로 필요합니다",
     "caution": "거대한 향로(보타푸메이로)를 흔드는 것은 정해진 미사에서만 합니다. 일정을 확인하세요."
   },
   "santiago-museum-of-the-cathedral-of-santiago": {
-    "name": "대성당 박물관",
     "summary": "회랑과 보물실, 태피스트리를 함께 본다",
     "why": "대성당의 회랑과 보물실, 고야 밑그림으로 짠 태피스트리를 봅니다. 성당 본당만 보고 나오면 놓치는 부분입니다."
   },
   "santiago-museum-of-sacred-art-of-the-collegiate-church-of": {
-    "name": "사르 성당 성미술관",
     "summary": "기둥이 기울어진 사르 성당의 성미술관",
     "why": "기둥이 눈에 띄게 기울어진 사르 성당에 딸린 작은 성미술관입니다. 성당 자체가 더 볼거리입니다."
   },
   "santiago-monasterio-de-san-martino-pinario": {
-    "name": "산 마르티뇨 피나리오 수도원",
     "summary": "스페인에서 두 번째로 큰 수도원",
     "why": "스페인에서 두 번째로 큰 수도원입니다. 대성당 바로 옆인데 규모는 오히려 더 커서, 광장에서 보면 어느 쪽이 성당인지 헷갈립니다."
   },
   "santiago-palacio-de-rajoy": {
-    "name": "라호이 궁",
     "summary": "오브라도이로 광장의 신고전 건물. 지금은 시청",
     "why": "오브라도이로 광장 한 면을 차지한 신고전주의 건물로, 지금은 시청입니다. 광장 사면이 각각 다른 시대·용도의 건물이라는 점이 이 광장의 특징입니다."
   },
   "santiago-museum-of-the-galician-people": {
-    "name": "갈리시아 민속 박물관",
     "summary": "삼중 나선 계단이 있는 갈리시아 민속 박물관",
     "why": "갈리시아 사람들의 생활을 다루는 박물관인데, 서로 만나지 않는 세 개의 나선 계단이 한 통 안에 얽힌 구조가 더 유명합니다. 무료입니다."
   },
   "santiago-museum-of-pilgrimages-and-santiago": {
-    "name": "순례 박물관",
     "summary": "순례가 무엇인지 설명하는 박물관. 무료",
     "why": "산티아고 순례가 어떻게 시작돼 유럽 전역으로 퍼졌는지를 다룹니다. 걷지 않고 온 사람에게는 이 도시를 이해하는 출발점이 됩니다."
   },
   "santiago-museum-of-sacred-art-of-san-paio-de-antealtares": {
-    "name": "산 파이오 성미술관",
     "summary": "베네딕도회 수녀원의 성미술관",
     "why": "대성당 뒤편 베네딕도회 수녀원의 성미술관입니다. 사도의 유해가 처음 모셔졌던 자리라 전해집니다."
   },
   "santiago-museum-of-san-martino-pinario": {
-    "name": "산 마르티뇨 피나리오 박물관",
     "summary": "수도원의 성구실과 도서관, 약제실",
     "why": "산 마르티뇨 피나리오 수도원의 성구실과 도서관, 옛 약제실을 봅니다. 바로크 제단 조각이 특히 압도적입니다."
   },
   "santiago-eugenio-granell-foundation-museum": {
-    "name": "에우헤니오 그라넬 미술관",
     "summary": "갈리시아 출신 초현실주의 화가의 미술관. 무료",
     "why": "갈리시아 출신 초현실주의 화가 에우헤니오 그라넬의 작품을 모았습니다. 저택 건물이고 무료입니다."
   },
   "santiago-casa-da-troia-museum": {
-    "name": "카사 다 트로이아",
     "summary": "19세기 대학생 하숙집을 그대로 남겼다",
     "why": "19세기 대학생 하숙집을 가구까지 그대로 남긴 곳입니다. 소설의 무대가 된 집이라, 이 도시가 오래된 대학 도시라는 사실이 실감납니다.",
     "caution": "여름과 부활절, 연휴에만 여는 경우가 많습니다."
   },
   "santiago-natural-history-museum-of-the-usc": {
-    "name": "자연사 박물관",
     "summary": "산티아고 대학이 운영하는 자연사 박물관",
     "why": "산티아고 대학이 운영하는 자연사 박물관입니다. 갈리시아의 동식물과 광물을 다룹니다."
   },
   "santiago-gaias-cidade-da-cultura": {
-    "name": "가이아스 문화도시",
-    "durationMin": 120,
     "summary": "피터 아이젠먼이 언덕 자체를 건축으로 만든 곳",
     "why": "피터 아이젠먼이 언덕의 지형을 그대로 건물 지붕으로 삼아, 건물과 땅의 경계를 지웠습니다. 계획의 절반만 짓고 중단돼 그 자체가 논쟁거리인데, 규모와 형태만으로도 볼 값어치가 있습니다.",
     "caution": "시내에서 떨어져 있어 버스나 차가 필요합니다."
   },
   "santiago-cgac-galician-centre-for-contemporary-art": {
-    "name": "CGAC 현대미술센터",
-    "theme": "art",
     "summary": "알바루 시자가 설계한 현대미술센터. 옥상 전망",
     "why": "포르투갈 건축가 알바루 시자가 설계한 갈리시아 현대미술의 중심입니다. 옥상에서 구시가와 보나발 공원이 내려다보이고, 무료입니다."
   },
   "santiago-ciac-environmental-interpretation-centre": {
-    "name": "환경 해설 센터",
-    "theme": "nature",
     "summary": "갈리시아의 자연을 설명하는 해설 센터. 무료",
     "why": "갈리시아의 자연 환경을 설명하는 해설 센터입니다. 무료이고 규모가 작습니다."
   },
   "santiago-pilgrim-house": {
-    "name": "필그림 하우스",
     "summary": "순례를 마친 사람들을 위한 쉼터",
     "why": "순례를 마친 사람들이 샤워하고 빨래하고 이야기를 나누는 쉼터입니다. 800km를 걷고 온 사람들의 이야기가 오가는 자리라, 걷지 않았어도 들러 볼 만합니다.",
     "caution": "4~10월에만, 수·일요일을 빼고 엽니다."
   },
   "santiago-pilgrim-reception-office": {
-    "name": "순례자 사무소",
     "summary": "순례 증명서를 발급받는 곳",
     "why": "마지막 100km 이상을 걸은 사람에게 순례 증명서(콤포스텔라)를 발급하는 곳입니다. 여기 줄 선 사람들의 표정만 봐도 순례가 무엇인지 짐작됩니다.",
     "busy": "여름 성수기에는 대기가 몇 시간까지 늘어납니다"
   },
   "santiago-afundacion-cultural-centre": {
-    "name": "아푼다시온 문화센터",
     "summary": "17세기 저택의 전시 공간. 무료 기획전",
     "why": "17세기 저택을 쓰는 전시 공간으로 무료 기획전이 열립니다. 구시가를 걷다 들어가 볼 만합니다."
   },
   "santiago-wd-way-of-saint-james": {
-    "name": "산티아고 순례길",
-    "durationMin": 240,
-    "energy": 5,
     "summary": "마지막 100km만 걸어도 증명서를 받는 순례길",
     "why": "유럽 각지에서 이 대성당으로 향하는 순례길입니다. 전 구간을 걸을 필요는 없고, 마지막 100km만 걸어도 순례 증명서를 받습니다. 유네스코 세계유산.",
     "caution": "증명서를 받으려면 도장이 찍힌 순례자 여권이 필요합니다."
   },
   "santiago-wd-glory-s-portico": {
-    "name": "영광의 문",
     "summary": "복원으로 원래 채색이 드러난 12세기 로마네스크 정문",
     "why": "12세기에 마테오 장인이 조각한 로마네스크 정문입니다. 최근 복원으로 원래 입혀져 있던 채색이 드러나, 800년 전 순례자가 본 색을 지금 다시 볼 수 있습니다.",
     "booking": "인원 제한이 있어 별도 예약이 필요합니다"
   },
   "santiago-wd-hospital-de-los-reyes-catolicos": {
-    "name": "왕립 순례자 병원",
     "summary": "1499년 순례자 숙소. 지금은 파라도르 호텔",
     "why": "가톨릭 양왕이 1499년에 순례자 숙소로 지은 건물로, 세계에서 가장 오래된 호텔로 꼽히기도 합니다. 지금은 파라도르라 묵지 않아도 안뜰까지는 볼 수 있습니다."
   },
   "santiago-wd-e3-european-long-distance-path": {
-    "name": "E3 장거리 도보길",
     "summary": "유럽을 가로지르는 장거리 트레일의 한 구간",
     "why": "유럽을 동서로 가로지르는 장거리 도보길의 한 구간입니다. 순례길과 겹치는 부분이 있습니다."
   },
   "santiago-wd-monte-do-gozo": {
-    "name": "몬테 도 고소",
     "summary": "순례자가 대성당 첨탑을 처음 보는 '기쁨의 언덕'",
     "why": "800km를 걸어온 순례자가 대성당 첨탑을 처음 보게 되는 언덕이라 '기쁨의 산'이라 부릅니다. 시내에서 5km 거리라, 반대로 걸어 나가 그 시선을 따라해 볼 수 있습니다."
   },
   "santiago-wd-castle-da-rocha-forte": {
-    "name": "로차 포르테 성터",
     "summary": "발굴 중인 중세 성터",
     "why": "발굴이 진행 중인 중세 성터입니다. 시 외곽에 있고 정비된 관광지는 아닙니다."
   },
   "santiago-wd-plaza-del-obradoiro": {
-    "name": "오브라도이로 광장",
     "summary": "순례를 마친 사람들이 배낭을 내려놓는 광장",
     "why": "대성당 정면이 서 있는 광장입니다. 순례를 마친 사람들이 여기 도착해 배낭을 내려놓고 주저앉는데, 그 장면이 이 도시에서 가장 오래 기억에 남습니다."
   },
   "santiago-wd-convent-of-san-domingos-de-bonaval": {
-    "name": "산 도밍고스 데 보나발 수녀원",
     "summary": "삼중 나선 계단으로 유명한 수녀원",
     "why": "서로 만나지 않는 세 개의 나선 계단이 한 통 안에 얽혀 있습니다. 지금은 갈리시아 민속 박물관이 들어서 있고, 옆의 옛 묘지 공원도 함께 걷게 됩니다."
   },
   "santiago-wd-monte-pedroso": {
-    "name": "페드로소 산",
-    "energy": 4,
     "summary": "도시 서쪽 언덕. 구시가 전경이 보인다",
     "why": "도시 서쪽 언덕으로, 정상에서 구시가와 대성당 첨탑이 한눈에 들어옵니다.",
     "caution": "오르막을 걸어야 합니다."
   },
   "santiago-wd-castrino-of-conxo": {
-    "name": "콘호 암각화 유적",
     "summary": "청동기 시대 암각화가 남은 유적",
     "why": "청동기 시대 사람들이 바위에 새긴 무늬가 남은 유적입니다. 갈리시아 곳곳에 이런 암각화가 있는데, 그중 접근이 쉬운 편입니다."
   },
-  "santiago-wd-galicia-contemporary-art-center": {
-    "name": "갈리시아 현대미술센터(CGAC)",
-    "desc": "알바루 시자가 설계한 미술관. 옥상에서 구시가가 보입니다."
-  },
   "santiago-wd-church-of-santa-maria-la-real-del-sar": {
-    "name": "사르의 산타 마리아 성당",
     "summary": "기둥이 눈에 띄게 기울어진 12세기 로마네스크 성당",
     "why": "기둥과 벽이 눈에 띄게 안쪽으로 기울어져 있습니다. 지반 문제로 그렇게 됐는데 800년을 버텨, 밖에서 버팀벽을 대고 지금도 서 있습니다."
   },
   "santiago-wd-monastery-of-saint-pelagius-of-antealtares": {
-    "name": "산 파이오 데 안테알타레스 수도원",
     "summary": "대성당 뒤편의 베네딕도회 수녀원",
     "why": "대성당 뒤편의 베네딕도회 수녀원입니다. 광장 쪽 벽면이 창 하나 없이 이어져, 킨타나 광장의 인상을 만듭니다."
   },
   "santiago-wd-pazo-de-san-lourenzo-santiago": {
-    "name": "산 로렌소 저택",
     "summary": "숲에 둘러싸인 옛 귀족 저택",
     "why": "참나무 숲에 둘러싸인 옛 귀족 저택(파소)입니다. 갈리시아 특유의 저택 형식을 보여 줍니다."
   },
   "santiago-wd-auditorio-de-galicia": {
-    "name": "갈리시아 오디토리움",
     "summary": "호수를 낀 공연장. 갈리시아 심포니의 본거지",
     "why": "호수를 낀 공연장으로 갈리시아 심포니의 본거지입니다. 공연이 없어도 주변 공원을 걷기 좋습니다."
   },
   "santiago-wd-alameda-park-santiago-de-compostela": {
-    "name": "알라메다 공원",
     "summary": "대성당 전경을 담는 대표 포토 스팟",
     "why": "구시가 옆 도심 공원으로, 참나무 산책로 끝에서 대성당 전경이 정면으로 잡힙니다. 산티아고의 대표 사진은 대부분 여기서 찍힙니다."
-  },
-  "santiago-restaurante-dubra": {
-    "name": "두브라",
-    "desc": "해산물이 대표 메뉴인 향토 식당입니다."
-  },
-  "santiago-restaurante-trebol": {
-    "name": "트레볼",
-    "desc": "해산물 평이 좋은 식당입니다."
   }
 }
