@@ -101,14 +101,30 @@ function cleanName(s) {
   return s.replace(/^(go to|visit|see|take|try|explore|wander|walk)\s+(the\s+)?/i, '').trim();
 }
 
-/** Parse a Wikivoyage price string ("€12", "free", "€8-15") into a euro number. */
-function parsePrice(raw) {
+/**
+ * Wikivoyage 가격 문자열 → 유로 숫자.
+ *
+ * 문자열에 섞인 아무 숫자나 평균 내면 안 된다. 예전 방식은
+ * "Drink + bocadillo €3-4 (Oct 2017)" 를 675 유로로 읽었고,
+ * "€15 (adults) ... free admission within 2 hours of closure" 를 무료로 읽었다.
+ * 그래서 통화 기호가 붙은 금액만 보고, 그중 첫 번째(성인 정가)를 쓴다.
+ * 금액이 하나도 없을 때만 free/gratis 를 0으로 인정한다.
+ */
+export function parsePrice(raw) {
   if (!raw) return null;
-  const s = plain(raw).toLowerCase();
+  const s = plain(raw).toLowerCase().replace(/\b(19|20)\d{2}\b/g, ' ');
+  const amounts = [];
+  // "€8-11", "€9.50", "8 euros" — 통화가 붙은 것만 센다.
+  const re = /(?:€\s*(\d+(?:[.,]\d{1,2})?)(?:\s*[-–]\s*(\d+(?:[.,]\d{1,2})?))?)|(?:(\d+(?:[.,]\d{1,2})?)\s*(?:eur\b|euros?\b))/g;
+  for (const m of s.matchAll(re)) {
+    const lo = parseFloat((m[1] ?? m[3]).replace(',', '.'));
+    const hi = m[2] ? parseFloat(m[2].replace(',', '.')) : null;
+    const v = hi ? (lo + hi) / 2 : lo;
+    if (Number.isFinite(v) && v > 0 && v <= 500) amounts.push(v);
+  }
+  if (amounts.length) return Math.round(amounts[0]);
   if (/\b(free|gratis|no charge|libre)\b/.test(s)) return 0;
-  const nums = [...s.matchAll(/(\d+(?:[.,]\d{1,2})?)/g)].map((m) => parseFloat(m[1].replace(',', '.')));
-  if (!nums.length) return null;
-  return Math.round(nums.reduce((a, b) => a + b, 0) / nums.length);
+  return null;
 }
 
 function slug(s) {

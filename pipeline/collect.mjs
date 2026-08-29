@@ -14,7 +14,7 @@
  */
 import { mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
 import { createInterface } from 'node:readline/promises';
-import { collectCity, EVENT_RE } from './src/extract.mjs';
+import { collectCity, EVENT_RE, parsePrice } from './src/extract.mjs';
 import { enrichItem, popularityByWikidata } from './src/enrich.mjs';
 import { fetchNearby } from './src/wdnearby.mjs';
 import { selectBalanced } from './src/select.mjs';
@@ -217,6 +217,12 @@ for (const [i, city] of selected.entries()) {
     popularity = await popularityByWikidata(ids);
     await mkdir(new URL('./out/raw/', import.meta.url), { recursive: true });
     await writeFile(cachePath, JSON.stringify({ items, popularity }));
+  }
+
+  // 가격은 캐시에 이미 파싱된 값이 들어 있다. 파서를 고쳐도 다시 크롤링하지
+  // 않으려고, 원문(priceRaw)이 남아 있으면 여기서 다시 읽는다.
+  for (const it of items) {
+    if (it.priceRaw !== undefined) it.priceEur = parsePrice(it.priceRaw);
   }
 
   const cap = city.isHub ? CAP.hub : CAP.satellite;

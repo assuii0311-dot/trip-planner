@@ -111,14 +111,10 @@
     "why": "베니카를로에 남은 후작 저택입니다. 밖에서 파사드를 보는 정도입니다.",
     "caution": "베니카를로에 있습니다."
   },
-  "penyiscola-wd-church-of-saint-john-the-baptist": {
-    "summary": "근교 마을의 성당",
-    "why": "근교 마을의 성당입니다. 마을을 지나며 광장에서 보게 됩니다."
-  },
-  "penyiscola-wd-morrongo": {
-    "summary": "베니카를로 시내 앞 해변",
-    "why": "베니카를로 시내 앞 해변입니다. 편의시설이 잘 갖춰져 있습니다.",
-    "caution": "베니카를로에 있습니다."
+  "penyiscola-wd-hermitage-of-saint-lucia-and-saint-benedict": {
+    "summary": "알칼라 데 시베르트의 은수처",
+    "why": "언덕에 있는 은수처로, 마을 축제 때 순례 목적지가 됩니다. 올라가면 평야가 내려다보입니다.",
+    "caution": "근교 마을에 있습니다."
   },
   "penyiscola-wd-church-of-saint-bartholomew": {
     "summary": "근교 마을의 성당",
@@ -129,48 +125,14 @@
     "why": "이르타 자연공원 남쪽 알코세브레의 해변입니다. 물이 맑고 자갈이라 사람이 덜 붐빕니다.",
     "caution": "차로 20분쯤 걸립니다."
   },
-  "penyiscola-wd-hermitage-of-saint-lucia-and-saint-benedict": {
-    "summary": "알칼라 데 시베르트의 은수처",
-    "why": "언덕에 있는 은수처로, 마을 축제 때 순례 목적지가 됩니다. 올라가면 평야가 내려다보입니다.",
-    "caution": "근교 마을에 있습니다."
-  },
-  "penyiscola-wd-former-church-of-saint-augustin": {
-    "summary": "근교 마을의 옛 아우구스티노회 성당",
-    "why": "근교 마을에 남은 옛 아우구스티노회 성당입니다. 지금은 다른 용도로 쓰입니다."
-  },
-  "penyiscola-wd-church-of-saint-peter": {
+  "penyiscola-wd-church-of-saint-john-the-baptist": {
     "summary": "근교 마을의 성당",
-    "why": "근교 마을의 성당입니다. 지나며 보는 정도입니다."
+    "why": "근교 마을의 성당입니다. 마을을 지나며 광장에서 보게 됩니다."
   },
-  "penyiscola-wd-hermitage-of-saint-gregory": {
-    "summary": "근교의 순례 은수처",
-    "why": "근교에 있는 순례용 은수처입니다. 마을 축제 때 사람이 모입니다."
-  },
-  "penyiscola-wd-ermita-del-calvari-d-alcala-de-xivert": {
-    "summary": "알칼라 데 시베르트의 십자가의 길 예배당",
-    "why": "언덕을 오르는 십자가의 길 끝에 있는 예배당입니다. 오르는 길에 마을과 평야가 내려다보입니다.",
-    "caution": "근교 마을에 있습니다."
-  },
-  "penyiscola-wd-capella-de-la-mare-de-deu-dels-desemparats-d-alc": {
-    "summary": "알칼라 데 시베르트의 작은 예배당",
-    "why": "근교 마을의 작은 예배당입니다. 마을 광장 근처에 있습니다."
-  },
-  "penyiscola-wd-church-of-saint-james-the-great": {
-    "summary": "근교 마을의 성당",
-    "why": "근교 마을의 성당입니다. 지나며 보는 정도입니다."
-  },
-  "penyiscola-wd-chapel-of-our-lady-of-the-forsaken": {
-    "summary": "근교 마을의 작은 예배당",
-    "why": "근교 마을의 작은 예배당입니다. 규모가 작습니다."
-  },
-  "penyiscola-wd-torre-de-san-millan": {
-    "summary": "해안을 감시하던 옛 탑",
-    "why": "해적 습격을 감시하던 옛 해안 탑입니다. 이 해안을 따라 이런 탑이 줄지어 서 있었습니다."
-  },
-  "penyiscola-wd-far-d-irta": {
-    "summary": "이르타 자연공원의 등대",
-    "why": "이르타 자연공원 해안의 등대입니다. 절벽길 트레킹의 목적지 중 하나가 됩니다.",
-    "caution": "걸어가면 왕복 두 시간 이상 걸립니다."
+  "penyiscola-wd-morrongo": {
+    "summary": "베니카를로 시내 앞 해변",
+    "why": "베니카를로 시내 앞 해변입니다. 편의시설이 잘 갖춰져 있습니다.",
+    "caution": "베니카를로에 있습니다."
   },
   "penyiscola-wd-torre-de-calig": {
     "summary": "칼리그 마을의 옛 탑",
@@ -185,6 +147,44 @@
     "summary": "칼리그의 순례 은수처",
     "why": "칼리그 마을의 순례용 은수처입니다. 마을 축제 때 사람이 모입니다."
   },
+  "penyiscola-wd-former-church-of-saint-augustin": {
+    "summary": "근교 마을의 옛 아우구스티노회 성당",
+    "why": "근교 마을에 남은 옛 아우구스티노회 성당입니다. 지금은 다른 용도로 쓰입니다."
+  },
+  "penyiscola-wd-hermitage-of-saint-gregory": {
+    "summary": "근교의 순례 은수처",
+    "why": "근교에 있는 순례용 은수처입니다. 마을 축제 때 사람이 모입니다."
+  },
+  "penyiscola-wd-ermita-del-calvari-d-alcala-de-xivert": {
+    "summary": "알칼라 데 시베르트의 십자가의 길 예배당",
+    "why": "언덕을 오르는 십자가의 길 끝에 있는 예배당입니다. 오르는 길에 마을과 평야가 내려다보입니다.",
+    "caution": "근교 마을에 있습니다."
+  },
+  "penyiscola-wd-capella-de-la-mare-de-deu-dels-desemparats-d-alc": {
+    "summary": "알칼라 데 시베르트의 작은 예배당",
+    "why": "근교 마을의 작은 예배당입니다. 마을 광장 근처에 있습니다."
+  },
+  "penyiscola-wd-church-of-saint-peter": {
+    "summary": "근교 마을의 성당",
+    "why": "근교 마을의 성당입니다. 지나며 보는 정도입니다."
+  },
+  "penyiscola-wd-torre-de-san-millan": {
+    "summary": "해안을 감시하던 옛 탑",
+    "why": "해적 습격을 감시하던 옛 해안 탑입니다. 이 해안을 따라 이런 탑이 줄지어 서 있었습니다."
+  },
+  "penyiscola-wd-far-d-irta": {
+    "summary": "이르타 자연공원의 등대",
+    "why": "이르타 자연공원 해안의 등대입니다. 절벽길 트레킹의 목적지 중 하나가 됩니다.",
+    "caution": "걸어가면 왕복 두 시간 이상 걸립니다."
+  },
+  "penyiscola-wd-church-of-saint-james-the-great": {
+    "summary": "근교 마을의 성당",
+    "why": "근교 마을의 성당입니다. 지나며 보는 정도입니다."
+  },
+  "penyiscola-wd-chapel-of-our-lady-of-the-forsaken": {
+    "summary": "근교 마을의 작은 예배당",
+    "why": "근교 마을의 작은 예배당입니다. 규모가 작습니다."
+  },
   "penyiscola-wd-church-of-santa-magdalena-santa-magdalena-de-pol": {
     "summary": "산타 막달레나 데 폴피스의 성당",
     "why": "폴피스 성 아래 마을의 성당입니다. 성에 가는 길에 지나게 됩니다."
@@ -196,6 +196,11 @@
   "penyiscola-wd-convent-de-la-santissima-trinitat": {
     "summary": "근교 마을의 옛 수녀원",
     "why": "근교 마을에 남은 옛 수녀원 건물입니다. 내부 개방은 제한적입니다."
+  },
+  "penyiscola-wd-playa-del-forti": {
+    "summary": "베니카를로 요새 자리의 해변",
+    "why": "옛 요새 자리에 면한 해변입니다. 편의시설이 갖춰져 있고 산책로가 이어집니다.",
+    "caution": "페니스콜라가 아니라 베니카를로에 있습니다."
   },
   "penyiscola-wd-del-russo": {
     "summary": "이 해안의 작은 해변",

@@ -101,6 +101,12 @@
     "why": "옛 채석장 자리에 만든 재단으로, 16~19세기 어린이 초상화를 모은 드문 컬렉션이 있습니다. 조각 정원과 장미원이 함께 있습니다.",
     "booking": "정해진 요일에 예약제로만 들어갑니다"
   },
+  "pollenca-wd-bocchoris": {
+    "name": "보코리스 유적",
+    "summary": "로마 이전 시기의 고고 유적",
+    "why": "로마가 오기 전 이 섬에 살던 사람들의 취락 유적입니다. 정비된 관광지는 아닙니다.",
+    "caution": "표지가 적고 접근이 불편합니다."
+  },
   "pollenca-wd-church-of-st-jaume": {
     "name": "산 하우메 성당",
     "summary": "구시가의 성당",
@@ -110,24 +116,9 @@
     "summary": "얕고 긴 모래 해변. 아이 동반에 좋다",
     "why": "물이 얕고 길게 이어지는 모래 해변입니다. 한참 걸어 들어가도 무릎 높이라 아이와 함께 가기 좋습니다."
   },
-  "pollenca-wd-bocchoris": {
-    "name": "보코리스 유적",
-    "summary": "로마 이전 시기의 고고 유적",
-    "why": "로마가 오기 전 이 섬에 살던 사람들의 취락 유적입니다. 정비된 관광지는 아닙니다.",
-    "caution": "표지가 적고 접근이 불편합니다."
-  },
   "pollenca-wd-illa-de-formentor": {
     "summary": "포르멘토르 곶 앞의 작은 섬",
     "why": "포르멘토르 곶 앞의 작은 섬입니다. 전망대에서 내려다보이고, 상륙할 수는 없습니다."
-  },
-  "pollenca-wd-torre-major": {
-    "summary": "해안을 감시하던 옛 탑",
-    "why": "해적을 감시하던 옛 해안 탑입니다. 이 해안을 따라 이런 탑이 줄지어 서 있었습니다."
-  },
-  "pollenca-wd-alcudia-beach": {
-    "name": "알쿠디아 해변",
-    "summary": "얕고 긴 모래 해변. 가족 단위에 맞는다",
-    "why": "알쿠디아 만의 길고 얕은 모래 해변입니다. 편의시설이 잘 갖춰져 있어 가족 단위가 많습니다."
   },
   "pollenca-wd-coves-de-campanet": {
     "name": "캄파네트 동굴",
@@ -139,10 +130,36 @@
     "why": "차로 갈 수 없고 산길을 30분쯤 내려가야 닿는 자갈 해변입니다. 그 수고 때문에 사람이 거의 없습니다.",
     "caution": "가파른 내리막입니다. 물과 신발을 챙기세요."
   },
+  "pollenca-wd-torre-major": {
+    "summary": "해안을 감시하던 옛 탑",
+    "why": "해적을 감시하던 옛 해안 탑입니다. 이 해안을 따라 이런 탑이 줄지어 서 있었습니다."
+  },
+  "pollenca-wd-alcudia-beach": {
+    "name": "알쿠디아 해변",
+    "summary": "얕고 긴 모래 해변. 가족 단위에 맞는다",
+    "why": "알쿠디아 만의 길고 얕은 모래 해변입니다. 편의시설이 잘 갖춰져 있어 가족 단위가 많습니다."
+  },
   "pollenca-wd-alcudia-bullring": {
     "name": "알쿠디아 투우장",
     "summary": "이웃 마을의 투우장",
     "why": "이웃 마을 알쿠디아의 투우장입니다. 축제 기간이 아니면 조용합니다."
+  },
+  "pollenca-wd-botanical-garden-of-lluc": {
+    "summary": "루크 성지에 딸린 산속 식물원",
+    "why": "루크 성지에 딸린 식물원으로, 트라문타나 산의 고유 식물을 모았습니다. 성지 관람과 함께 보게 됩니다."
+  },
+  "pollenca-wd-illa-d-alcanada": {
+    "summary": "알쿠디아 앞바다의 작은 섬",
+    "why": "알쿠디아 앞바다의 작은 섬으로 등대가 서 있습니다. 해변에서 바라보는 대상입니다."
+  },
+  "pollenca-wd-esglesia-de-santa-anna": {
+    "name": "산타 안나 성당",
+    "summary": "알쿠디아 쪽의 성당",
+    "why": "알쿠디아 쪽에 있는 성당입니다. 지나며 보는 정도입니다."
+  },
+  "pollenca-wd-ermita-de-santa-magdalena": {
+    "summary": "언덕 정상의 은수처. 마요르카 중부가 내려다보인다",
+    "why": "인카 근처 언덕 정상의 은수처입니다. 마요르카 중부 평야가 사방으로 내려다보여, 섬의 지형이 한 번에 잡힙니다."
   },
   "pollenca-wd-cala-sant-vicenc-majorca": {
     "name": "칼라 산 비센스",
@@ -173,40 +190,40 @@
     "summary": "바위를 깎아 만든 소규모 로마 극장",
     "why": "바위를 그대로 깎아 만든 작은 로마 극장입니다. 폴렌티아 유적의 일부이고, 규모는 작지만 원형이 잘 남았습니다."
   },
-  "pollenca-wd-ermita-de-santa-magdalena": {
-    "summary": "언덕 정상의 은수처. 마요르카 중부가 내려다보인다",
-    "why": "인카 근처 언덕 정상의 은수처입니다. 마요르카 중부 평야가 사방으로 내려다보여, 섬의 지형이 한 번에 잡힙니다."
-  },
   "pollenca-wd-cova-de-sant-marti": {
     "name": "산 마르티 동굴 예배당",
     "summary": "동굴 안에 만든 예배당",
     "why": "자연 동굴 안에 그대로 만든 예배당입니다. 알쿠디아 근처에 있고 규모가 작습니다."
   },
-  "pollenca-wd-botanical-garden-of-lluc": {
-    "summary": "루크 성지에 딸린 산속 식물원",
-    "why": "루크 성지에 딸린 식물원으로, 트라문타나 산의 고유 식물을 모았습니다. 성지 관람과 함께 보게 됩니다."
+  "pollenca-wd-santa-margalida-de-crestatx": {
+    "name": "산타 마르갈리다 데 크레스타치",
+    "summary": "들판에 선 13세기 작은 성당",
+    "why": "사 포블라 근교 들판에 선 13세기 성당입니다. 마요르카에 남은 초기 기독교 건축 중 하나로, 주변에 아무것도 없어 더 인상적입니다.",
+    "caution": "차가 필요합니다."
   },
-  "pollenca-wd-illa-d-alcanada": {
-    "summary": "알쿠디아 앞바다의 작은 섬",
-    "why": "알쿠디아 앞바다의 작은 섬으로 등대가 서 있습니다. 해변에서 바라보는 대상입니다."
+  "pollenca-wd-albufereta-de-pollenca": {
+    "name": "알부페레타 습지",
+    "summary": "철새가 모이는 작은 자연 보호구역",
+    "why": "폴렌사 만 안쪽의 작은 습지 보호구역입니다. 알부페라보다 작지만 철새 관찰에는 충분하고 사람이 적습니다."
   },
-  "pollenca-wd-esglesia-de-santa-anna": {
-    "name": "산타 안나 성당",
-    "summary": "알쿠디아 쪽의 성당",
-    "why": "알쿠디아 쪽에 있는 성당입니다. 지나며 보는 정도입니다."
+  "pollenca-wd-museu-monografic-de-po-lentia": {
+    "name": "폴렌티아 박물관",
+    "summary": "폴렌티아 유적 출토품을 전시하는 작은 박물관",
+    "why": "로마 도시 폴렌티아에서 나온 출토품을 전시하는 작은 박물관입니다. 유적을 걷기 전에 들르면 무엇을 보고 있는지가 잡힙니다.",
+    "caution": "알쿠디아에 있습니다."
   },
-  "pollenca-wd-punta-de-l-avancada-lighthouse": {
-    "name": "아반사다 등대",
-    "summary": "포르트 데 폴렌사 항구 입구의 등대",
-    "why": "포르트 데 폴렌사 항구 입구의 등대입니다. 해안 산책로 끝에 있습니다."
+  "pollenca-wd-basilica-of-the-mother-of-god": {
+    "summary": "루크 성지의 성당. 검은 성모상을 모셨다",
+    "why": "루크 성지의 성당으로, 마요르카의 수호 성모인 검은 성모상을 모셨습니다. 섬 사람들에게는 이 섬에서 가장 중요한 자리입니다."
   },
   "pollenca-wd-esglesia-de-sant-pere-d-escorca": {
     "summary": "산속 마을의 작은 로마네스크 성당",
     "why": "트라문타나 산속 에스코르카 마을의 작은 성당입니다. 루크로 가는 산길에 있습니다."
   },
-  "pollenca-wd-basilica-of-the-mother-of-god": {
-    "summary": "루크 성지의 성당. 검은 성모상을 모셨다",
-    "why": "루크 성지의 성당으로, 마요르카의 수호 성모인 검은 성모상을 모셨습니다. 섬 사람들에게는 이 섬에서 가장 중요한 자리입니다."
+  "pollenca-wd-punta-de-l-avancada-lighthouse": {
+    "name": "아반사다 등대",
+    "summary": "포르트 데 폴렌사 항구 입구의 등대",
+    "why": "포르트 데 폴렌사 항구 입구의 등대입니다. 해안 산책로 끝에 있습니다."
   },
   "pollenca-wd-museu-etnologic-de-muro": {
     "summary": "17세기 저택의 민속 박물관",
@@ -226,17 +243,5 @@
   "pollenca-wd-mare-de-deu-del-roser": {
     "name": "로세르 성모 성당",
     "desc": "옛 예수회 성당입니다."
-  },
-  "pollenca-wd-museu-monografic-de-po-lentia": {
-    "name": "폴렌티아 박물관",
-    "desc": "유적 출토품을 전시하는 작은 박물관입니다."
-  },
-  "pollenca-wd-santa-margalida-de-crestatx": {
-    "name": "산타 마르갈리다 데 크레스타치",
-    "desc": "들판에 선 오래된 작은 성당입니다."
-  },
-  "pollenca-wd-albufereta-de-pollenca": {
-    "name": "알부페레타 습지",
-    "desc": "철새가 모이는 자연 보호구역입니다."
   }
 }
