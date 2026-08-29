@@ -71,6 +71,9 @@ const DROP_IDS = new Set([
   'malaga-wd-carmen-thyssen-museum',       // = malaga-museo-carmen-thyssen
   'malaga-wd-casa-natal-de-pablo-ruiz-picasso', // = malaga-picasso-s-birthplace
   'san-sebastian-wd-san-telmo-museoa', // = san-sebastian-san-telmo-museum
+  'vitoria-wd-fournier-museum-of-playing-cards', // = vitoria-fournier-playing-card-museum
+  'vitoria-wd-museo-de-bellas-artes-de-alava',   // = vitoria-fine-arts-museum
+  'pamplona-wd-museum-of-navarre',  // = pamplona-museo-de-navarra
 ]);
 const isSight = (it) => it.theme !== 'food' && it.theme !== 'nightlife';
 

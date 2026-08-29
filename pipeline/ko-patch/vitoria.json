@@ -1,155 +1,117 @@
 {
   "vitoria-saburdi-taberna": {
-    "name": "사부르디",
     "summary": "비토리아에서 가장 이름난 핀초스 바 중 하나",
     "why": "비토리아에서 가장 이름난 핀초스 바 중 하나입니다. 바 위에 늘어놓은 것을 손으로 골라 집으면 됩니다."
   },
   "vitoria-sagartoki-erretegia": {
-    "name": "사가르토키",
     "summary": "'스페인 최고의 핀초' 상을 여러 번 받은 곳",
     "why": "전국 대회에서 최고의 핀초 상을 여러 번 받았습니다. 달걀 요리를 응용한 핀초가 대표작이라, 다들 그것부터 시킵니다."
   },
   "vitoria-el-tolono-taberna": {
-    "name": "엘 톨로뇨",
     "summary": "특이한 핀초스로 소문난 바",
     "why": "흔치 않은 조합의 핀초스로 소문난 바입니다. 여러 집을 도는 순례에서 변화를 주고 싶을 때 넣습니다."
   },
   "vitoria-perretxico": {
-    "name": "페레치코",
     "summary": "창작 핀초스 구성이 훌륭한 바",
     "why": "창작 핀초스 구성이 훌륭한 바입니다. 이름은 바스크어로 봄에 나는 버섯을 뜻합니다."
   },
   "vitoria-bar-restaurante-casa-juan": {
-    "name": "카사 후안",
     "summary": "동네 식당 겸 바",
     "why": "관광객이 거의 없는 동네 식당 겸 바입니다. 값이 예측 가능합니다."
   },
   "vitoria-neptuno": {
-    "name": "넵투노",
     "summary": "구시가의 식당",
     "why": "구시가에 있는 식당입니다. 무난하고 접근이 쉽습니다."
   },
   "vitoria-restaurante-green-postas": {
-    "name": "그린 포스타스",
     "summary": "채식 선택지가 있는 식당",
     "why": "채식 선택지를 갖춘 식당입니다. 고기와 핀초스가 중심인 이 도시에서 필요한 선택지입니다."
   },
   "vitoria-catedral-de-maria-inmaculada-de-vitoria": {
-    "name": "마리아 인마쿨라다 신 대성당",
     "summary": "20세기에 지은 네오고딕 신 대성당",
     "why": "20세기에 지은 네오고딕 대성당으로, 구 대성당과 구분해 '신 대성당'이라 부릅니다. 안에 교구 미술관이 들어서 있습니다."
   },
   "vitoria-artium-museum": {
-    "name": "아르티움 미술관",
     "summary": "바스크 현대미술 컬렉션이 가장 두터운 미술관",
     "why": "바스크 현대미술 컬렉션으로는 가장 두터운 미술관입니다. 치이다와 오테이사 같은 바스크 조각가들의 작업을 한자리에서 봅니다."
   },
   "vitoria-museum-of-natural-history": {
-    "name": "자연사 박물관",
     "summary": "옛 탑 건물의 자연사 박물관. 호박 화석",
     "why": "중세 탑 건물을 쓰는 자연사 박물관입니다. 이 지역에서 나온 호박 화석 컬렉션이 특히 좋고, 무료입니다."
   },
   "vitoria-fournier-playing-card-museum": {
-    "name": "푸르니에 카드 박물관",
     "summary": "세계 최대 규모의 트럼프 카드 컬렉션",
     "why": "비토리아는 19세기부터 유럽에 카드를 공급하던 제조 중심지였습니다. 그 회사가 모은 세계 각국의 카드 2만 점 이상이 여기 있고, 무료입니다."
   },
   "vitoria-itinerario-muralistico-de-vitoria-gasteiz": {
-    "name": "벽화 순례길",
-    "durationMin": 90,
     "summary": "구시가 벽에 그린 대형 벽화 연작",
     "why": "구시가 건물 벽면에 주민들과 함께 그린 대형 벽화 연작입니다. 지도를 따라 걸으면 도시가 하나의 야외 전시장이 됩니다."
   },
   "vitoria-bar-txiki": {
-    "name": "바르 치키",
     "summary": "작은 동네 바",
     "why": "작은 동네 바입니다. 관광객이 없어 값과 분위기가 다릅니다."
   },
   "vitoria-fine-arts-museum": {
-    "name": "미술관",
     "summary": "저택 건물의 19~20세기 바스크 회화",
     "why": "저택 건물을 쓰는 미술관으로, 19~20세기 바스크 회화가 중심입니다. 관광객이 적어 조용합니다."
   },
   "vitoria-archeological-museum": {
-    "name": "고고학 박물관",
     "summary": "알라바 지역의 선사부터 중세까지",
     "why": "알라바 지역의 선사시대부터 중세까지를 다룹니다. 카드 박물관과 같은 자리에 있어 함께 보게 됩니다."
   },
   "vitoria-wd-cathedral-of-santa-maria-de-vitoria": {
-    "name": "산타 마리아 구 대성당",
-    "durationMin": 90,
     "summary": "'열린 채로 공사 중'인 대성당. 공사 현장을 걷는다",
     "why": "구조 문제로 수십 년째 복원 중인데, 문을 닫는 대신 안전모를 쓰고 공사 현장을 걷게 합니다. 이 방식이 유럽에서 상을 여러 번 받았고, 켄 폴릿의 소설에도 영감을 주었습니다.",
     "booking": "가이드 투어로만 들어가고 예약이 필요합니다",
     "caution": "안전모를 쓰고 공사 현장을 걷습니다. 편한 신발이 필요합니다."
   },
   "vitoria-wd-ajuria-enea": {
-    "name": "아후리아 에네아",
     "summary": "바스크 자치정부 수반의 관저",
     "why": "바스크 자치정부 수반의 공식 관저입니다. 밖에서 보는 정도입니다.",
     "caution": "경비 구역입니다. 내부는 볼 수 없습니다."
   },
   "vitoria-wd-church-of-san-vicente-martir": {
-    "name": "산 비센테 성당",
     "summary": "구시가 언덕 위의 고딕 성당",
     "why": "구시가 언덕 위의 고딕 성당입니다. 요새를 겸해 지어 벽이 두껍습니다."
   },
   "vitoria-wd-virgen-blanca-square": {
-    "name": "비르헨 블랑카 광장",
     "summary": "비탈에 자리한 도시의 중심 광장",
     "why": "구시가 언덕 아래 비탈에 자리한 중심 광장입니다. 8월 축제 때 우산을 든 인형이 줄을 타고 내려오는 개막 행사가 여기서 열립니다."
   },
   "vitoria-wd-church-of-san-miguel": {
-    "name": "산 미겔 성당",
     "summary": "비르헨 블랑카 상을 모신 성당. 광장을 내려다본다",
     "why": "도시의 수호성모 비르헨 블랑카 상을 모신 성당으로, 광장을 내려다보는 자리에 있습니다."
   },
   "vitoria-wd-los-arquillos": {
-    "name": "로스 아르키요스",
     "summary": "언덕 높이차를 회랑으로 해결한 18세기 도시 설계",
     "why": "언덕 위 구시가와 아래 신시가의 높이차를, 계단 대신 여러 층의 회랑과 아치로 이었습니다. 18세기 도시 설계의 해법으로 비토리아 특유의 풍경이 됐습니다."
   },
   "vitoria-wd-iradier-arena": {
-    "name": "이라디에르 아레나",
     "summary": "실내 다목적 경기장",
     "why": "옛 투우장을 개조한 실내 다목적 경기장입니다. 행사가 있을 때만 의미가 있습니다."
   },
   "vitoria-wd-nueva-square": {
-    "name": "누에바 광장",
     "summary": "회랑이 사방을 두른 신고전주의 광장",
     "why": "회랑이 사방을 두른 신고전주의 광장입니다. 그 아래에 핀초스 바가 이어져 저녁이면 사람이 모입니다."
   },
-  "vitoria-wd-fournier-museum-of-playing-cards": {
-    "name": "푸르니에 카드 컬렉션",
-    "desc": "20,000점이 넘는 카드와 인쇄 도구를 전시합니다."
-  },
   "vitoria-wd-church-of-san-pedro-apostol": {
-    "name": "산 페드로 성당",
     "summary": "고딕 정문 조각이 훌륭한 성당",
     "why": "고딕 정문 조각이 훌륭한 성당입니다. 구시가 서쪽 비탈에 있습니다."
   },
   "vitoria-wd-basilica-of-san-prudencio-de-armentia": {
-    "name": "아르멘티아 성당",
     "summary": "도시 외곽의 12세기 로마네스크 성당",
     "why": "도시 외곽 아르멘티아 마을의 12세기 로마네스크 성당입니다. 조각이 남아 있고 관광객이 없습니다."
   },
   "vitoria-wd-la-florida": {
-    "name": "라 플로리다 공원",
     "summary": "도심 한복판의 19세기 낭만주의 정원",
     "why": "도심 한복판의 19세기 낭만주의 정원입니다. 비토리아는 유럽 녹색 수도로 뽑힌 도시인데, 그 성격이 여기서 시작됩니다."
   },
   "vitoria-wd-house-of-cordon": {
-    "name": "코르돈 저택",
     "summary": "15세기 탑 저택. 전시 공간으로 쓰인다",
     "why": "15세기 탑 저택으로, 지금은 전시 공간입니다. 안에 더 오래된 13세기 탑이 그대로 들어 있습니다."
   },
   "vitoria-wd-plaza-de-los-fueros": {
-    "name": "푸에로스 광장",
     "summary": "치이다가 설계한 광장. 전통 구기 경기장을 품었다",
     "why": "조각가 에두아르도 치이다가 설계한 광장입니다. 바스크 전통 구기 펠로타 경기장을 광장 안에 품고 있어, 조각과 생활이 한 자리에 있습니다."
-  },
-  "vitoria-wd-museo-de-bellas-artes-de-alava": {
-    "name": "알라바 미술관",
-    "desc": "저택 건물의 지역 미술관입니다."
   }
 }
