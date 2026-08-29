@@ -63,6 +63,8 @@ const DROP_IDS = new Set([
   'salamanca-wd-monterrey-palace',  // = salamanca-palacio-de-monterey
   'salamanca-wd-museo-de-art-nouveau-y-art-deco', // = salamanca-casa-lis
   'salamanca-wd-salamanca-old-cathedral', // = salamanca-new-old-cathedrals 에 포함
+  'cordoba-wd-puente-romano',       // = cordoba-roman-bridge
+  'cadiz-wd-roman-theatre-of-cadiz', // = cadiz-teatro-romano
 ]);
 const isSight = (it) => it.theme !== 'food' && it.theme !== 'nightlife';
 
