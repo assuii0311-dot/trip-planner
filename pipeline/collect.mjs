@@ -70,6 +70,7 @@ const DROP_IDS = new Set([
   'malaga-wd-castle-of-gibralfaro',        // = malaga-castillo-de-gibralfaro
   'malaga-wd-carmen-thyssen-museum',       // = malaga-museo-carmen-thyssen
   'malaga-wd-casa-natal-de-pablo-ruiz-picasso', // = malaga-picasso-s-birthplace
+  'san-sebastian-wd-san-telmo-museoa', // = san-sebastian-san-telmo-museum
 ]);
 const isSight = (it) => it.theme !== 'food' && it.theme !== 'nightlife';
 
