@@ -48,6 +48,18 @@ const FILL_TARGET = { hub: 44, satellite: 26 };
 const SIGHT_TARGET = { hub: 28, satellite: 15 };
 /** 검증으로 정한 도시당 절대 하한. 이 아래면 보고서에 경고를 낸다. */
 const FLOOR = 20;
+
+/**
+ * 자동 중복 판정이 못 잡는 같은 장소들. 이름이 서로 겹치지 않아서
+ * 규칙을 넓히면 '말라가 대성당'과 '말라가 박물관'까지 합쳐 버린다.
+ * 전수 점검에서 나온 두 건뿐이라 그냥 이름으로 지운다.
+ */
+const DROP_IDS = new Set([
+  'teruel-wd-la-escalinata',   // = teruel-escalinata-neo-mudejar
+  'jerez-damajuana',           // = jerez-damajuana-cafe-bar
+  'girona-wd-museo-de-historia-de-girona', // = girona-museu-d-historia-de-girona
+  'madrid-wd-bernabeu',        // = madrid-real-madrid
+]);
 const isSight = (it) => it.theme !== 'food' && it.theme !== 'nightlife';
 
 /**
@@ -281,7 +293,7 @@ for (const [i, city] of selected.entries()) {
   }
 
 
-  const finalItems = dedupe(enriched);
+  const finalItems = dedupe(enriched).filter((it) => !DROP_IDS.has(it.id));
 
   // Wikidata 는 식당을 거의 담지 않는다. 그대로 두면 근교 당일치기 일정에
   // 점심과 저녁이 통째로 빠져 계획이 망가진 것처럼 보인다.
