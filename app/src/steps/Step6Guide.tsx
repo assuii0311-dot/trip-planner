@@ -37,8 +37,13 @@ export default function Step6Guide({
         <div className="day" key={day.dayIndex}>
           <div className="day-head">
             <span className="n">{day.dayIndex}일차</span>
-            <span className="d">{day.date} · {cityOf(day.city)?.name ?? day.city}</span>
-            {day.isDayTrip && <span className="badge">근교 당일치기</span>}
+            <span className="d">
+              {day.date} · {cityOf(day.city)?.name ?? day.city}
+              {day.returnTo && ` (오전) → ${cityOf(day.returnTo)?.name ?? day.returnTo} (오후)`}
+            </span>
+            {day.isDayTrip && (
+              <span className="badge">{day.returnTo ? '반나절 근교' : '근교 당일치기'}</span>
+            )}
           </div>
 
           {day.isDayTrip && home && cityOf(day.city) && (

@@ -129,6 +129,8 @@ export interface PlanEntry {
   startMin: number;
   item: Item;
   travelMin: number;
+  /** 반나절 근교에서 거점으로 돌아오는 이동이 이 앞에 끼는지. */
+  returnLeg?: { from: string; to: string; minutes: number };
 }
 
 export interface PlanDay {
@@ -136,6 +138,8 @@ export interface PlanDay {
   dayIndex: number;
   city: string;
   isDayTrip: boolean;
+  /** 반나절 근교인 경우 오후에 돌아올 거점. 몬세라트는 오전만으로 충분하다. */
+  returnTo: string | null;
   entries: PlanEntry[];
   walkKm: number;
 }

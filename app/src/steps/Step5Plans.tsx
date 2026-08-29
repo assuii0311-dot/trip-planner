@@ -89,8 +89,20 @@ export default function Step5Plans({
         <div className="day" key={day.dayIndex}>
           <div className="day-head">
             <span className="n">{day.dayIndex}일차</span>
-            <span className="d">{day.date} · {cityName(day.city)}</span>
-            {day.isDayTrip && <span className="badge">근교 당일치기</span>}
+            <span className="d">
+              {day.date} · {cityName(day.city)}
+              {day.returnTo && (
+                day.entries.some((e) => e.returnLeg && (e.slot === 'afternoon' || e.slot === 'evening'))
+                  ? ` (오전) → ${cityName(day.returnTo)} (오후)`
+                  : ` → ${cityName(day.returnTo)} (저녁)`
+              )}
+            </span>
+            {day.isDayTrip && (
+              <span className="badge">
+                {day.entries.some((e) => e.returnLeg && (e.slot === 'afternoon' || e.slot === 'evening'))
+                  ? '반나절 근교' : '근교 당일치기'}
+              </span>
+            )}
           </div>
           <div className="card">
             {day.entries.length === 0 ? (
@@ -103,9 +115,16 @@ export default function Step5Plans({
                     <div className="slot">{SLOT_LABEL[e.slot]}</div>
                   </div>
                   <div>
+                    {e.returnLeg && (
+                      <div className="travel return-leg">
+                        ↑ {cityName(e.returnLeg.from)} → {cityName(e.returnLeg.to)} 이동 {e.returnLeg.minutes}분
+                      </div>
+                    )}
                     <div className="title">{THEME_ICON[e.item.theme]} {e.item.name}</div>
                     <div className="sub">{e.item.nameLocal ?? e.item.nameEn}</div>
-                    {e.travelMin > 0 && <div className="travel">↑ 앞 일정에서 약 {e.travelMin}분 이동</div>}
+                    {!e.returnLeg && e.travelMin > 0 && (
+                      <div className="travel">↑ 앞 일정에서 약 {e.travelMin}분 이동</div>
+                    )}
                   </div>
                 </div>
               ))

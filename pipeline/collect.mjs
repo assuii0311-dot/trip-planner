@@ -33,11 +33,20 @@ const macroOf = (region) => MACRO_REGIONS.find((m) => m.regions.includes(region)
 
 /** 도시당 아이템 상한. 거점은 더 많이, 근교는 하루치면 충분하다. */
 const CAP = { hub: Number(flag('cap-hub') ?? 70), satellite: Number(flag('cap-sat') ?? 40) };
-const MIN_ITEMS = 12;
-/** 이 수에 못 미치는 도시는 Wikidata 근접 검색으로 채운다. */
-const FILL_TARGET = { hub: 40, satellite: 22 };
+/**
+ * 이 수에 못 미치는 도시는 Wikidata 근접 검색으로 채운다.
+ *
+ * 무작위 여행 800건 × 데이터 비율 7단계를 시뮬레이션해 정한 값이다.
+ * 여행에 쓰인 가장 작은 도시의 아이템 수별로 빈 일자를 재 보면
+ * 15~19개에서 13%, 20~24개에서 9%, 25~29개에서 7%로 20개 부근에서 곡선이 꺾인다.
+ * 그래서 하한을 20개로 잡고, 보강이 목표를 다 못 채우는 경우를 감안해
+ * 목표는 그보다 높게 둔다. 자세한 근거는 docs/04-data-volume.md 참조.
+ */
+const FILL_TARGET = { hub: 44, satellite: 26 };
 /** 식사·술자리를 뺀 '볼거리' 하한. 이 아래면 하루를 채울 수가 없다. */
-const SIGHT_TARGET = { hub: 26, satellite: 13 };
+const SIGHT_TARGET = { hub: 28, satellite: 15 };
+/** 검증으로 정한 도시당 절대 하한. 이 아래면 보고서에 경고를 낸다. */
+const FLOOR = 20;
 const isSight = (it) => it.theme !== 'food' && it.theme !== 'nightlife';
 
 /**
@@ -253,7 +262,7 @@ for (const [i, city] of selected.entries()) {
       // 포옌사처럼 여전히 모자라면 근처 마을까지 포함해 한 번 더 넓힌다.
       if (enriched.filter(isSight).length < sightTarget) {
         const wide = await fetchNearby(city, {
-          radiusKm: city.isHub ? 15 : 12,
+          radiusKm: city.isHub ? 20 : 18,
           minSitelinks: 2,
           exclude: new Set(enriched.flatMap((e) => [e.nameEn, e.name])),
           otherCities: cityNames(city.nameEn),
@@ -369,10 +378,15 @@ await writeFile(
 console.log(`\n${'도시'.padEnd(24)} 아이템 볼거리  테마  대표  보강  번역`);
 console.log('-'.repeat(66));
 for (const r of report) {
-  const warn = r.items < MIN_ITEMS ? '  ⚠ 부족' : r.sights < 8 ? '  ⚠ 볼거리 부족' : '';
+  const warn = r.items < FLOOR ? `  ⚠ 하한(${FLOOR}) 미달` : r.sights < 8 ? '  ⚠ 볼거리 부족' : '';
   console.log(`${r.city.padEnd(24)} ${String(r.items).padStart(5)} ${String(r.sights).padStart(5)} ${String(r.themes).padStart(5)} ${String(r.headline).padStart(5)} ${String(r.filled).padStart(5)} ${String(r.translated).padStart(5)}${warn}`);
 }
 const total = report.reduce((a, r) => a + r.items, 0);
 console.log(`\n총 아이템 ${total}개 / ${report.length}개 도시 (평균 ${(total / report.length).toFixed(1)})`);
-const thin = report.filter((r) => r.items < MIN_ITEMS);
-if (thin.length) console.log(`아이템이 부족한 도시 ${thin.length}곳: ${thin.map((r) => r.slug).join(', ')}`);
+const thin = report.filter((r) => r.items < FLOOR);
+if (thin.length) {
+  console.log(`하한 ${FLOOR}개에 못 미치는 도시 ${thin.length}곳: `
+    + thin.map((r) => `${r.slug}(${r.items})`).join(', '));
+} else {
+  console.log(`모든 도시가 하한 ${FLOOR}개를 넘습니다.`);
+}

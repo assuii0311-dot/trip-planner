@@ -345,3 +345,5 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
 .base-switch { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
 .base-switch > span { font-size: 12px; color: var(--muted); white-space: nowrap; }
 .base-switch select { min-height: 40px; }
+
+.return-leg { color: var(--accent); font-weight: 600; margin-bottom: 4px; }
