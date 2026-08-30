@@ -1,0 +1,334 @@
+import type { City, Item, Preferences } from '../types';
+import type { Service } from './routing';
+import { fastest, servicesBetween } from './routing';
+import { estimateDays } from './capacity';
+
+/**
+ * 도시 순서 · 숙박 · 도시 간 이동을 한꺼번에 정하는 엔진.
+ *
+ * ## 원칙: 이동 시간 효율이 가장 우선
+ *
+ * 값이 싸거나 경치가 좋아도 하루를 이동으로 버리면 여행이 아니라 이동이다.
+ * 그래서 도시 순서는 '도시 간 총 이동 시간 최소' 로 푼다. 출발 공항에서
+ * 시작해 도착 공항에서 끝나는 것만 고정하고 나머지는 자유롭게 재배열한다.
+ *
+ * 예전에는 사용자가 고른 순서와 권역 묶음을 그대로 따라가서, 바르셀로나 →
+ * 세비야 → 빌바오처럼 나라를 두 번 가로지르는 일정이 나왔다.
+ *
+ * ## 숙박
+ *
+ * 한 도시에서 이틀 이상 보낼 만큼 볼 것이 있으면 거기서 잔다. 짧게 볼
+ * 도시는 가까운 숙박지에서 당일치기로 다녀온다. 안달루시아를 돌면서
+ * 말라가와 세비야에 각각 묵는 것처럼, 숙박지가 여럿일 수 있다.
+ */
+
+export interface Stop {
+  city: City;
+  /** 고른 아이템으로 계산한 소요 일수(소수 가능). */
+  itemDays: number;
+  /** 달력에서 차지하는 일수(정수). 당일치기는 0. */
+  nights: number;
+  /** 여기서 자는가. */
+  sleep: boolean;
+  /** 당일치기라면 어느 도시에서 다녀오는가. */
+  base: string | null;
+  /** 왕복 이동 시간(당일치기일 때만). */
+  dayTripMin: number;
+}
+
+export interface Hop {
+  from: City;
+  to: City;
+  /** 시간 효율 순 대안. 첫 번째가 기본. */
+  options: Service[];
+  /** 사용자가 고른 수단. 없으면 options[0]. */
+  chosen: Service;
+}
+
+export interface Itinerary {
+  stops: Stop[];
+  hops: Hop[];
+  /** 아이템을 다 보려면 필요한 날. 이동일 포함. */
+  daysNeeded: number;
+  /** 도시 간 총 이동 시간(분). */
+  transitMin: number;
+}
+
+/** 당일치기로 다녀올 만한 편도 한계(분). 왕복이면 하루의 3분의 1이다. */
+export const DAY_TRIP_ONE_WAY_MAX = 110;
+
+/** 조사해 둔 구간표. dayTrips 에 들어 있는 실측값이다. */
+export function measuredTable(cities: City[]): Map<string, { minutes: number; mode: string }> {
+  const t = new Map<string, { minutes: number; mode: string }>();
+  const key = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+  for (const c of cities) {
+    for (const d of c.dayTrips) t.set(key(c.slug, d.city), { minutes: d.transitMin, mode: d.mode });
+  }
+  return t;
+}
+
+const mkey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+
+/**
+ * 도시 간 이동 시간 행렬. 최선 수단의 문앞~문앞 시간을 쓴다.
+ * 이 값으로 순서를 정하므로, 수단마다 다른 시간을 여기서 이미 반영한다.
+ */
+function costMatrix(cities: City[], measured: Map<string, { minutes: number; mode: string }>): number[][] {
+  return cities.map((a) => cities.map((b) => (
+    a.slug === b.slug ? 0 : fastest(a, b, measured.get(mkey(a.slug, b.slug))).totalMin
+  )));
+}
+
+/**
+ * 총 이동 시간이 가장 짧은 순서를 찾는다.
+ *
+ * 도시가 10곳 이하면 정확히 푼다(Held-Karp). 그보다 많으면 가까운 곳부터
+ * 잇고 2-opt 로 다듬는다 — 여행 도시가 열 곳을 넘는 경우는 드물고, 그때는
+ * 최적해와 몇 분 차이일 뿐이라 정확히 풀 이유가 없다.
+ */
+export function orderCities(
+  cities: City[], startSlug: string | null, endSlug: string | null,
+  measured: Map<string, { minutes: number; mode: string }>,
+): City[] {
+  const n = cities.length;
+  if (n <= 2) return cities;
+  const cost = costMatrix(cities, measured);
+  const idx = (slug: string | null) => (slug ? cities.findIndex((c) => c.slug === slug) : -1);
+  const start = idx(startSlug);
+  let end = idx(endSlug);
+
+  /*
+   * 왕복(입국·출국 공항이 같은 도시)이면 고리를 푸는 문제다.
+   * 끝을 안 묶으면 마지막 도시에서 출발 도시로 돌아오는 구간이 계산에서
+   * 빠져, 가장 먼 도시에서 끝나는 순서를 최적이라고 내놓는다.
+   * 돌아오는 비용을 넣어 고리로 풀되, 도시를 두 번 세지 않는다.
+   */
+  const roundTrip = start >= 0 && start === end;
+  if (roundTrip) end = -1;
+
+  const order = n <= 10
+    ? exactOrder(n, cost, start, end, roundTrip ? start : -1)
+    : heuristicOrder(n, cost, start, end, roundTrip ? start : -1);
+  return order.map((i) => cities[i]);
+}
+
+function pathCost(cost: number[][], path: number[]): number {
+  let sum = 0;
+  for (let i = 1; i < path.length; i++) sum += cost[path[i - 1]][path[i]];
+  return sum;
+}
+
+/** Held-Karp. 양 끝이 고정될 수 있으므로 그것만 다르다. */
+function exactOrder(n: number, cost: number[][], start: number, end: number, returnTo = -1): number[] {
+  const free = [...Array(n).keys()].filter((i) => i !== start && i !== end);
+  const first = start >= 0 ? start : -1;
+  const last = end >= 0 && end !== start ? end : -1;
+
+  // 시작이 고정되지 않았으면 모든 시작을 시도한다.
+  const starts = first >= 0 ? [first] : [...Array(n).keys()].filter((i) => i !== last);
+  let best: number[] = [];
+  let bestCost = Infinity;
+
+  for (const s of starts) {
+    const mid = free.filter((i) => i !== s);
+    const m = mid.length;
+    const size = 1 << m;
+    // dp[mask][j] = s 에서 출발해 mask 를 다 돌고 mid[j] 에 서 있을 때 최소 비용
+    const dp = Array.from({ length: size }, () => new Float64Array(m).fill(Infinity));
+    const prev = Array.from({ length: size }, () => new Int16Array(m).fill(-1));
+    for (let j = 0; j < m; j++) dp[1 << j][j] = cost[s][mid[j]];
+    for (let mask = 1; mask < size; mask++) {
+      for (let j = 0; j < m; j++) {
+        if (!(mask & (1 << j)) || dp[mask][j] === Infinity) continue;
+        for (let k = 0; k < m; k++) {
+          if (mask & (1 << k)) continue;
+          const nm = mask | (1 << k);
+          const v = dp[mask][j] + cost[mid[j]][mid[k]];
+          if (v < dp[nm][k]) { dp[nm][k] = v; prev[nm][k] = j; }
+        }
+      }
+    }
+    const full = size - 1;
+    if (m === 0) {
+      const path = last >= 0 ? [s, last] : [s];
+      const c = pathCost(cost, path) + (returnTo >= 0 && path.length > 1 ? cost[path[path.length - 1]][returnTo] : 0);
+      if (c < bestCost) { bestCost = c; best = path; }
+      continue;
+    }
+    for (let j = 0; j < m; j++) {
+      // returnTo 가 있으면 마지막 도시에서 출발 도시로 돌아오는 비용까지 센다.
+      const tail = (last >= 0 ? cost[mid[j]][last] : 0)
+        + (returnTo >= 0 ? cost[mid[j]][returnTo] : 0);
+      const total = dp[full][j] + tail;
+      if (total >= bestCost) continue;
+      // 역추적
+      const seq: number[] = [];
+      let mask = full;
+      let cur = j;
+      while (cur >= 0) { seq.push(mid[cur]); const p = prev[mask][cur]; mask ^= 1 << cur; cur = p; }
+      seq.reverse();
+      const path = [s, ...seq, ...(last >= 0 ? [last] : [])];
+      bestCost = total;
+      best = path;
+    }
+  }
+  return best;
+}
+
+/** 가까운 곳부터 잇고 2-opt 로 다듬는다. */
+function heuristicOrder(n: number, cost: number[][], start: number, end: number, returnTo = -1): number[] {
+  const s = start >= 0 ? start : 0;
+  const left = new Set([...Array(n).keys()]);
+  left.delete(s);
+  if (end >= 0 && end !== s) left.delete(end);
+  const path = [s];
+  let cur = s;
+  while (left.size) {
+    let best = -1;
+    let bestC = Infinity;
+    for (const i of left) if (cost[cur][i] < bestC) { bestC = cost[cur][i]; best = i; }
+    path.push(best); left.delete(best); cur = best;
+  }
+  if (end >= 0 && end !== s) path.push(end);
+
+  // 2-opt. 양 끝은 고정이므로 안쪽만 뒤집는다.
+  const lo = 1;
+  const hi = end >= 0 && end !== s ? path.length - 2 : path.length - 1;
+  const total = (pp: number[]) => pathCost(cost, pp)
+    + (returnTo >= 0 && pp.length > 1 ? cost[pp[pp.length - 1]][returnTo] : 0);
+  let improved = true;
+  while (improved) {
+    improved = false;
+    for (let i = lo; i < hi; i++) {
+      for (let j = i + 1; j <= hi; j++) {
+        const next = path.slice();
+        next.splice(i, j - i + 1, ...path.slice(i, j + 1).reverse());
+        if (total(next) < total(path) - 0.5) {
+          path.splice(0, path.length, ...next);
+          improved = true;
+        }
+      }
+    }
+  }
+  return path;
+}
+
+/**
+ * 순서가 정해진 도시들에 숙박과 당일치기를 배정한다.
+ *
+ * 하루치도 안 되는 도시를 위해 짐을 풀고 싸는 것은 낭비다. 앞이나 뒤의
+ * 숙박지에서 왕복 4시간 안에 다녀올 수 있으면 당일치기로 붙인다.
+ * 그럴 수 없으면 짧게라도 거기서 잔다 — 왕복 6시간을 쓰느니 자는 편이 낫다.
+ */
+export function assignLodging(
+  ordered: City[], itemDaysOf: (slug: string) => number,
+  measured: Map<string, { minutes: number; mode: string }>,
+  overrides: Record<string, 'sleep' | 'daytrip'> = {},
+): Stop[] {
+  const stops: Stop[] = ordered.map((city) => ({
+    city,
+    itemDays: itemDaysOf(city.slug),
+    nights: 0,
+    sleep: true,
+    base: null,
+    dayTripMin: 0,
+  }));
+
+  for (let i = 0; i < stops.length; i++) {
+    const s = stops[i];
+    const forced = overrides[s.city.slug];
+    if (forced === 'sleep') continue;
+    // 하루를 다 쓸 만큼 볼 것이 있으면 거기서 잔다.
+    if (forced !== 'daytrip' && s.itemDays >= 0.75) continue;
+
+    // 앞뒤의 숙박 도시 중 가까운 쪽에서 다녀온다.
+    let best: { idx: number; min: number } | null = null;
+    for (const j of [i - 1, i + 1]) {
+      if (j < 0 || j >= stops.length || !stops[j].sleep) continue;
+      const leg = fastest(s.city, stops[j].city, measured.get(mkey(s.city.slug, stops[j].city.slug)));
+      if (leg.totalMin <= DAY_TRIP_ONE_WAY_MAX && (!best || leg.totalMin < best.min)) {
+        best = { idx: j, min: leg.totalMin };
+      }
+    }
+    if (best) {
+      s.sleep = false;
+      s.base = stops[best.idx].city.slug;
+      s.dayTripMin = best.min * 2;
+    }
+  }
+
+  // 숙박 도시의 밤 수 — 자기 아이템 일수 + 자기에게 붙은 당일치기 일수.
+  for (const s of stops) {
+    if (!s.sleep) continue;
+    const attached = stops.filter((x) => !x.sleep && x.base === s.city.slug);
+    s.nights = Math.max(1, Math.ceil(s.itemDays + attached.length));
+  }
+  return stops;
+}
+
+/** 순서대로 이동 구간을 만든다. 당일치기는 숙박지 사이 이동에 끼지 않는다. */
+export function buildHops(
+  stops: Stop[], measured: Map<string, { minutes: number; mode: string }>,
+  picks: Record<string, string> = {},
+  /** 왕복이면 마지막에 돌아갈 도시. 그 구간도 실제로 타야 하므로 넣는다. */
+  returnTo?: City,
+): Hop[] {
+  const sleeping = stops.filter((s) => s.sleep).map((s) => s.city);
+  if (returnTo && sleeping.length && sleeping[sleeping.length - 1].slug !== returnTo.slug) {
+    sleeping.push(returnTo);
+  }
+  const hops: Hop[] = [];
+  for (let i = 1; i < sleeping.length; i++) {
+    const from = sleeping[i - 1];
+    const to = sleeping[i];
+    const options = servicesBetween(from, to, measured.get(mkey(from.slug, to.slug)));
+    const wanted = picks[`${from.slug}>${to.slug}`];
+    const chosen = options.find((o) => o.mode === wanted) ?? options[0];
+    hops.push({ from, to, options, chosen });
+  }
+  return hops;
+}
+
+/**
+ * 전체를 조립한다.
+ *
+ * daysNeeded 는 아이템을 다 보는 데 필요한 날 + 도시 간 이동으로 날아가는
+ * 날이다. 이동이 4시간을 넘으면 그날은 반나절이 사라지므로 0.5일,
+ * 8시간을 넘으면 하루가 통째로 날아간다.
+ */
+export function buildItinerary(
+  cities: City[], items: Item[], prefs: Preferences,
+  startSlug: string | null, endSlug: string | null,
+  allCities: City[],
+  opts: { lodging?: Record<string, 'sleep' | 'daytrip'>; picks?: Record<string, string> } = {},
+): Itinerary {
+  const measured = measuredTable(allCities);
+  const byCity = new Map<string, Item[]>();
+  for (const it of items) {
+    const l = byCity.get(it.city) ?? [];
+    l.push(it);
+    byCity.set(it.city, l);
+  }
+  const itemDaysOf = (slug: string) => estimateDays(byCity.get(slug) ?? [], prefs);
+
+  const ordered = orderCities(cities, startSlug, endSlug, measured);
+  const stops = assignLodging(ordered, itemDaysOf, measured, opts.lodging);
+  // 왕복이면 마지막 도시에서 출발 도시로 돌아오는 구간도 실제로 타야 한다.
+  const back = startSlug && startSlug === endSlug
+    ? ordered.find((c) => c.slug === startSlug)
+    : undefined;
+  const hops = buildHops(stops, measured, opts.picks, back);
+
+  const transitMin = hops.reduce((a, h) => a + h.chosen.totalMin, 0);
+  const travelDays = hops.reduce((a, h) => (
+    a + (h.chosen.totalMin >= 480 ? 1 : h.chosen.totalMin >= 240 ? 0.5 : 0)
+  ), 0);
+  const stayDays = stops.reduce((a, s) => a + (s.sleep ? s.itemDays : Math.max(s.itemDays, 1)), 0);
+
+  return {
+    stops,
+    hops,
+    daysNeeded: Math.max(1, Math.round((stayDays + travelDays) * 10) / 10),
+    transitMin,
+  };
+}
