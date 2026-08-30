@@ -1,13 +1,13 @@
 import type { Item, Preferences, Priorities } from '../types';
 
-/** 별점(4단계) 가중치. 0 은 제외이므로 후보에서 빠진다. */
+/** 별점(3단계) 가중치. 0 은 제외이므로 후보에서 빠진다. */
 const STAR_WEIGHT: Record<number, number> = { 1: 18, 2: 40, 3: 75 };
 
 const BUDGET_CEILING: Record<Preferences['budget'], number> = { low: 15, mid: 40, high: 120 };
 
 /**
  * 아이템 점수.
- * 4단계 별점이 가장 큰 축이고, 2단계 취향이 그다음이다.
+ * 3단계 별점이 가장 큰 축이고, 2단계 취향이 그다음이다.
  * 별점을 주지 않은 아이템도 취향만으로 후보에 남아 3개 옵션의 다양성을 만든다.
  */
 export function scoreItem(item: Item, prefs: Preferences, priorities: Priorities): number {

@@ -497,3 +497,90 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
   border-color: var(--accent);
   color: var(--accent);
 }
+
+/* --- 3단계: 도시별 추천 코스 --- */
+
+.city-panel { margin-top: 10px; }
+
+/* 코스 세 장은 가로로 넘긴다. 세로로 쌓으면 비교가 안 된다 —
+   비교하려고 만든 화면이므로 나란히 보이는 것이 핵심이다. */
+.course-grid {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 2px 2px 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.course {
+  flex: 0 0 232px;
+  scroll-snap-align: start;
+  text-align: left;
+  padding: 12px 13px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+.course.is-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent) inset, var(--shadow);
+  background: var(--accent-soft);
+}
+.course-head { display: flex; align-items: baseline; gap: 8px; }
+.course-title { font-size: 15px; font-weight: 700; }
+.course-on {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.course-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.course-mix { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.course-basis { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+.course-thumbs { display: flex; gap: 5px; margin-top: 9px; }
+.course-thumbs .item-photo { flex: 0 0 46px; width: 46px; height: 46px; border-radius: 7px; }
+
+/* --- 4단계: 일정 대안 --- */
+
+/* 폰에서는 일정 아래로 내려온다. 390px 에서 오른쪽에 칸을 더 두면
+   일정 제목이 두 글자씩 끊긴다. 아이패드 폭에서는 오른쪽 칸으로 간다. */
+.entry-alts { grid-column: 2; margin-top: 8px; }
+.entry-alts > summary {
+  display: inline-block;
+  font-size: 11.5px;
+  color: var(--accent);
+  cursor: pointer;
+  list-style: none;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.entry-alts > summary::-webkit-details-marker { display: none; }
+.entry-alts > summary:after { content: " ▾"; }
+.entry-alts[open] > summary:after { content: " ▴"; }
+.entry-alts:empty { display: none; }
+
+.alt-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.alt {
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.alt-name { font-size: 13px; font-weight: 600; line-height: 1.35; }
+.alt-why { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.alt-delta { font-size: 11px; color: var(--accent); margin-top: 3px; }
+
+@media (min-width: 720px) {
+  .entry { grid-template-columns: 54px 1fr 210px; }
+  .entry-alts { grid-column: 3; margin-top: 0; }
+  .course { flex-basis: 268px; }
+}

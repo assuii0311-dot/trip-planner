@@ -161,3 +161,31 @@ function distributeNights(groups: BaseGroup[], totalDays: number): BaseGroup[] {
   }
   return groups;
 }
+
+/**
+ * 입국·출국 도시에 맞춰 거점 순서를 돌린다.
+ *
+ * 마드리드로 들어와 바르셀로나에서 나가는 사람에게 바르셀로나부터 도는
+ * 일정을 주면, 첫날과 마지막 날에 대륙을 가로지르는 이동이 붙는다.
+ * 어느 그룹에도 없는 도시를 지정했으면 아무것도 하지 않는다.
+ */
+export function orderGroups(
+  groups: BaseGroup[], startCity: string | null, endCity: string | null,
+): BaseGroup[] {
+  const has = (g: BaseGroup, slug: string) =>
+    g.base.slug === slug || g.dayTrips.some((t) => t.city.slug === slug);
+
+  const out = [...groups];
+  if (startCity) {
+    const i = out.findIndex((g) => has(g, startCity));
+    if (i > 0) out.unshift(...out.splice(i, 1));
+  }
+  if (endCity) {
+    const i = out.findIndex((g) => has(g, endCity));
+    // 입국 도시와 같은 그룹이면 옮기지 않는다 - 왕복이라 순서가 무의미하다.
+    if (i >= 0 && i < out.length - 1 && !(startCity && has(out[i], startCity))) {
+      out.push(...out.splice(i, 1));
+    }
+  }
+  return out;
+}

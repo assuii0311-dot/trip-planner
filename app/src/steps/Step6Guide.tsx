@@ -15,12 +15,12 @@ function LinkRow({ label, note, url }: { label: string; note: string; url: strin
   );
 }
 
-/** 6단계 — 선택한 계획의 이동과 예약 방법을 안내한다. */
+/** 5단계 — 선택한 계획의 이동과 예약 방법을 안내한다. */
 export default function Step6Guide({
   plan, cities,
 }: { plan: Plan | null; cities: City[] }) {
   if (!plan) {
-    return <div className="empty">먼저 5단계에서 계획을 하나 선택해 주세요.</div>;
+    return <div className="empty">먼저 4단계에서 계획을 하나 선택해 주세요.</div>;
   }
   const cityOf = (slug: string) => cities.find((c) => c.slug === slug);
   const usedCities = [...new Set(plan.days.map((d) => d.city))].map(cityOf).filter(Boolean) as City[];

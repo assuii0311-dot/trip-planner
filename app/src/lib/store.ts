@@ -18,6 +18,8 @@ export function defaultState(): TripState {
     endDate: end.toISOString().slice(0, 10),
     lastDayPlan: 'morning',
     partySize: 2,
+    startCity: null,
+    endCity: null,
   };
   const prefs: Preferences = {
     themes: { ...DEFAULT_THEMES },
@@ -34,7 +36,32 @@ export function defaultState(): TripState {
     transport: ['walk', 'metro'],
     dayTripAppetite: 2,
   };
-  return { version: 1, step: 1, basics, prefs, priorities: {}, chosenPlan: null, savedPlans: [], baseOverrides: {} };
+  return { version: 2, step: 1, basics, prefs, priorities: {}, chosenPlan: null, savedPlans: [], baseOverrides: {}, courses: {} };
+}
+
+/**
+ * 예전 저장분을 지금 구조로 옮긴다.
+ *
+ * v1 은 6단계였고 아이템 고르기가 3·4단계로 나뉘어 있었다. v2 에서 둘을
+ * 합쳐 5단계가 됐으므로 6단계에 있던 사람은 5단계로 당긴다. 고른 아이템과
+ * 취향은 그대로 쓸 수 있으니 버리지 않는다 - 2천 개에서 골라낸 것을
+ * 구조가 바뀌었다는 이유로 날리면 안 된다.
+ */
+function migrate(parsed: TripState): TripState {
+  const base = defaultState();
+  const legacy = (parsed.version as number) < 2;
+  // v1 의 3·4단계는 v2 의 3단계 하나다. 5·6단계는 4·5단계로 당겨진다.
+  const step = legacy && parsed.step >= 4 ? parsed.step - 1 : parsed.step;
+  return {
+    ...base,
+    ...parsed,
+    version: 2,
+    step: Math.min(5, Math.max(1, step || 1)),
+    basics: { ...base.basics, ...parsed.basics },
+    prefs: { ...base.prefs, ...parsed.prefs, themes: { ...base.prefs.themes, ...parsed.prefs?.themes } },
+    priorities: parsed.priorities ?? {},
+    courses: parsed.courses ?? {},
+  };
 }
 
 /** localStorage 는 사파리 프라이빗 모드 등에서 던질 수 있으므로 항상 감싼다. */
@@ -43,18 +70,8 @@ export function loadState(): TripState {
     const raw = localStorage.getItem(KEY);
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw) as TripState;
-    // 1단계 구조가 바뀌어 예전 저장분은 복원하지 않는다.
-    if (parsed?.version !== 1 || !Array.isArray((parsed.basics as Basics | undefined)?.cities)) {
-      return defaultState();
-    }
-    const base = defaultState();
-    return {
-      ...base,
-      ...parsed,
-      basics: { ...base.basics, ...parsed.basics },
-      prefs: { ...base.prefs, ...parsed.prefs, themes: { ...base.prefs.themes, ...parsed.prefs?.themes } },
-      priorities: parsed.priorities ?? {},
-    };
+    if (!Array.isArray((parsed?.basics as Basics | undefined)?.cities)) return defaultState();
+    return migrate(parsed);
   } catch {
     return defaultState();
   }
@@ -124,14 +141,10 @@ export function exportState(state: TripState): void {
 export async function importState(file: File): Promise<TripState> {
   const text = await file.text();
   const parsed = JSON.parse(text) as TripState;
-  if (parsed?.version !== 1 || !parsed.basics) throw new Error('여행 계획 파일 형식이 아닙니다.');
-  const base = defaultState();
-  return {
-    ...base,
-    ...parsed,
-    basics: { ...base.basics, ...parsed.basics },
-    prefs: { ...base.prefs, ...parsed.prefs, themes: { ...base.prefs.themes, ...parsed.prefs?.themes } },
-  };
+  if (!parsed?.basics || !Array.isArray(parsed.basics.cities)) {
+    throw new Error('여행 계획 파일 형식이 아닙니다.');
+  }
+  return migrate(parsed);
 }
 
 export type { Priorities };

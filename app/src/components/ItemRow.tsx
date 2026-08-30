@@ -19,7 +19,7 @@ export function ItemMeta({ item }: { item: Item }) {
 }
 
 /**
- * 4단계 우선순위 입력 — 체크박스로 후보에 넣고, 별점 3단계로 우선순위를 준다.
+ * 3단계 담기 — 체크박스로 후보에 넣고, 별점 3단계로 우선순위를 준다.
  * 체크를 풀면 0(제외)이 되어 계획에서 빠진다.
  */
 export function ItemRow({

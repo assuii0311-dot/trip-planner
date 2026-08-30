@@ -144,6 +144,15 @@ export interface Basics {
   endDate: string;
   lastDayPlan: LastDayPlan;
   partySize: number;
+  /**
+   * 입국 도시와 출국 도시.
+   *
+   * 마드리드로 들어와 바르셀로나에서 나가는 일정과, 둘 다 마드리드인 일정은
+   * 도시 순서도 마지막 날 쓰는 법도 다르다. 고른 도시 중에서 고르며,
+   * null 이면 앱이 동선을 보고 알아서 정한다.
+   */
+  startCity: string | null;
+  endCity: string | null;
 }
 
 export type Budget = 'low' | 'mid' | 'high';
@@ -199,8 +208,11 @@ export interface Plan {
   stats: { items: number; walkKm: number; costEur: number; themeMix: Partial<Record<ThemeId, number>> };
 }
 
+/** 3단계에서 도시마다 고른 추천 코스. 값이 없으면 아직 안 고른 것. */
+export type CourseId = 'balanced' | 'focusA' | 'focusB';
+
 export interface TripState {
-  version: 1;
+  version: 2;
   step: number;
   basics: Basics;
   prefs: Preferences;
@@ -209,6 +221,8 @@ export interface TripState {
   savedPlans: Plan[];
   /** 앱이 제안한 거점을 사용자가 바꿨을 때. 그룹 인덱스 → 도시 slug. */
   baseOverrides: Record<number, string>;
+  /** 도시 slug → 고른 코스. 코스를 고른 뒤 개별 아이템을 더하고 뺄 수 있다. */
+  courses: Record<string, CourseId>;
   /** 2단계에서 역산 결과를 한 번이라도 확인했는지. */
   tasteConfirmed?: boolean;
   /** 마지막으로 저장된 시각(epoch ms). 저장할 때 store 가 찍는다. */
@@ -219,9 +233,11 @@ export interface TripState {
    * 튕겨 나가면 어디까지 봤는지 알 수 없다.
    */
   ui?: {
-    /** 4단계에서 펼쳐 두었던 테마. */
+    /** 3단계에서 펼쳐 두었던 테마. */
     openTheme?: ThemeId | null;
     /** '고른 것만 보기' 를 켜 두었는지. */
     onlyPicked?: boolean;
+    /** 3단계에서 보고 있던 도시. 도시가 여러 곳이면 한 번에 다 못 고른다. */
+    openCity?: string | null;
   };
 }

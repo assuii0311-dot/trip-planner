@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { Basics, City, LastDayPlan, MacroRegion } from '../types';
 import { Block, Field, Segmented } from '../components/Controls';
 import CityCard from '../components/CityCard';
 import BasePlan from '../components/BasePlan';
-import { assignBases } from '../lib/basing';
+import type { BaseGroup } from '../lib/basing';
 
 export function tripDays(basics: Basics): number {
   const a = new Date(`${basics.startDate}T00:00:00`);
@@ -19,11 +19,17 @@ export function tripDays(basics: Basics): number {
  * 효율적인지 판단할 근거가 없기 때문이다. 도시를 고르면 앱이 묶어 준다.
  */
 export default function Step1Basics({
-  basics, cities, macroRegions, overrides, onChange, onOverride,
+  basics, cities, macroRegions, groups, overrides, onChange, onOverride,
 }: {
   basics: Basics;
   cities: City[];
   macroRegions: MacroRegion[];
+  /**
+   * 거점 묶음. App 이 한 곳에서 계산해 내려 준다.
+   * 예전에는 이 화면이 따로 계산했는데, 그러면 입국·출국 도시로 돌린 순서가
+   * 여기에 반영되지 않아 화면과 실제 계획이 어긋난다.
+   */
+  groups: BaseGroup[];
   overrides: Record<number, string>;
   onChange: (patch: Partial<Basics>) => void;
   onOverride: (index: number, slug: string) => void;
@@ -34,11 +40,6 @@ export default function Step1Basics({
   const days = tripDays(basics);
   const nights = Math.max(0, days - 1);
   const selected = cities.filter((c) => basics.cities.includes(c.slug));
-  const groups = useMemo(
-    () => assignBases(selected, cities, days),
-    [selected.map((c) => c.slug).join(','), cities, days],
-  );
-
   const toggle = (slug: string) => {
     const next = basics.cities.includes(slug)
       ? basics.cities.filter((s) => s !== slug)
@@ -147,6 +148,39 @@ export default function Step1Basics({
           );
         })}
       </Block>
+
+      {selected.length > 1 && (
+        <Block
+          title="들어가고 나오는 도시"
+          help="마드리드로 들어와 바르셀로나에서 나오는 일정이라면 도시 순서가 달라집니다. 왕복 항공권이면 둘을 같은 도시로 두세요."
+        >
+          <div className="date-pair">
+            <Field label="첫 도시" hint="비행기가 내리는 곳">
+              <select
+                value={basics.startCity ?? ''}
+                onChange={(e) => onChange({ startCity: e.target.value || null })}
+              >
+                <option value="">앱이 정하도록</option>
+                {selected.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+              </select>
+            </Field>
+            <Field label="마지막 도시" hint="돌아가는 비행기를 타는 곳">
+              <select
+                value={basics.endCity ?? ''}
+                onChange={(e) => onChange({ endCity: e.target.value || null })}
+              >
+                <option value="">앱이 정하도록</option>
+                {selected.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+              </select>
+            </Field>
+          </div>
+          {basics.startCity && basics.endCity && basics.startCity !== basics.endCity && (
+            <p className="help">
+              편도 두 장(오픈조) 일정입니다. 같은 도시로 돌아오지 않으므로 마지막 날 짐을 옮길 일이 없습니다.
+            </p>
+          )}
+        </Block>
+      )}
 
       {selected.length > 0 && (
         <BasePlan groups={groups} candidates={cities} overrides={overrides} onOverride={onOverride} />

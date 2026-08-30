@@ -1,20 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Basics, Item, Plan, PlanStyle, Preferences, Priorities, ThemeId, TripState } from './types';
+import type { Basics, CourseId, Item, Plan, PlanStyle, Preferences, Priorities, ThemeId, TripState } from './types';
 import { loadCountry, loadItemsFor, type CountryIndex } from './lib/data';
 import { clearState, defaultState, exportState, importState, isInstalled, loadState, saveState } from './lib/store';
 import type { SaveResult } from './lib/store';
 import { SaveStatus } from './components/SaveStatus';
 import { ResumeBanner, StorageWarning } from './components/ResumeBanner';
-import { assignBases } from './lib/basing';
+import { assignBases, orderGroups } from './lib/basing';
 import { inferHints, inferThemes } from './lib/taste';
 import Step1Basics, { tripDays } from './steps/Step1Basics';
 import Step2Preferences from './steps/Step2Preferences';
-import Step3Items from './steps/Step3Items';
-import Step4Priority, { minimumPicks } from './steps/Step4Priority';
+import Step3Course from './steps/Step3Course';
+import { minimumPicks } from './lib/course';
 import Step5Plans from './steps/Step5Plans';
 import Step6Guide from './steps/Step6Guide';
 
-const STEP_TITLES = ['기초 정보', '취향 확인', '아이템', '우선순위', '계획 3안', '이동·예약'];
+const STEP_TITLES = ['기초 정보', '취향 확인', '코스 선택', '계획 3안', '이동·예약'];
+const LAST_STEP = STEP_TITLES.length;
 
 export default function App() {
   const [state, setState] = useState<TripState>(() => loadState());
@@ -66,7 +67,11 @@ export default function App() {
   /** 1단계에서 고른 도시를 거점 단위로 묶는다. 사용자가 거점을 바꾼 경우를 반영한다. */
   const groups = useMemo(() => {
     if (!index) return [];
-    const base = assignBases(selectedCities, index.cities, days);
+    // 입국·출국 도시를 지정했으면 그 순서로 돌린다.
+    const base = orderGroups(
+      assignBases(selectedCities, index.cities, days),
+      state.basics.startCity, state.basics.endCity,
+    );
     return base.map((g, i) => {
       const override = state.baseOverrides[i];
       if (!override || override === g.base.slug) return g;
@@ -82,7 +87,7 @@ export default function App() {
         reason: `${swap.name}에 묵는 것으로 바꾸셨습니다.`,
       };
     });
-  }, [index, selectedCities, days, state.baseOverrides]);
+  }, [index, selectedCities, days, state.baseOverrides, state.basics.startCity, state.basics.endCity]);
 
   /** 거점으로 제안된 도시는 사용자가 고르지 않았어도 아이템이 필요하다. */
   const cityScope = useMemo(() => {
@@ -105,11 +110,25 @@ export default function App() {
     return () => { alive = false; };
   }, [cityScope.join(',')]);
 
+  /** 아이템 id → 도시. 코스를 갈아 끼울 때 그 도시 것만 골라내는 데 쓴다. */
+  const itemCityOf = useMemo(() => new Map(items.map((i) => [i.id, i.city])), [items]);
+
   /** 고른 도시에서 역산한 테마 관심도. 2단계의 기본값이 된다. */
   const inferred = useMemo<Record<ThemeId, number>>(() => inferThemes(selectedCities), [selectedCities]);
 
   const patchBasics = (patch: Partial<Basics>) =>
-    setState((s) => ({ ...s, basics: { ...s.basics, ...patch } }));
+    setState((s) => {
+      const basics = { ...s.basics, ...patch };
+      // 도시를 빼면 거기에 걸려 있던 입국·출국 지정과 코스 선택도 함께 지운다.
+      // 남겨 두면 고르지 않은 도시가 동선을 결정하게 된다.
+      const live = new Set(basics.cities);
+      if (basics.startCity && !live.has(basics.startCity)) basics.startCity = null;
+      if (basics.endCity && !live.has(basics.endCity)) basics.endCity = null;
+      const courses = Object.fromEntries(
+        Object.entries(s.courses).filter(([slug]) => live.has(slug)),
+      );
+      return { ...s, basics, courses };
+    });
   const patchPrefs = (patch: Partial<Preferences>) =>
     setState((s) => ({ ...s, prefs: { ...s.prefs, ...patch } }));
   const setPriority = (id: string, v: 0 | 1 | 2 | 3) =>
@@ -137,6 +156,21 @@ export default function App() {
     window.scrollTo({ top: 0 });
   };
 
+  /**
+   * 4단계에서 일정 하나를 다른 곳(들)로 바꾼다.
+   *
+   * 계획은 우선순위에서 다시 만들어지므로, 뺀 것을 지우고 넣을 것에 별을
+   * 주면 그대로 반영된다. 넣는 쪽에 별 3개를 주는 이유는, 방금 직접 고른
+   * 것이 다음 계산에서 밀려나면 바꾼 것이 사라진 것처럼 보이기 때문이다.
+   */
+  const swapEntry = (out: Item, inItems: Item[]) =>
+    setState((s) => {
+      const next = { ...s.priorities };
+      delete next[out.id];
+      for (const i of inItems) next[i.id] = 3;
+      return { ...s, priorities: next };
+    });
+
   const handlePlans = useCallback((plans: Plan[]) => { plansRef.current = plans; }, []);
   const choosePlan = (style: PlanStyle) => setState((s) => ({ ...s, chosenPlan: style }));
 
@@ -145,12 +179,28 @@ export default function App() {
     switch (state.step) {
       case 1: return state.basics.cities.length > 0 && days > 0;
       case 2: return true;
-      case 3: return items.length > 0;
-      case 4: return picked >= minimumPicks(days);
-      case 5: return state.chosenPlan !== null || plansRef.current.length > 0;
+      case 3: return picked >= minimumPicks(days);
+      case 4: return state.chosenPlan !== null || plansRef.current.length > 0;
       default: return false;
     }
   })();
+
+  /**
+   * 코스를 고르면 그 도시의 기존 선택을 갈아 끼운다.
+   *
+   * 더하기가 아니라 갈아 끼우기다. 코스를 바꿔 가며 비교하는데 앞서 고른
+   * 것이 계속 남으면, 세 코스를 다 눌러 본 사람은 세 코스를 합친 목록을
+   * 갖게 된다. 다른 도시의 선택은 건드리지 않는다.
+   */
+  const chooseCourse = (city: string, course: CourseId, courseItems: Item[]) =>
+    setState((s) => {
+      const next: Priorities = {};
+      for (const [id, v] of Object.entries(s.priorities)) {
+        if (itemCityOf.get(id) !== city) next[id] = v;
+      }
+      for (const it of courseItems) next[it.id] = 2;
+      return { ...s, priorities: next, courses: { ...s.courses, [city]: course } };
+    });
 
   const onImport = async (file: File) => {
     try { setState(await importState(file)); }
@@ -187,7 +237,7 @@ export default function App() {
         <div className="step-label">
           <span>{state.step}단계 · {STEP_TITLES[state.step - 1]}</span>
           <SaveStatus result={saved} now={now} />
-          <span>{state.step} / 6</span>
+          <span>{state.step} / {LAST_STEP}</span>
         </div>
       </header>
 
@@ -213,6 +263,7 @@ export default function App() {
         {state.step === 1 && (
           <Step1Basics
             basics={state.basics} cities={index.cities} macroRegions={index.macroRegions}
+            groups={groups}
             overrides={state.baseOverrides} onChange={patchBasics} onOverride={setOverride}
           />
         )}
@@ -225,27 +276,28 @@ export default function App() {
         {state.step === 3 && (
           loadingItems
             ? <div className="spinner">아이템을 모으는 중…</div>
-            : <Step3Items items={items} cities={index.cities} prefs={state.prefs} />
+            : (
+              <Step3Course
+                items={items} cities={index.cities} groups={groups}
+                prefs={state.prefs} priorities={state.priorities}
+                courses={state.courses} days={days}
+                ui={state.ui ?? {}}
+                onSet={setPriority} onBulk={setPriorities} onCourse={chooseCourse}
+                onUi={(next) => setState((s) => ({ ...s, ui: { ...s.ui, ...next } }))}
+              />
+            )
         )}
         {state.step === 4 && (
-          <Step4Priority
-            items={items} cities={index.cities} prefs={state.prefs}
-            priorities={state.priorities} days={days}
-            ui={state.ui ?? {}}
-            onSet={setPriority} onBulk={setPriorities}
-            onUi={(next) => setState((s) => ({ ...s, ui: { ...s.ui, ...next } }))}
-          />
-        )}
-        {state.step === 5 && (
           <Step5Plans
             items={items} cities={index.cities} groups={groups}
             startDate={state.basics.startDate} days={days}
             lastDayPlan={state.basics.lastDayPlan}
             prefs={state.prefs} priorities={state.priorities}
             chosen={state.chosenPlan} onChoose={choosePlan} onPlans={handlePlans}
+            onSwap={swapEntry}
           />
         )}
-        {state.step === 6 && <Step6Guide plan={chosenPlan} cities={index.cities} />}
+        {state.step === 5 && <Step6Guide plan={chosenPlan} cities={index.cities} />}
 
         <div className="toolbar">
           <button type="button" onClick={() => exportState(state)}>계획 내보내기</button>
@@ -274,9 +326,9 @@ export default function App() {
           {state.step > 1 && (
             <button type="button" className="ghost" onClick={() => goto(state.step - 1)}>이전</button>
           )}
-          {state.step < 6 ? (
+          {state.step < LAST_STEP ? (
             <button type="button" className="primary" disabled={!canAdvance} onClick={() => goto(state.step + 1)}>
-              {state.step === 4 ? '계획 세우기' : state.step === 5 ? '이 계획으로 진행' : '다음'}
+              {state.step === 3 ? '계획 세우기' : state.step === 4 ? '이 계획으로 진행' : '다음'}
             </button>
           ) : (
             <button type="button" className="primary" onClick={() => exportState(state)}>계획 저장하기</button>

@@ -50,14 +50,23 @@ async function run(days, picks, label) {
   await p.getByRole('button', { name: /^종일$/, exact: true }).click().catch(() => {});
   await p.waitForTimeout(200);
 
-  for (let i = 0; i < 3; i++) {
+  // 1 → 2 → 3단계
+  for (let i = 0; i < 2; i++) {
     await p.getByRole('button', { name: /^다음$/ }).click();
-    await p.waitForTimeout(600);
+    await p.waitForTimeout(700);
   }
-  await p.getByRole('button', { name: '취향대로 추천 담기' }).click();
-  await p.waitForTimeout(400);
+  // 3단계 — 도시마다 첫 코스를 담는다.
+  await p.waitForSelector('.course', { timeout: 20000 });
+  for (const head of await p.locator('main > .theme-group > .theme-head').all()) {
+    if ((await head.getAttribute('aria-expanded')) !== 'true') {
+      await head.click();
+      await p.waitForTimeout(400);
+    }
+    const c = p.locator('.course').first();
+    if (await c.count()) { await c.click(); await p.waitForTimeout(400); }
+  }
   await p.getByRole('button', { name: /^(다음|계획 세우기)$/ }).click();
-  await p.waitForTimeout(1200);
+  await p.waitForTimeout(1500);
 
   const dayCount = await p.locator('.day').count();
   const empties = await p.locator('.empty').count();
