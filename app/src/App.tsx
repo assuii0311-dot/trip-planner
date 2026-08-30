@@ -121,7 +121,11 @@ export default function App() {
       const courses = Object.fromEntries(
         Object.entries(s.courses).filter(([slug]) => live.has(slug)),
       );
-      return { ...s, basics, courses };
+      // 굳혀 둔 도시 순서에서 빠진 도시를 지운다. 더해진 도시가 있으면
+      // 순서를 통째로 놓아 엔진이 다시 최적으로 정하게 한다.
+      const kept = s.cityOrder.filter((c) => live.has(c));
+      const cityOrder = kept.length === basics.cities.length ? kept : [];
+      return { ...s, basics, courses, cityOrder };
     });
   const patchPrefs = (patch: Partial<Preferences>) =>
     setState((s) => ({ ...s, prefs: { ...s.prefs, ...patch } }));
@@ -179,10 +183,10 @@ export default function App() {
     return buildItinerary(
       tripCities, pickedItems, state.prefs,
       arrival?.slug ?? null, departure?.slug ?? null, index.cities,
-      { lodging: state.lodging, picks: state.modePicks },
+      { lodging: state.lodging, picks: state.modePicks, order: state.cityOrder },
     );
   }, [index, tripCities, pickedItems, state.prefs, arrival?.slug, departure?.slug,
-    state.lodging, state.modePicks]);
+    state.lodging, state.modePicks, state.cityOrder]);
 
   const setMode = (from: string, to: string, mode: string) =>
     setState((s) => ({ ...s, modePicks: { ...s.modePicks, [`${from}>${to}`]: mode } }));
@@ -204,6 +208,40 @@ export default function App() {
         basics: { ...s.basics, cities: s.basics.cities.filter((c) => c !== city) },
         priorities: next, courses, lodging,
       };
+    });
+
+  /**
+   * 도시 순서를 한 칸 옮긴다.
+   *
+   * 처음 손대는 순간 지금 순서를 그대로 굳혀 두고 거기서 옮긴다. 굳히지
+   * 않으면 다음 계산에서 엔진이 다시 최적 순서로 되돌려, 사용자가 옮긴
+   * 것이 사라진 것처럼 보인다. 옮긴 뒤에는 교통편을 다시 찾는다.
+   */
+  const moveCity = (city: string, dir: -1 | 1) =>
+    setState((s) => {
+      const cur = s.cityOrder.length
+        ? s.cityOrder
+        : (itinerary?.stops.map((x) => x.city.slug) ?? s.basics.cities);
+      const i = cur.indexOf(city);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= cur.length) return s;
+      const next = [...cur];
+      [next[i], next[j]] = [next[j], next[i]];
+      return { ...s, cityOrder: next };
+    });
+
+  /** 하루 안에서 일정을 한 칸 옮긴다. 시각은 플래너가 다시 계산한다. */
+  const moveEntry = (date: string, itemId: string, dir: -1 | 1) =>
+    setState((s) => {
+      const plan = plansRef.current.find((pl) => pl.style === (s.chosenPlan ?? plansRef.current[0]?.style));
+      const day = plan?.days.find((d) => d.date === date);
+      const cur = s.dayOrder[date] ?? day?.entries.map((e) => e.item.id) ?? [];
+      const i = cur.indexOf(itemId);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= cur.length) return s;
+      const next = [...cur];
+      [next[i], next[j]] = [next[j], next[i]];
+      return { ...s, dayOrder: { ...s.dayOrder, [date]: next } };
     });
 
   const handlePlans = useCallback((plans: Plan[]) => { plansRef.current = plans; }, []);
@@ -330,6 +368,7 @@ export default function App() {
             prefs={state.prefs} priorities={state.priorities}
             chosen={state.chosenPlan} onChoose={choosePlan} onPlans={handlePlans}
             onSwap={swapEntry} onMode={setMode} onLodging={setLodging} onDropCity={dropCity}
+            onMoveCity={moveCity} onMoveEntry={moveEntry} manualOrder={state.dayOrder}
           />
         )}
         {state.step === 5 && (

@@ -196,6 +196,8 @@ export interface PlanInput {
   lastDayPlan: LastDayPlan;
   prefs: Preferences;
   priorities: Priorities;
+  /** 사용자가 손으로 정한 하루 안 순서. 날짜 → 아이템 id 순서. */
+  dayOrder?: Record<string, string[]>;
 }
 
 /** 고른 근교를 다 넣지 못했을 때 알려 주기 위한 값. */
@@ -239,7 +241,12 @@ const toOption = (s: Service): TravelOption => ({
 
 export function scheduleFromItinerary(
   itin: Itinerary, totalDays: number, dayStartMin: number,
-): { schedule: DayPlanSlot[]; overflow: { city: string; name: string; days: number }[] } {
+): {
+  schedule: DayPlanSlot[];
+  overflow: { city: string; name: string; days: number }[];
+  /** 채우지 못하고 남은 날. 볼거리가 모자란다는 뜻이다. */
+  spare: number;
+} {
   const schedule: DayPlanSlot[] = [];
   const sleeping = itin.stops.filter((s) => s.sleep);
   const hopOf = new Map(itin.hops.map((h) => [`${h.from.slug}>${h.to.slug}`, h]));
@@ -313,32 +320,74 @@ export function scheduleFromItinerary(
    * 새 도시를 끼워 넣지는 않는다 — 사용자가 고르지 않은 도시를 앱이 밀어
    * 넣는 것은 월권이다.
    */
+  let spare = 0;
   if (schedule.length > 0 && schedule.length < totalDays) {
-    const sleepIdx = schedule
-      .map((d, i) => ({ d, i }))
-      .filter(({ d }) => !d.isDayTrip)
-      .map(({ i }) => i);
-    let k = 0;
-    while (schedule.length < totalDays) {
-      const src = schedule[sleepIdx[k % sleepIdx.length]];
-      // 그 도시의 마지막 날 뒤에 하루를 더 붙인다.
-      let insert = schedule.length;
-      for (let i = schedule.length - 1; i >= 0; i--) {
-        if (schedule[i].city === src.city) { insert = i + 1; break; }
+    /*
+     * 볼거리가 많은 도시에 더 준다.
+     *
+     * 처음에는 순번대로 돌렸는데, 작은 도시 넷을 고른 7일 일정에서 세고비아가
+     * 4일을 받았다. 수도교 하나를 보러 나흘을 머물 사람은 없다. 각 도시에
+     * 실제로 몇 일치가 있는지(itemDays)에 비례해 나눈다.
+     */
+    const sleepStops = itin.stops.filter((s) => s.sleep);
+    const weights = sleepStops.map((s) => Math.max(0.2, s.itemDays));
+    const totalW = weights.reduce((a, b) => a + b, 0);
+    let extra = totalDays - schedule.length;
+
+    // 최대 몫 순으로 한 장씩 나눠 준다(최대 잔여법).
+    const given = new Array(sleepStops.length).fill(0);
+    while (extra > 0) {
+      let best = 0;
+      let bestScore = -Infinity;
+      for (let i = 0; i < sleepStops.length; i++) {
+        // 이미 자기 몫보다 많이 받았으면 점수가 떨어진다.
+        const score = weights[i] / totalW - given[i] / Math.max(1, totalDays - schedule.length);
+        if (score > bestScore) { bestScore = score; best = i; }
       }
-      schedule.splice(insert, 0, { ...src, travel: null });
-      k += 1;
+      // 볼거리가 하루치도 안 되는 도시에는 더 주지 않는다.
+      const stop = sleepStops[best];
+      if (given[best] + stop.nights >= Math.ceil(stop.itemDays) + 2) {
+        // 모든 도시가 배부르면 남은 날은 그대로 둔다.
+        if (sleepStops.every((st, i) => given[i] + st.nights >= Math.ceil(st.itemDays) + 2)) break;
+        weights[best] = 0.001;
+        continue;
+      }
+      given[best] += 1;
+      extra -= 1;
+    }
+
+    sleepStops.forEach((stop, i) => {
+      for (let k = 0; k < given[i]; k++) {
+        let insert = schedule.length;
+        for (let j = schedule.length - 1; j >= 0; j--) {
+          if (schedule[j].city === stop.city.slug) { insert = j + 1; break; }
+        }
+        const src = schedule.find((d) => d.city === stop.city.slug);
+        if (src) schedule.splice(insert, 0, { ...src, travel: null });
+      }
+    });
+
+    /*
+     * 그래도 날이 남으면 마지막 도시에 붙인다.
+     *
+     * 채울 것이 없다고 달력을 짧게 끝내면 안 된다 - 사용자는 그날에도
+     * 스페인에 있다. 며칠이 비는지는 spare 로 알려 화면에서 말하게 한다.
+     */
+    spare = totalDays - schedule.length;
+    while (schedule.length < totalDays && schedule.length > 0) {
+      schedule.push({ ...schedule[schedule.length - 1], travel: null });
     }
   }
-  return { schedule, overflow };
+  return { schedule, overflow, spare };
 }
 
 export function buildPlans(input: PlanInput): {
   plans: Plan[];
   overflow: { city: string; name: string; days: number }[];
+  spare: number;
 } {
   const ranked = rankItems(input.items, input.prefs, input.priorities).filter((r) => r.score > -20);
-  const { schedule, overflow } = scheduleFromItinerary(
+  const { schedule, overflow, spare } = scheduleFromItinerary(
     input.itinerary, input.days, DAY_START[input.prefs.dayStart],
   );
 
@@ -361,7 +410,11 @@ export function buildPlans(input: PlanInput): {
       );
     });
 
-    const all = days.flatMap((d) => d.entries.map((e) => e.item));
+    // 사용자가 손으로 바꾼 순서를 마지막에 반영한다. 시각은 다시 계산한다 —
+    // 순서만 바꾸고 시각을 그대로 두면 15시 일정이 9시 일정보다 앞에 온다.
+    const ordered = days.map((d) => reorderDay(d, input.dayOrder?.[d.date], spec, input.prefs));
+
+    const all = ordered.flatMap((d) => d.entries.map((e) => e.item));
     const themeMix: Partial<Record<ThemeId, number>> = {};
     for (const it of all) themeMix[it.theme] = (themeMix[it.theme] ?? 0) + 1;
 
@@ -369,17 +422,56 @@ export function buildPlans(input: PlanInput): {
       style: spec.style,
       title: spec.title,
       summary: spec.summary,
-      days,
+      days: ordered,
       stats: {
         items: all.length,
-        walkKm: Math.round(days.reduce((a, d) => a + d.walkKm, 0) * 10) / 10,
+        walkKm: Math.round(ordered.reduce((a, d) => a + d.walkKm, 0) * 10) / 10,
         costEur: all.reduce((a, i) => a + (i.priceEur ?? 0), 0),
         themeMix,
       },
     };
   });
 
-  return { plans, overflow };
+  return { plans, overflow, spare };
+}
+
+/**
+ * 하루 안의 일정 순서를 사용자가 정한 대로 바꾸고 시각을 다시 계산한다.
+ *
+ * 순서만 바꾸고 시각을 그대로 두면 15시 일정이 9시 일정보다 앞에 오는
+ * 앞뒤가 안 맞는 표가 된다. 앞 일정이 끝나는 시각에 이동 시간을 더해
+ * 다시 쌓는다. 슬롯 이름(오전·점심)은 새 시각에 맞춰 다시 붙인다.
+ */
+function reorderDay(
+  day: PlanDay, order: string[] | undefined, spec: StyleSpec, prefs: Preferences,
+): PlanDay {
+  if (!order || order.length === 0 || day.entries.length < 2) return day;
+  const byId = new Map(day.entries.map((e) => [e.item.id, e]));
+  const seq = order.map((id) => byId.get(id)).filter((e): e is PlanEntry => !!e);
+  for (const e of day.entries) if (!seq.includes(e)) seq.push(e);
+  if (seq.length !== day.entries.length) return day;
+
+  const first = day.entries[0];
+  let clock = first.startMin;
+  const entries: PlanEntry[] = seq.map((e, i) => {
+    const prev = i > 0 ? seq[i - 1].item : null;
+    const travelMin = e.returnLeg ? e.travelMin : prev ? travelMinutes(prev, e.item) : 0;
+    const startMin = i === 0 ? first.startMin : clock + travelMin + spec.slack;
+    clock = startMin + e.item.durationMin;
+    return { ...e, startMin, travelMin, slot: slotAt(startMin, prefs) };
+  });
+  return { ...day, entries, walkKm: walkKmOf(entries.map((e) => e.item)) };
+}
+
+/** 시각에 맞는 시간대 이름. 순서를 바꾼 뒤 라벨을 다시 붙이는 데 쓴다. */
+function slotAt(min: number, prefs: Preferences): Slot {
+  const start = DAY_START[prefs.dayStart];
+  if (min >= 22 * 60) return 'night';
+  if (min >= 20 * 60 + 15) return 'dinner';
+  if (min >= 18 * 60) return 'evening';
+  if (min >= 15 * 60) return 'afternoon';
+  if (min >= 13 * 60) return 'lunch';
+  return min >= start ? 'morning' : 'morning';
 }
 
 export function formatTime(min: number): string {

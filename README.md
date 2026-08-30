@@ -30,7 +30,8 @@
 거점 도시를 고르면 근교 당일치기 후보가 자동으로 따라옵니다.
 
 데이터 출처와 그 선택 이유는 [docs/01-data-sourcing.md](docs/01-data-sourcing.md),
-단계별 정의는 [docs/02-spec.md](docs/02-spec.md) 에 있습니다.
+단계별 정의는 [docs/02-spec.md](docs/02-spec.md),
+동선·교통 엔진은 [docs/06-routing.md](docs/06-routing.md) 에 있습니다.
 
 ## 실행
 

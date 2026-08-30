@@ -300,7 +300,12 @@ export function buildItinerary(
   cities: City[], items: Item[], prefs: Preferences,
   startSlug: string | null, endSlug: string | null,
   allCities: City[],
-  opts: { lodging?: Record<string, 'sleep' | 'daytrip'>; picks?: Record<string, string> } = {},
+  opts: {
+    lodging?: Record<string, 'sleep' | 'daytrip'>;
+    picks?: Record<string, string>;
+    /** 사용자가 직접 정한 도시 순서. 있으면 최적화 대신 이것을 쓴다. */
+    order?: string[];
+  } = {},
 ): Itinerary {
   const measured = measuredTable(allCities);
   const byCity = new Map<string, Item[]>();
@@ -323,7 +328,19 @@ export function buildItinerary(
     return c?.nights?.[0] ?? 1.5;
   };
 
-  const ordered = orderCities(cities, startSlug, endSlug, measured);
+  /*
+   * 사용자가 순서를 직접 정했으면 그대로 따른다.
+   *
+   * 이동 시간 효율이 원칙이지만 그것이 전부는 아니다 - 특정 날짜에만 열리는
+   * 축제, 친구와 만나기로 한 날처럼 앱이 알 수 없는 사정이 있다. 다만
+   * 사용자가 정한 순서에도 교통편은 다시 찾는다.
+   */
+  const manual = opts.order?.length
+    ? opts.order.map((slug) => cities.find((c) => c.slug === slug)).filter((c): c is City => !!c)
+    : null;
+  const ordered = manual && manual.length === cities.length
+    ? manual
+    : orderCities(cities, startSlug, endSlug, measured);
   const stops = assignLodging(ordered, itemDaysOf, measured, opts.lodging);
   // 왕복이면 마지막 도시에서 출발 도시로 돌아오는 구간도 실제로 타야 한다.
   const back = startSlug && startSlug === endSlug

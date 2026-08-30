@@ -262,6 +262,16 @@ export interface TripState {
   modePicks: Record<string, string>;
   /** 숙박을 직접 정한 경우. 도시 slug → 자기/당일치기. */
   lodging: Record<string, 'sleep' | 'daytrip'>;
+  /**
+   * 도시 순서를 직접 정한 경우.
+   * 비어 있으면 동선 엔진이 이동 시간 기준으로 정한다.
+   */
+  cityOrder: string[];
+  /**
+   * 하루 안의 일정 순서를 직접 정한 경우. 날짜 → 아이템 id 순서.
+   * 특수한 사정(예약 시각, 누구와 만나기로 한 시각)은 앱이 알 수 없다.
+   */
+  dayOrder: Record<string, string[]>;
   /** 2단계에서 역산 결과를 한 번이라도 확인했는지. */
   tasteConfirmed?: boolean;
   /** 마지막으로 저장된 시각(epoch ms). 저장할 때 store 가 찍는다. */

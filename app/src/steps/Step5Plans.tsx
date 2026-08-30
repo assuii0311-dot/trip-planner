@@ -10,7 +10,7 @@ import { THEME_ICON, THEME_LABEL } from '../lib/themes';
 /** 4단계 — 담은 곳을 바탕으로 밀도가 다른 3가지 안을 만든다. */
 export default function Step5Plans({
   items, cities, itinerary, startDate, days, lastDayPlan, prefs, priorities, chosen,
-  onChoose, onPlans, onSwap, onMode, onLodging, onDropCity,
+  onChoose, onPlans, onSwap, onMode, onLodging, onDropCity, onMoveCity, onMoveEntry, manualOrder,
 }: {
   items: Item[];
   cities: City[];
@@ -31,14 +31,22 @@ export default function Step5Plans({
   onLodging: (city: string, how: 'sleep' | 'daytrip') => void;
   /** 날이 모자랄 때 이 도시를 뺀다. */
   onDropCity: (city: string) => void;
+  /** 도시 순서를 한 칸 옮긴다. 옮기면 교통편을 다시 찾는다. */
+  onMoveCity: (city: string, dir: -1 | 1) => void;
+  /** 하루 안에서 일정을 한 칸 옮긴다. */
+  onMoveEntry: (date: string, itemId: string, dir: -1 | 1) => void;
+  /** 사용자가 순서를 손댄 날짜들. 되돌리기 버튼을 띄우는 데 쓴다. */
+  manualOrder: Record<string, string[]>;
 }) {
-  const { plans, overflow } = useMemo(() => {
-    const built = buildPlans({ items, itinerary, startDate, days, lastDayPlan, prefs, priorities });
+  const { plans, overflow, spare } = useMemo(() => {
+    const built = buildPlans({
+      items, itinerary, startDate, days, lastDayPlan, prefs, priorities, dayOrder: manualOrder,
+    });
     onPlans(built.plans);
     return built;
     // onPlans 는 저장만 하므로 의존성에서 제외한다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, itinerary, startDate, days, lastDayPlan, prefs, priorities]);
+  }, [items, itinerary, startDate, days, lastDayPlan, prefs, priorities, manualOrder]);
 
   const active = plans.find((p) => p.style === chosen) ?? plans[0];
   const cityName = (slug: string) => cities.find((c) => c.slug === slug)?.name ?? slug;
@@ -89,7 +97,18 @@ export default function Step5Plans({
         </div>
       )}
 
-      <ItineraryBar itinerary={itinerary} cities={cities} onLodging={onLodging} />
+      {spare > 0 && (
+        <div className="notice" style={{ marginBottom: 16 }}>
+          <b>{spare}일이 빕니다.</b> 고르신 곳을 다 봐도 날이 남습니다.
+          3단계에서 아이템을 더 담거나, 1단계에서 도시를 더 고르세요.
+          그대로 두면 그 날들은 자유 시간이 됩니다.
+        </div>
+      )}
+
+      <ItineraryBar
+        itinerary={itinerary} cities={cities}
+        onLodging={onLodging} onMoveCity={onMoveCity}
+      />
 
       <div className="plan-tabs" role="group">
         {plans.map((p) => (
@@ -126,6 +145,7 @@ export default function Step5Plans({
         <Day
           key={day.dayIndex} day={day} pool={pool} prefs={prefs}
           cityName={cityName} onSwap={onSwap} onMode={onMode}
+          onMoveEntry={onMoveEntry} touched={Boolean(manualOrder[day.date])}
         />
       ))}
     </>
@@ -134,7 +154,7 @@ export default function Step5Plans({
 
 /** 하루치. 대안은 여기서 한 번에 뽑아 자리마다 나눠 준다. */
 function Day({
-  day, pool, prefs, cityName, onSwap, onMode,
+  day, pool, prefs, cityName, onSwap, onMode, onMoveEntry, touched,
 }: {
   day: PlanDay;
   pool: Item[];
@@ -142,6 +162,8 @@ function Day({
   cityName: (slug: string) => string;
   onSwap: (out: Item, inItems: Item[]) => void;
   onMode: (from: string, to: string, mode: string) => void;
+  onMoveEntry: (date: string, itemId: string, dir: -1 | 1) => void;
+  touched: boolean;
 }) {
   const altsByItem = useMemo(() => alternativesForDay(day, pool, prefs), [day, pool, prefs]);
   return (
@@ -156,6 +178,7 @@ function Day({
                   : ` → ${cityName(day.returnTo)} (저녁)`
               )}
             </span>
+            {touched && <span className="badge">순서 바꿈</span>}
             {day.isDayTrip && (
               <span className="badge">
                 {day.entries.some((e) => e.returnLeg && (e.slot === 'afternoon' || e.slot === 'evening'))
@@ -193,6 +216,18 @@ function Day({
                     {!e.returnLeg && e.travelMin > 0 && (
                       <div className="travel">↑ 앞 일정에서 약 {e.travelMin}분 이동</div>
                     )}
+                    <div className="entry-move" role="group" aria-label="순서 바꾸기">
+                      <button
+                        type="button" disabled={i === 0}
+                        aria-label={`${e.item.name} 앞으로`}
+                        onClick={() => onMoveEntry(day.date, e.item.id, -1)}
+                      >↑</button>
+                      <button
+                        type="button" disabled={i === day.entries.length - 1}
+                        aria-label={`${e.item.name} 뒤로`}
+                        onClick={() => onMoveEntry(day.date, e.item.id, 1)}
+                      >↓</button>
+                    </div>
                   </div>
                   <Alternatives alts={altsByItem.get(e.item.id) ?? []} target={e.item} onSwap={onSwap} />
                 </div>
@@ -325,11 +360,12 @@ function TravelBlock({
  * 맨 위에 놓고, 그 자리에서 바꿀 수 있게 한다.
  */
 function ItineraryBar({
-  itinerary, cities, onLodging,
+  itinerary, cities, onLodging, onMoveCity,
 }: {
   itinerary: Itinerary;
   cities: City[];
   onLodging: (city: string, how: 'sleep' | 'daytrip') => void;
+  onMoveCity: (city: string, dir: -1 | 1) => void;
 }) {
   const name = (slug: string) => cities.find((c) => c.slug === slug)?.name ?? slug;
   return (
@@ -342,10 +378,22 @@ function ItineraryBar({
       <div className="itin-body">
         <p className="help" style={{ margin: '0 0 10px' }}>
           도시 간 이동 시간이 가장 짧은 순서로 짰습니다. 숙박은 하루치를 채우는 도시에서만 하고,
-          짧게 볼 곳은 가까운 숙박지에서 다녀옵니다. 아래에서 바꿀 수 있습니다.
+          짧게 볼 곳은 가까운 숙박지에서 다녀옵니다. <b>화살표로 순서를 바꾸면 교통편을 다시 찾습니다.</b>
         </p>
-        {itinerary.stops.map((s) => (
+        {itinerary.stops.map((s, i) => (
           <div className="itin-row" key={s.city.slug}>
+            <div className="itin-move" role="group" aria-label={`${s.city.name} 순서 바꾸기`}>
+              <button
+                type="button" disabled={i === 0}
+                aria-label={`${s.city.name} 앞으로`}
+                onClick={() => onMoveCity(s.city.slug, -1)}
+              >↑</button>
+              <button
+                type="button" disabled={i === itinerary.stops.length - 1}
+                aria-label={`${s.city.name} 뒤로`}
+                onClick={() => onMoveCity(s.city.slug, 1)}
+              >↓</button>
+            </div>
             <span className="itin-city">{s.city.name}</span>
             <span className="itin-state">
               {s.sleep ? `${s.nights}박` : `당일치기 ← ${name(s.base ?? '')}`}

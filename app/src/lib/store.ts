@@ -37,7 +37,7 @@ export function defaultState(): TripState {
     transport: ['walk', 'metro'],
     dayTripAppetite: 2,
   };
-  return { version: 2, step: 1, basics, prefs, priorities: {}, chosenPlan: null, savedPlans: [], baseOverrides: {}, courses: {}, modePicks: {}, lodging: {} };
+  return { version: 2, step: 1, basics, prefs, priorities: {}, chosenPlan: null, savedPlans: [], baseOverrides: {}, courses: {}, modePicks: {}, lodging: {}, cityOrder: [], dayOrder: {} };
 }
 
 /**
@@ -80,6 +80,8 @@ function migrate(parsed: TripState): TripState {
     courses: parsed.courses ?? {},
     modePicks: parsed.modePicks ?? {},
     lodging: parsed.lodging ?? {},
+    cityOrder: parsed.cityOrder ?? [],
+    dayOrder: parsed.dayOrder ?? {},
   };
 }
 

@@ -774,3 +774,20 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
   line-height: 1.7;
   border-radius: 0 0 var(--radius) var(--radius);
 }
+
+/* 순서 바꾸기 — 도시와 일정 모두 같은 모양의 화살표를 쓴다. */
+.entry-move, .itin-move { display: flex; gap: 4px; }
+.entry-move { margin-top: 8px; }
+.entry-move button, .itin-move button {
+  width: 32px; height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+.entry-move button:disabled, .itin-move button:disabled { opacity: 0.3; cursor: default; }
+.itin-move { flex: 0 0 auto; }
