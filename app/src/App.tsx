@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Basics, Item, Plan, PlanStyle, Preferences, Priorities, ThemeId, TripState } from './types';
 import { loadCountry, loadItemsFor, type CountryIndex } from './lib/data';
-import { clearState, defaultState, exportState, importState, loadState, saveState } from './lib/store';
+import { clearState, defaultState, exportState, importState, isInstalled, loadState, saveState } from './lib/store';
+import type { SaveResult } from './lib/store';
+import { SaveStatus } from './components/SaveStatus';
+import { ResumeBanner, StorageWarning } from './components/ResumeBanner';
 import { assignBases } from './lib/basing';
 import { inferHints, inferThemes } from './lib/taste';
 import Step1Basics, { tripDays } from './steps/Step1Basics';
@@ -22,7 +25,33 @@ export default function App() {
   const plansRef = useRef<Plan[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { saveState(state); }, [state]);
+  const [saved, setSaved] = useState<SaveResult | null>(null);
+  // '방금 → 3분 전' 이 저절로 바뀌도록 1분마다 현재 시각만 다시 읽는다.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 60_000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => { setSaved(saveState(state)); setNow(Date.now()); }, [state]);
+
+  /**
+   * 지난번 것이 복원됐는지는 첫 렌더 때 한 번만 판단한다.
+   * 1단계에서 아무것도 안 한 상태면 알릴 것이 없다.
+   */
+  const [showResume, setShowResume] = useState(() => {
+    const s = loadState();
+    return Boolean(s.savedAt) && (s.step > 1 || s.basics.cities.length > 0);
+  });
+
+  /**
+   * 홈 화면 앱이 아니면 저장분이 7일 뒤 지워질 수 있다.
+   * 다만 아직 아무것도 안 고른 사람에게는 잃을 것이 없으니 알릴 이유도 없다.
+   * 실제로 손이 쌓이기 시작한 뒤에 한 번만 띄운다.
+   */
+  const [warnDismissed, setWarnDismissed] = useState(false);
+  const pickedCount = Object.values(state.priorities).filter((v) => v > 0).length;
+  const showStorageWarning = !warnDismissed && !isInstalled() && pickedCount >= 5;
 
   useEffect(() => {
     loadCountry(state.basics.country).then(setIndex).catch((e: Error) => setError(e.message));
@@ -157,11 +186,30 @@ export default function App() {
         </div>
         <div className="step-label">
           <span>{state.step}단계 · {STEP_TITLES[state.step - 1]}</span>
+          <SaveStatus result={saved} now={now} />
           <span>{state.step} / 6</span>
         </div>
       </header>
 
       <main>
+        {showResume && (
+          <ResumeBanner
+            state={state} now={now}
+            onDismiss={() => setShowResume(false)}
+            onReset={() => {
+              if (confirm('처음부터 다시 시작할까요? 지금까지 고른 것은 사라집니다.')) {
+                clearState(); setState(defaultState()); setShowResume(false);
+              }
+            }}
+          />
+        )}
+        {showStorageWarning && (
+          <StorageWarning
+            onExport={() => { exportState(state); setWarnDismissed(true); }}
+            onDismiss={() => setWarnDismissed(true)}
+          />
+        )}
+
         {state.step === 1 && (
           <Step1Basics
             basics={state.basics} cities={index.cities} macroRegions={index.macroRegions}
@@ -183,7 +231,9 @@ export default function App() {
           <Step4Priority
             items={items} cities={index.cities} prefs={state.prefs}
             priorities={state.priorities} days={days}
+            ui={state.ui ?? {}}
             onSet={setPriority} onBulk={setPriorities}
+            onUi={(next) => setState((s) => ({ ...s, ui: { ...s.ui, ...next } }))}
           />
         )}
         {state.step === 5 && (

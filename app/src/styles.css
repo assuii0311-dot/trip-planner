@@ -445,3 +445,55 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
 .pick-city { font-size: 11px; font-weight: 700; color: var(--accent); }
 .pick-name { font-size: 14px; font-weight: 600; line-height: 1.35; margin-top: 1px; }
 .pick-why { font-size: 11.5px; color: var(--muted); margin-top: 5px; line-height: 1.45; }
+
+/* --- 중간 저장: 저장 상태 · 이어서 하기 · 저장분 경고 --- */
+
+/* 단계 표시줄 가운데. 눈에 띄되 방해하지 않는 크기여야 한다. */
+.save-status {
+  color: var(--ok);
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.save-status.is-bad {
+  color: var(--accent);
+  font-weight: 700;
+}
+.step-label { align-items: center; gap: 10px; }
+
+.resume {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.resume-body { flex: 1 1 190px; min-width: 0; }
+.resume-title { font-size: 14px; font-weight: 700; }
+.resume-when { font-weight: 400; color: var(--muted); }
+.resume-detail { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.resume-acts { display: flex; gap: 8px; }
+.resume-acts button {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.resume-acts .resume-reset { color: var(--muted); }
+
+.storage-warn { margin-bottom: 18px; line-height: 1.6; font-size: 13px; }
+.storage-warn button {
+  background: var(--surface);
+  border-color: var(--accent);
+  color: var(--accent);
+}

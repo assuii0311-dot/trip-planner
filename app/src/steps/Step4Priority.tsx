@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { City, Item, Preferences, Priorities, ThemeId } from '../types';
 import { THEMES } from '../lib/themes';
 import { rankItems } from '../lib/scoring';
@@ -12,18 +12,25 @@ export const minimumPicks = (days: number) => Math.max(4, days * 2);
  * 체크박스로 후보를 넣고 빼고, 별 1~3개로 순위를 준다.
  */
 export default function Step4Priority({
-  items, cities, prefs, priorities, days, onSet, onBulk,
+  items, cities, prefs, priorities, days, ui, onSet, onBulk, onUi,
 }: {
   items: Item[];
   cities: City[];
   prefs: Preferences;
   priorities: Priorities;
   days: number;
+  /** 지난번에 보던 자리. 아이템이 2천 개라 여러 번에 나눠 고르게 된다. */
+  ui: { openTheme?: ThemeId | null; onlyPicked?: boolean };
   onSet: (id: string, v: 0 | 1 | 2 | 3) => void;
   onBulk: (next: Priorities) => void;
+  onUi: (next: { openTheme?: ThemeId | null; onlyPicked?: boolean }) => void;
 }) {
-  const [open, setOpen] = useState<ThemeId | null>(THEMES[0].id);
-  const [onlyPicked, setOnlyPicked] = useState(false);
+  // 펼친 테마와 필터는 저장에 함께 들어간다. 다시 들어왔을 때 첫 테마로
+  // 튕겨 나가면 어디까지 봤는지 알 수 없다.
+  const open = ui.openTheme === undefined ? THEMES[0].id : ui.openTheme;
+  const onlyPicked = ui.onlyPicked ?? false;
+  const setOpen = (v: ThemeId | null) => onUi({ openTheme: v });
+  const setOnlyPicked = (v: boolean) => onUi({ onlyPicked: v });
 
   const ranked = useMemo(() => rankItems(items, prefs, priorities), [items, prefs, priorities]);
   const byTheme = useMemo(() => {
@@ -63,7 +70,7 @@ export default function Step4Priority({
 
       <div className="toolbar" style={{ marginTop: 0, marginBottom: 16 }}>
         <button type="button" onClick={autoPick}>취향대로 추천 담기</button>
-        <button type="button" onClick={() => setOnlyPicked((v) => !v)}>
+        <button type="button" onClick={() => setOnlyPicked(!onlyPicked)}>
           {onlyPicked ? '전체 보기' : '고른 것만 보기'}
         </button>
         {picked > 0 && <button type="button" onClick={() => onBulk({})}>전부 해제</button>}

@@ -211,4 +211,17 @@ export interface TripState {
   baseOverrides: Record<number, string>;
   /** 2단계에서 역산 결과를 한 번이라도 확인했는지. */
   tasteConfirmed?: boolean;
+  /** 마지막으로 저장된 시각(epoch ms). 저장할 때 store 가 찍는다. */
+  savedAt?: number;
+  /**
+   * 화면 상태. 계획 내용은 아니지만, 이어서 할 때 보던 자리로 돌아가려면 필요하다.
+   * 아이템이 2천 개라 4단계는 여러 번에 나눠 고르게 되고, 그때마다 첫 테마로
+   * 튕겨 나가면 어디까지 봤는지 알 수 없다.
+   */
+  ui?: {
+    /** 4단계에서 펼쳐 두었던 테마. */
+    openTheme?: ThemeId | null;
+    /** '고른 것만 보기' 를 켜 두었는지. */
+    onlyPicked?: boolean;
+  };
 }
