@@ -103,6 +103,53 @@ export default function Step1Basics({
         />
       </Block>
 
+      {/*
+        날짜·인원과 같은 '기본 정보' 로 인식되는 항목이라 위쪽에 둔다.
+        예전에는 도시 목록 뒤에 있었는데, 60개 도시 아코디언 때문에 화면
+        상단에서 3,000px 아래로 밀려 사실상 보이지 않았다.
+        고른 도시가 2곳이 안 되면 고를 것이 없지만, 그때도 자리는 보여 준다 —
+        비어 있으면 이런 항목이 있다는 사실 자체를 알 수 없다.
+      */}
+      <Block
+        title="들어가고 나오는 도시"
+        help="마드리드로 들어와 바르셀로나에서 나오는 일정이라면 도시 순서가 달라집니다. 왕복 항공권이면 둘을 같은 도시로 두세요."
+      >
+        {selected.length > 1 ? (
+          <>
+            <div className="date-pair">
+              <Field label="첫 도시" hint="도착 공항">
+                <select
+                  value={basics.startCity ?? ''}
+                  onChange={(e) => onChange({ startCity: e.target.value || null })}
+                >
+                  <option value="">앱이 정하도록</option>
+                  {selected.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+                </select>
+              </Field>
+              <Field label="마지막 도시" hint="출국 공항">
+                <select
+                  value={basics.endCity ?? ''}
+                  onChange={(e) => onChange({ endCity: e.target.value || null })}
+                >
+                  <option value="">앱이 정하도록</option>
+                  {selected.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
+                </select>
+              </Field>
+            </div>
+            {basics.startCity && basics.endCity && basics.startCity !== basics.endCity && (
+              <p className="help">
+                편도 두 장(오픈조) 일정입니다. 같은 도시로 돌아오지 않으므로 마지막 날 짐을 옮길 일이 없습니다.
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="help" style={{ margin: 0 }}>
+            아래에서 <b>도시를 2곳 이상</b> 고르시면 여기서 정할 수 있습니다.
+            {selected.length === 1 && ' 지금은 한 곳이라 들어가고 나오는 도시가 같습니다.'}
+          </p>
+        )}
+      </Block>
+
       <Block title="가고 싶은 도시" help={`${cities.length}곳 전부를 권역별로 묶었습니다. 여러 곳을 골라도 됩니다.`}>
         <div className="toolbar" style={{ marginTop: 0, marginBottom: 12 }}>
           <button type="button" onClick={() => setOnlyFirst((v) => !v)}>
@@ -148,39 +195,6 @@ export default function Step1Basics({
           );
         })}
       </Block>
-
-      {selected.length > 1 && (
-        <Block
-          title="들어가고 나오는 도시"
-          help="마드리드로 들어와 바르셀로나에서 나오는 일정이라면 도시 순서가 달라집니다. 왕복 항공권이면 둘을 같은 도시로 두세요."
-        >
-          <div className="date-pair">
-            <Field label="첫 도시" hint="비행기가 내리는 곳">
-              <select
-                value={basics.startCity ?? ''}
-                onChange={(e) => onChange({ startCity: e.target.value || null })}
-              >
-                <option value="">앱이 정하도록</option>
-                {selected.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
-              </select>
-            </Field>
-            <Field label="마지막 도시" hint="돌아가는 비행기를 타는 곳">
-              <select
-                value={basics.endCity ?? ''}
-                onChange={(e) => onChange({ endCity: e.target.value || null })}
-              >
-                <option value="">앱이 정하도록</option>
-                {selected.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
-              </select>
-            </Field>
-          </div>
-          {basics.startCity && basics.endCity && basics.startCity !== basics.endCity && (
-            <p className="help">
-              편도 두 장(오픈조) 일정입니다. 같은 도시로 돌아오지 않으므로 마지막 날 짐을 옮길 일이 없습니다.
-            </p>
-          )}
-        </Block>
-      )}
 
       {selected.length > 0 && (
         <BasePlan groups={groups} candidates={cities} overrides={overrides} onOverride={onOverride} />
