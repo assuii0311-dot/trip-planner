@@ -303,11 +303,32 @@ export function scheduleFromItinerary(
       overflow.push({ city: slug, name: st?.city.name ?? slug, days });
     }
   }
-  while (schedule.length < totalDays && schedule.length > 0) {
-    // 날이 남으면 마지막 숙박지에서 더 머문다. 새 도시를 끼워 넣지 않는다 —
-    // 사용자가 고르지 않은 도시를 앱이 밀어 넣는 것은 월권이다.
-    const last = schedule[schedule.length - 1];
-    schedule.push({ ...last, travel: null });
+  /*
+   * 날이 남으면 숙박지들에 고르게 나눈다.
+   *
+   * 예전에는 마지막 도시 뒤에 붙였는데, 14일 일정에서 그라나다가 2박에서
+   * 5박이 되어 1단계 미리보기와 전혀 다른 계획이 나왔다. 마지막 도시에서만
+   * 나흘을 더 보내는 것은 아무도 원한 적 없는 배치다.
+   *
+   * 새 도시를 끼워 넣지는 않는다 — 사용자가 고르지 않은 도시를 앱이 밀어
+   * 넣는 것은 월권이다.
+   */
+  if (schedule.length > 0 && schedule.length < totalDays) {
+    const sleepIdx = schedule
+      .map((d, i) => ({ d, i }))
+      .filter(({ d }) => !d.isDayTrip)
+      .map(({ i }) => i);
+    let k = 0;
+    while (schedule.length < totalDays) {
+      const src = schedule[sleepIdx[k % sleepIdx.length]];
+      // 그 도시의 마지막 날 뒤에 하루를 더 붙인다.
+      let insert = schedule.length;
+      for (let i = schedule.length - 1; i >= 0; i--) {
+        if (schedule[i].city === src.city) { insert = i + 1; break; }
+      }
+      schedule.splice(insert, 0, { ...src, travel: null });
+      k += 1;
+    }
   }
   return { schedule, overflow };
 }

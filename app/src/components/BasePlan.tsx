@@ -1,73 +1,55 @@
-import type { BaseGroup } from '../lib/basing';
 import type { City } from '../types';
+import type { Itinerary } from '../lib/itinerary';
+import { fmtDur } from '../lib/routing';
 
 /**
- * 거점 판정 결과를 보여 준다.
- * 자동으로 확정하지 않고 이유를 붙여 제안한 뒤 사용자가 바꿀 수 있게 한다.
- * 특히 고르지 않은 도시를 거점으로 끌어온 경우에는 반드시 설명이 필요하다.
+ * 1단계 미리보기 — 이 도시들을 고르면 여행이 어떤 모양이 되는지.
+ *
+ * 4단계의 계획과 같은 엔진(동선·숙박)을 쓴다. 예전에는 이 화면이 따로
+ * 거점을 계산해서, 여기서 본 것과 실제 계획이 달랐다. 미리보기가 실제와
+ * 다르면 미리보기가 아니라 오해를 만드는 화면이다.
+ *
+ * 여기서 보여 주는 일수는 도시 성격에 적힌 권장값을 쓴 가이드다. 실제
+ * 일수는 3단계에서 담은 아이템에 맞춰 다시 정해진다.
  */
 export default function BasePlan({
-  groups, candidates, overrides, onOverride,
-}: {
-  groups: BaseGroup[];
-  candidates: City[];
-  overrides: Record<number, string>;
-  onOverride: (index: number, slug: string) => void;
-}) {
-  if (groups.length === 0) return null;
+  itinerary, cities,
+}: { itinerary: Itinerary; cities: City[] }) {
+  const name = (slug: string) => cities.find((c) => c.slug === slug)?.name ?? slug;
+  const sleeps = itinerary.stops.filter((s) => s.sleep);
 
   return (
     <section className="block">
-      <h3>이렇게 묵으시면 됩니다</h3>
-      <p className="help">고른 도시를 이동 시간 기준으로 묶었습니다. 거점은 바꿀 수 있습니다.</p>
+      <h3>이렇게 돌게 됩니다</h3>
+      <p className="help">
+        도시 간 이동 시간이 가장 짧은 순서입니다. 숙박은 {sleeps.length}곳,
+        도시 간 이동은 모두 {fmtDur(itinerary.transitMin)}입니다.
+        아래 일수는 가이드이고, 실제 일수는 3단계에서 고른 곳에 맞춰 정해집니다.
+      </p>
 
-      {groups.map((g, i) => {
-        const options = [g.base, ...g.dayTrips.map((t) => t.city)]
-          .filter((c) => c.nights[1] > 0);
-        return (
-          <div className="card base-group" key={g.base.slug}>
-            <div className="base-head">
-              <span className="base-name">{g.base.name}</span>
-              <span className="base-nights">{g.nights}박</span>
-              {g.baseSuggested && <span className="badge-suggest">제안</span>}
-            </div>
-            <p className="base-reason">{g.reason}</p>
+      <div className="card base-group">
+        <ol className="route">
+          {itinerary.stops.map((s, i) => (
+            <li key={s.city.slug}>
+              <span className="route-no">{i + 1}</span>
+              <span className="route-city">{s.city.name}</span>
+              <span className={`route-stay${s.sleep ? '' : ' is-trip'}`}>
+                {s.sleep ? `${s.nights}박` : `당일치기 ← ${name(s.base ?? '')}`}
+              </span>
+            </li>
+          ))}
+        </ol>
 
-            {g.dayTrips.length > 0 && (
-              <ul className="base-trips">
-                {g.dayTrips.map((t) => (
-                  <li key={t.city.slug}>
-                    <span className="trip-city">{t.city.name}</span>
-                    <span className="trip-leg">
-                      {t.leg.measured ? '' : '약 '}{t.leg.minutes}분 · {t.leg.mode}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {options.length > 1 && (
-              <label className="base-switch">
-                <span>여기 대신 묵을 곳</span>
-                <select
-                  value={overrides[i] ?? g.base.slug}
-                  onChange={(e) => onOverride(i, e.target.value)}
-                >
-                  {options.map((c) => (
-                    <option key={c.slug} value={c.slug}>{c.name}</option>
-                  ))}
-                </select>
-              </label>
-            )}
-          </div>
-        );
-      })}
-
-      {candidates.some((c) => groups.some((g) => g.baseSuggested && g.base.slug === c.slug)) && (
-        <p className="help" style={{ marginTop: 10 }}>
-          제안된 거점은 고르지 않으신 도시입니다. 그 도시의 볼거리도 후보에 함께 들어갑니다.
-        </p>
-      )}
+        {itinerary.hops.length > 0 && (
+          <ul className="route-hops">
+            {itinerary.hops.map((h) => (
+              <li key={`${h.from.slug}-${h.to.slug}`}>
+                {h.from.name} → {h.to.name} · {h.chosen.label} {fmtDur(h.chosen.totalMin)}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
   );
 }

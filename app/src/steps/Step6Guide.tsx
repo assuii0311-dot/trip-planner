@@ -3,6 +3,7 @@ import { ItemDetail } from '../components/ItemDetail';
 import { bookingLinks, directionsUrl, intercityLinks, mapsPlaceUrl } from '../lib/deeplinks';
 import { formatTime, SLOT_LABEL } from '../lib/planner';
 import { MapExport } from '../components/MapExport';
+import { TripMap, TripMapLegend, mapDataOf } from '../components/TripMap';
 
 function LinkRow({ label, note, url }: { label: string; note: string; url: string }) {
   return (
@@ -33,6 +34,7 @@ export default function Step6Guide({
   }
   const cityOf = (slug: string) => cities.find((c) => c.slug === slug);
   const usedCities = [...new Set(plan.days.map((d) => d.city))].map(cityOf).filter(Boolean) as City[];
+  const mapData = mapDataOf(plan, cities);
   const home = usedCities[0];
 
   return (
@@ -42,6 +44,17 @@ export default function Step6Guide({
         각 일정의 길찾기와 예약 경로를 정리했습니다.
         실시간 영업시간과 평점은 링크를 눌러 지도에서 확인하세요.
       </p>
+
+      <section className="block" style={{ marginBottom: 26 }}>
+        <h3>한눈에 보기</h3>
+        <p className="help" style={{ margin: '0 0 10px' }}>
+          큰 점은 자는 곳, 작은 점은 당일치기입니다. 선 위의 아이콘이 그 구간에서 타는 것입니다.
+        </p>
+        <div className="card" style={{ padding: 12 }}>
+          <TripMap stops={mapData.stops} hops={mapData.hops} />
+          <TripMapLegend stops={mapData.stops} hops={mapData.hops} />
+        </div>
+      </section>
 
       <section className="block" style={{ marginBottom: 26 }}>
         <h3>내 구글 지도에 담아 가기</h3>

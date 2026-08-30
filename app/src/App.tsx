@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Basics, City, CourseId, Item, Plan, PlanStyle, Preferences, Priorities, ThemeId, TripState } from './types';
+import type { Basics, CourseId, Item, Plan, PlanStyle, Preferences, Priorities, ThemeId, TripState } from './types';
 import { loadCountry, loadItemsFor, type CountryIndex } from './lib/data';
 import { clearState, defaultState, exportState, importState, isInstalled, loadState, saveState } from './lib/store';
 import type { SaveResult } from './lib/store';
 import { SaveStatus } from './components/SaveStatus';
 import { ResumeBanner, StorageWarning } from './components/ResumeBanner';
-import { assignBases, orderGroups } from './lib/basing';
 import { airportOf, cityForAirport } from './lib/airports';
 import { buildItinerary } from './lib/itinerary';
 import { inferHints, inferThemes } from './lib/taste';
@@ -67,31 +66,21 @@ export default function App() {
   );
 
   /**
-   * 거점 묶기. 공항 순서를 반영하기 전의 원본이다.
+   * 이번 여행에서 밟는 도시 = 사용자가 고른 도시.
    *
-   * 공항이 어느 도시로 이어지는지는 '실제로 방문하는 도시' 를 알아야 정할 수
-   * 있는데, 그 목록에는 사용자가 고르지 않았지만 앱이 거점으로 제안한 도시도
-   * 들어간다. 말라가를 고르지 않았어도 앱이 말라가에 묵으라고 했다면 AGP 는
-   * 말라가 공항이 맞다. 그래서 순서를 돌리기 전에 이것부터 계산한다.
+   * 예전에는 '앱이 거점으로 제안한 도시' 까지 넣었다. 그래서 바르셀로나를
+   * 골랐는데 사라고사에 묵으며 바르셀로나를 당일치기로 다녀오는 계획이
+   * 나왔다. 고르지도 않은 도시에서 자게 만드는 것은 월권이고, 실제로 아무도
+   * 그렇게 여행하지 않는다. 어디서 잘지는 동선 엔진이 고른 도시들 사이에서
+   * 정한다.
    */
-  const rawGroups = useMemo(
-    () => (index ? assignBases(selectedCities, index.cities, days) : []),
-    [index, selectedCities, days],
-  );
-
-  /** 이번 여행에서 실제로 밟는 도시 — 제안된 거점까지 포함한다. */
-  const tripCities = useMemo(() => {
-    const seen = new Map<string, City>();
-    for (const g of rawGroups) {
-      seen.set(g.base.slug, g.base);
-      for (const t of g.dayTrips) seen.set(t.city.slug, t.city);
-    }
-    return [...seen.values()];
-  }, [rawGroups]);
+  const tripCities = selectedCities;
 
   /**
-   * 입·출국 공항이 실제로 어느 도시로 이어지는지.
-   * 공항 도시가 이번 여행에 없으면 가장 가까운 도시로 붙는다.
+   * 공항이 어느 도시로 이어지는지.
+   *
+   * 공항 도시가 이번 여행에 없으면(마드리드로 들어와 안달루시아만 도는 경우)
+   * 고른 도시 중 가장 가까운 곳으로 붙이고 몇 km 인지 알린다.
    */
   const arrival = useMemo(
     () => cityForAirport(airportOf(state.basics.startAirport), tripCities),
@@ -102,36 +91,8 @@ export default function App() {
     [state.basics.endAirport, tripCities],
   );
 
-  /** 공항 순서를 반영하고, 사용자가 거점을 바꾼 경우도 반영한다. */
-  const groups = useMemo(() => {
-    if (!index) return [];
-    const base = orderGroups(rawGroups, arrival?.slug ?? null, departure?.slug ?? null);
-    return base.map((g, i) => {
-      const override = state.baseOverrides[i];
-      if (!override || override === g.base.slug) return g;
-      const swap = [g.base, ...g.dayTrips.map((t) => t.city)].find((c) => c.slug === override);
-      if (!swap) return g;
-      const rest = [g.base, ...g.dayTrips.map((t) => t.city)].filter((c) => c.slug !== override);
-      return {
-        ...g,
-        base: swap,
-        baseSuggested: false,
-        dayTrips: rest.map((c) => ({ city: c, leg: g.dayTrips.find((t) => t.city.slug === c.slug)?.leg
-          ?? { minutes: 60, mode: '이동', measured: false } })),
-        reason: `${swap.name}에 묵는 것으로 바꾸셨습니다.`,
-      };
-    });
-  }, [index, rawGroups, state.baseOverrides, arrival?.slug, departure?.slug]);
-
-  /** 거점으로 제안된 도시는 사용자가 고르지 않았어도 아이템이 필요하다. */
-  const cityScope = useMemo(() => {
-    const set = new Set(state.basics.cities);
-    for (const g of groups) {
-      set.add(g.base.slug);
-      g.dayTrips.forEach((t) => set.add(t.city.slug));
-    }
-    return [...set];
-  }, [state.basics.cities, groups]);
+  /** 아이템을 받아올 도시 = 사용자가 고른 도시. */
+  const cityScope = state.basics.cities;
 
   useEffect(() => {
     if (cityScope.length === 0) { setItems([]); return; }
@@ -171,8 +132,6 @@ export default function App() {
       return { ...s, priorities: next };
     });
   const setPriorities = (next: Priorities) => setState((s) => ({ ...s, priorities: next }));
-  const setOverride = (i: number, slug: string) =>
-    setState((s) => ({ ...s, baseOverrides: { ...s.baseOverrides, [i]: slug } }));
 
   const goto = (step: number) => {
     setState((s) => {
@@ -339,8 +298,8 @@ export default function App() {
         {state.step === 1 && (
           <Step1Basics
             basics={state.basics} cities={index.cities} macroRegions={index.macroRegions}
-            groups={groups} arrival={arrival} departure={departure}
-            overrides={state.baseOverrides} onChange={patchBasics} onOverride={setOverride}
+            itinerary={itinerary} arrival={arrival} departure={departure}
+            onChange={patchBasics}
           />
         )}
         {state.step === 2 && (
@@ -354,7 +313,7 @@ export default function App() {
             ? <div className="spinner">아이템을 모으는 중…</div>
             : (
               <Step3Course
-                items={items} cities={index.cities} groups={groups}
+                items={items} cities={index.cities} itinerary={itinerary}
                 prefs={state.prefs} priorities={state.priorities}
                 courses={state.courses} days={days}
                 ui={state.ui ?? {}}

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { City, CourseId, Item, Preferences, Priorities, ThemeId } from '../types';
-import type { BaseGroup } from '../lib/basing';
+import type { Itinerary } from '../lib/itinerary';
 import { THEMES } from '../lib/themes';
 import { rankItems } from '../lib/scoring';
 import { coursesFor } from '../lib/course';
@@ -19,11 +19,12 @@ import { ItemPhoto } from '../components/ItemPhoto';
  * "이 도시는 보통 이렇게 돕니다" 를 먼저 주고, 거기서 빼고 더한다.
  */
 export default function Step3Course({
-  items, cities, groups, prefs, priorities, courses, days, ui, onSet, onBulk, onCourse, onUi,
+  items, cities, itinerary, prefs, priorities, courses, days, ui, onSet, onBulk, onCourse, onUi,
 }: {
   items: Item[];
   cities: City[];
-  groups: BaseGroup[];
+  /** 동선 엔진이 정한 방문 순서와 숙박. 도시별 코스 분량을 여기에 맞춘다. */
+  itinerary: Itinerary | null;
   prefs: Preferences;
   priorities: Priorities;
   courses: Record<string, CourseId>;
@@ -34,16 +35,12 @@ export default function Step3Course({
   onCourse: (city: string, course: CourseId, items: Item[]) => void;
   onUi: (next: { openCity?: string | null; openTheme?: ThemeId | null; onlyPicked?: boolean }) => void;
 }) {
-  /** 방문할 도시를 거점 순서대로. 여기에 배정된 밤 수가 코스 분량을 정한다. */
-  const stops = useMemo(() => {
-    const out: { city: City; nights: number; isDayTrip: boolean }[] = [];
-    for (const g of groups) {
-      const trips = g.dayTrips.length;
-      out.push({ city: g.base, nights: Math.max(1, g.nights - trips), isDayTrip: false });
-      for (const t of g.dayTrips) out.push({ city: t.city, nights: 1, isDayTrip: true });
-    }
-    return out;
-  }, [groups]);
+  /** 방문 순서대로. 여기에 배정된 밤 수가 코스 분량을 정한다. */
+  const stops = useMemo(() => (itinerary?.stops ?? []).map((s) => ({
+    city: s.city,
+    nights: s.sleep ? s.nights : 1,
+    isDayTrip: !s.sleep,
+  })), [itinerary]);
 
   const openCity = ui.openCity === undefined ? (stops[0]?.city.slug ?? null) : ui.openCity;
   const onlyPicked = ui.onlyPicked ?? false;

@@ -3,7 +3,7 @@ import type { Basics, City, LastDayPlan, MacroRegion } from '../types';
 import { Block, Field, Segmented } from '../components/Controls';
 import CityCard from '../components/CityCard';
 import BasePlan from '../components/BasePlan';
-import type { BaseGroup } from '../lib/basing';
+import type { Itinerary } from '../lib/itinerary';
 import { AIRPORT_GROUPS, airportOf } from '../lib/airports';
 import { withJosa } from '../lib/korean';
 
@@ -21,23 +21,20 @@ export function tripDays(basics: Basics): number {
  * 효율적인지 판단할 근거가 없기 때문이다. 도시를 고르면 앱이 묶어 준다.
  */
 export default function Step1Basics({
-  basics, cities, macroRegions, groups, arrival, departure, overrides, onChange, onOverride,
+  basics, cities, macroRegions, itinerary, arrival, departure, onChange,
 }: {
   basics: Basics;
   cities: City[];
   macroRegions: MacroRegion[];
   /**
-   * 거점 묶음. App 이 한 곳에서 계산해 내려 준다.
-   * 예전에는 이 화면이 따로 계산했는데, 그러면 입국·출국 도시로 돌린 순서가
-   * 여기에 반영되지 않아 화면과 실제 계획이 어긋난다.
+   * 동선 엔진이 만든 여정. 4단계 계획과 같은 것을 쓴다 -
+   * 미리보기가 실제 계획과 다르면 오해만 만든다.
    */
-  groups: BaseGroup[];
+  itinerary: Itinerary | null;
   /** 입·출국 공항이 실제로 이어지는 도시. App 이 계산해 내려 준다. */
   arrival: { slug: string; transferKm: number } | null;
   departure: { slug: string; transferKm: number } | null;
-  overrides: Record<number, string>;
   onChange: (patch: Partial<Basics>) => void;
-  onOverride: (index: number, slug: string) => void;
 }) {
   const [openRegion, setOpenRegion] = useState<string | null>(macroRegions[0]?.id ?? null);
   const [onlyFirst, setOnlyFirst] = useState(false);
@@ -243,8 +240,8 @@ export default function Step1Basics({
         })}
       </Block>
 
-      {selected.length > 0 && (
-        <BasePlan groups={groups} candidates={cities} overrides={overrides} onOverride={onOverride} />
+      {selected.length > 0 && itinerary && (
+        <BasePlan itinerary={itinerary} cities={cities} />
       )}
     </>
   );

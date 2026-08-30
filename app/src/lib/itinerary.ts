@@ -309,7 +309,19 @@ export function buildItinerary(
     l.push(it);
     byCity.set(it.city, l);
   }
-  const itemDaysOf = (slug: string) => estimateDays(byCity.get(slug) ?? [], prefs);
+  /**
+   * 이 도시에 며칠이 필요한가.
+   *
+   * 담은 아이템으로 계산한다. 아직 아무것도 담지 않았으면(1단계 미리보기)
+   * 도시 성격에 적힌 권장 숙박일을 쓴다 — 0일로 두면 모든 도시가 당일치기로
+   * 판정돼 미리보기가 실제 계획과 전혀 다른 모양이 된다.
+   */
+  const itemDaysOf = (slug: string) => {
+    const list = byCity.get(slug);
+    if (list && list.length) return estimateDays(list, prefs);
+    const c = cities.find((x) => x.slug === slug);
+    return c?.nights?.[0] ?? 1.5;
+  };
 
   const ordered = orderCities(cities, startSlug, endSlug, measured);
   const stops = assignLodging(ordered, itemDaysOf, measured, opts.lodging);
