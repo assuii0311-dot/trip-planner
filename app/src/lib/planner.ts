@@ -1,5 +1,7 @@
-import type { Item, LastDayPlan, Plan, PlanDay, PlanEntry, PlanStyle, Preferences, Priorities, Slot, ThemeId } from '../types';
-import type { BaseGroup } from './basing';
+import type { Item, LastDayPlan, Plan, PlanDay, PlanEntry, PlanStyle, PlanTravel, Preferences, Priorities, Slot, ThemeId, TravelOption } from '../types';
+import type { Itinerary } from './itinerary';
+import type { Service } from './routing';
+import { MODE_ICON, nextDeparture } from './routing';
 import { rankItems } from './scoring';
 import { distanceKm, hasCoords, travelMinutes, walkKmOf } from './geo';
 
@@ -108,10 +110,13 @@ function buildDay(
   returnTo: string | null = null,
   returnMinutes = 0,
   returnAfter: 'afternoon' | 'dinner' = 'afternoon',
+  /** 이 날 아침에 도시를 옮겼다면 그 구간. 일정은 도착 시각부터 시작한다. */
+  travel: PlanTravel | null = null,
+  sleepAt: string | null = null,
 ): PlanDay {
   const inCity = pool.filter((p) => !used.has(p.item.id) && p.item.city === city);
   const anchor = inCity.find((p) => p.item.theme !== 'food' && p.item.theme !== 'nightlife');
-  if (!anchor) return { date, dayIndex, city, isDayTrip, returnTo, entries: [], walkKm: 0 };
+  if (!anchor) return { date, dayIndex, city, isDayTrip, returnTo, travel, sleepAt, entries: [], walkKm: 0 };
 
   const proximity = (item: Item) => {
     if (!hasCoords(item) || !hasCoords(anchor.item)) return 0.6;
@@ -119,8 +124,17 @@ function buildDay(
     return 1 / (1 + (km / spec.radiusKm) ** 2);
   };
 
-  // 당일치기는 오가는 시간이 있어 하루가 늦게 시작하고 일찍 끝난다.
-  const start = DAY_START[prefs.dayStart] + (isDayTrip ? 75 : 0);
+  /*
+   * 하루가 언제 시작하는가.
+   *
+   * 도시를 옮긴 날은 도착 시각부터다. 오전 9시 반에 시작한다고 해 놓고
+   * 실제로는 오후 1시에 도착하는 도시에 오전 일정을 넣으면, 그 일정은
+   * 현실에서 통째로 불가능하다. 이것이 '이동 시간을 고려하지 않은 일정'
+   * 의 정체였다. 짐을 풀고 나오는 30분을 더 준다.
+   */
+  const arrival = travel ? travel.arriveAt + 30 : null;
+  const base = DAY_START[prefs.dayStart] + (isDayTrip ? 75 : 0);
+  const start = arrival !== null ? Math.max(base, arrival) : base;
   // 도착일 오전만 쓰는 경우 점심 전에 끝낸다.
   const specs = spec.slots(start).filter((s) => (morningOnly ? s.slot === 'morning' : true));
   // 거점으로 돌아와 저녁을 먹으므로 근교라고 해서 하루를 일찍 끊지 않는다.
@@ -167,13 +181,16 @@ function buildDay(
     clock = startMin + pick.item.durationMin;
   }
 
-  return { date, dayIndex, city, isDayTrip, returnTo, entries, walkKm: walkKmOf(entries.map((e) => e.item)) };
+  return {
+    date, dayIndex, city, isDayTrip, returnTo, travel, sleepAt, entries,
+    walkKm: walkKmOf(entries.map((e) => e.item)),
+  };
 }
 
 export interface PlanInput {
   items: Item[];
-  /** 1단계에서 판정한 거점과 근교. 근교는 사용자가 직접 고른 곳이므로 반드시 넣는다. */
-  groups: BaseGroup[];
+  /** 동선 엔진이 만든 여정 — 도시 순서·숙박·이동 수단. */
+  itinerary: Itinerary;
   startDate: string;
   days: number;
   lastDayPlan: LastDayPlan;
@@ -185,69 +202,124 @@ export interface PlanInput {
 export interface PlanWarning { kind: 'daytrip-dropped'; cities: string[] }
 
 /**
- * 일자별로 어느 도시에 있을지 정한다.
+ * 여정(도시 순서·숙박·이동)을 달력에 편다.
  *
- * 근교 도시는 사용자가 직접 고른 곳이므로 "여유가 되면"이 아니라 반드시 넣는다.
- * 거점에 최소 하루는 남겨야 하므로, 날이 모자라면 들어가지 못한 근교를 알려 준다.
+ * 예전에는 거점 묶음을 순서대로 늘어놓고 날짜만 잘랐다. 도시를 옮기는 데
+ * 걸리는 시간이 어디에도 반영되지 않아, 오후 1시에 도착하는 도시에 오전
+ * 일정이 들어가 있었다. 이제는 이동 구간이 하루를 차지하고, 도착 시각이
+ * 그날 일정의 시작 시각이 된다.
+ *
+ * 날이 모자라면 잘라내지 않고 넘치는 만큼을 돌려준다 — 무엇을 뺄지는
+ * 사용자가 정할 일이지 앱이 조용히 정할 일이 아니다.
  */
-/** 이만큼도 안 되는 도시에 하루를 통째로 주면 오후가 빈다. 실측으로 정한 값이다. */
-const HALF_DAY_ITEM_FLOOR = 20;
-
-interface DayPlanSlot {
+export interface DayPlanSlot {
   city: string;
   isDayTrip: boolean;
-  /** 근교에서 돌아올 거점. 당일치기면 저녁만이라도 거점에서 먹는다. */
   returnTo: string | null;
   returnMinutes: number;
   returnAfter: 'afternoon' | 'dinner';
+  travel: PlanTravel | null;
+  sleepAt: string | null;
 }
 
-function assignCities(groups: BaseGroup[], totalDays: number): {
-  schedule: DayPlanSlot[];
-  dropped: string[];
-} {
+/** 이만큼도 안 되는 도시에 하루를 통째로 주면 오후가 빈다. 실측으로 정한 값이다. */
+const HALF_DAY_ITEM_FLOOR = 20;
+
+const toOption = (s: Service): TravelOption => ({
+  mode: s.mode,
+  label: s.label,
+  icon: MODE_ICON[s.mode],
+  totalMin: s.totalMin,
+  rideMin: s.rideMin,
+  costEur: s.costEur,
+  transfers: s.transfers,
+  estimated: s.estimated,
+  note: s.note,
+});
+
+export function scheduleFromItinerary(
+  itin: Itinerary, totalDays: number, dayStartMin: number,
+): { schedule: DayPlanSlot[]; overflow: { city: string; name: string; days: number }[] } {
   const schedule: DayPlanSlot[] = [];
-  const dropped: string[] = [];
+  const sleeping = itin.stops.filter((s) => s.sleep);
+  const hopOf = new Map(itin.hops.map((h) => [`${h.from.slug}>${h.to.slug}`, h]));
 
-  for (const g of groups) {
-    const nights = Math.max(1, g.nights);
-    // 거점에 최소 하루는 남긴다. 근교만 다니다 끝나면 묵는 의미가 없다.
-    const tripSlots = Math.max(0, Math.min(g.dayTrips.length, nights - 1));
-    const trips = g.dayTrips.slice(0, tripSlots);
-    dropped.push(...g.dayTrips.slice(tripSlots).map((t) => t.city.name));
+  sleeping.forEach((stop, i) => {
+    const prev = sleeping[i - 1];
+    const hop = prev ? hopOf.get(`${prev.city.slug}>${stop.city.slug}`) : undefined;
 
-    const baseDays = nights - trips.length;
-    // 첫날은 거점에서 시작한다. 도착 직후 먼 이동을 시키지 않기 위해서다.
-    for (let i = 0; i < baseDays; i++) {
+    let travel: PlanTravel | null = null;
+    if (hop) {
+      const dep = nextDeparture(hop.chosen, dayStartMin);
+      const alive = hop.options.filter((o) => nextDeparture(o, dayStartMin) !== null);
+      travel = {
+        from: hop.from.slug,
+        to: hop.to.slug,
+        chosen: toOption(hop.chosen),
+        leaveAt: dep?.leaveAt ?? dayStartMin,
+        departAt: dep?.departAt ?? dayStartMin,
+        arriveAt: dep?.arriveAt ?? dayStartMin + hop.chosen.totalMin,
+        waitMin: dep?.waitMin ?? 0,
+        options: alive.map(toOption),
+        unavailable: hop.options.filter((o) => !alive.includes(o)).map((o) => o.label),
+      };
+    }
+
+    // 이 숙박지에 붙은 당일치기들.
+    const trips = itin.stops.filter((x) => !x.sleep && x.base === stop.city.slug);
+    const baseDays = Math.max(1, stop.nights - trips.length);
+
+    for (let d = 0; d < baseDays; d++) {
       schedule.push({
-        city: g.base.slug, isDayTrip: false, returnTo: null, returnMinutes: 0, returnAfter: 'dinner',
+        city: stop.city.slug, isDayTrip: false, returnTo: null, returnMinutes: 0,
+        returnAfter: 'dinner',
+        travel: d === 0 ? travel : null,
+        sleepAt: stop.city.slug,
       });
     }
-    const inserted: DayPlanSlot[] = trips.map((t) => {
-      // 볼거리가 적으면 오전만 다녀오고 오후부터 거점에서 보낸다.
-      const halfDay = t.city.itemCount < HALF_DAY_ITEM_FLOOR;
-      return {
+    // 근교는 거점 일정 사이에 끼운다. 이동한 날 바로 근교로 보내지 않는다.
+    const insertAt = schedule.length - baseDays + Math.min(1, baseDays);
+    trips.forEach((t, k) => {
+      schedule.splice(insertAt + k, 0, {
         city: t.city.slug,
         isDayTrip: true,
-        returnTo: g.base.slug,
-        returnMinutes: t.leg.minutes,
-        returnAfter: halfDay ? 'afternoon' : 'dinner',
-      };
+        returnTo: stop.city.slug,
+        returnMinutes: Math.round(t.dayTripMin / 2),
+        returnAfter: t.city.itemCount < HALF_DAY_ITEM_FLOOR ? 'afternoon' : 'dinner',
+        travel: null,
+        sleepAt: stop.city.slug,
+      });
     });
-    // 근교를 거점 일정 사이에 끼워 넣어 이동이 몰리지 않게 한다.
-    inserted.forEach((d, i) => schedule.splice(Math.min(1 + i * 2, schedule.length), 0, d));
-  }
+  });
 
-  while (schedule.length > totalDays) schedule.pop();
-  while (schedule.length < totalDays && schedule.length > 0) {
-    schedule.push(schedule[schedule.length - 1]);
+  // 날이 모자라면 잘라내되, 무엇이 밀려났는지 돌려준다.
+  const overflow: { city: string; name: string; days: number }[] = [];
+  if (schedule.length > totalDays) {
+    const cut = schedule.splice(totalDays);
+    const byCity = new Map<string, number>();
+    for (const c of cut) byCity.set(c.city, (byCity.get(c.city) ?? 0) + 1);
+    for (const [slug, days] of byCity) {
+      const st = itin.stops.find((x) => x.city.slug === slug);
+      overflow.push({ city: slug, name: st?.city.name ?? slug, days });
+    }
   }
-  return { schedule, dropped };
+  while (schedule.length < totalDays && schedule.length > 0) {
+    // 날이 남으면 마지막 숙박지에서 더 머문다. 새 도시를 끼워 넣지 않는다 —
+    // 사용자가 고르지 않은 도시를 앱이 밀어 넣는 것은 월권이다.
+    const last = schedule[schedule.length - 1];
+    schedule.push({ ...last, travel: null });
+  }
+  return { schedule, overflow };
 }
 
-export function buildPlans(input: PlanInput): { plans: Plan[]; dropped: string[] } {
+export function buildPlans(input: PlanInput): {
+  plans: Plan[];
+  overflow: { city: string; name: string; days: number }[];
+} {
   const ranked = rankItems(input.items, input.prefs, input.priorities).filter((r) => r.score > -20);
-  const { schedule, dropped } = assignCities(input.groups, input.days);
+  const { schedule, overflow } = scheduleFromItinerary(
+    input.itinerary, input.days, DAY_START[input.prefs.dayStart],
+  );
 
   const plans = STYLES.map((spec) => {
     const used = new Set<string>();
@@ -257,12 +329,14 @@ export function buildPlans(input: PlanInput): { plans: Plan[]; dropped: string[]
       if (lastDay === 'none') {
         return {
           date: addDays(input.startDate, i), dayIndex: i + 1, city: s.city,
-          isDayTrip: s.isDayTrip, returnTo: null, entries: [], walkKm: 0,
+          isDayTrip: s.isDayTrip, returnTo: null, travel: s.travel, sleepAt: s.sleepAt,
+          entries: [], walkKm: 0,
         };
       }
       return buildDay(
         ranked, used, spec, input.prefs, addDays(input.startDate, i), i + 1,
         s.city, s.isDayTrip, lastDay === 'morning', s.returnTo, s.returnMinutes, s.returnAfter,
+        s.travel, s.sleepAt,
       );
     });
 
@@ -284,7 +358,7 @@ export function buildPlans(input: PlanInput): { plans: Plan[]; dropped: string[]
     };
   });
 
-  return { plans, dropped };
+  return { plans, overflow };
 }
 
 export function formatTime(min: number): string {

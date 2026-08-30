@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import type { City, Item, LastDayPlan, Plan, PlanDay, PlanStyle, Preferences, Priorities } from '../types';
-import type { BaseGroup } from '../lib/basing';
+import type { City, Item, LastDayPlan, Plan, PlanDay, PlanStyle, PlanTravel, Preferences, Priorities } from '../types';
+import type { Itinerary } from '../lib/itinerary';
+import { fmtDur, fmtHm } from '../lib/routing';
 import { buildPlans, formatTime, SLOT_LABEL } from '../lib/planner';
 import { alternativesForDay } from '../lib/alternatives';
 import type { Alternative } from '../lib/alternatives';
@@ -8,11 +9,12 @@ import { THEME_ICON, THEME_LABEL } from '../lib/themes';
 
 /** 4단계 — 담은 곳을 바탕으로 밀도가 다른 3가지 안을 만든다. */
 export default function Step5Plans({
-  items, cities, groups, startDate, days, lastDayPlan, prefs, priorities, chosen, onChoose, onPlans, onSwap,
+  items, cities, itinerary, startDate, days, lastDayPlan, prefs, priorities, chosen,
+  onChoose, onPlans, onSwap, onMode, onLodging, onDropCity,
 }: {
   items: Item[];
   cities: City[];
-  groups: BaseGroup[];
+  itinerary: Itinerary;
   startDate: string;
   days: number;
   lastDayPlan: LastDayPlan;
@@ -23,14 +25,20 @@ export default function Step5Plans({
   onPlans: (plans: Plan[]) => void;
   /** 일정 하나를 빼고 다른 곳(들)을 넣는다. 계획은 우선순위에서 다시 만들어진다. */
   onSwap: (out: Item, inItems: Item[]) => void;
+  /** 도시 간 이동 수단을 바꾼다. 바꾸면 도착 시각이 달라져 그날 일정이 다시 짜인다. */
+  onMode: (from: string, to: string, mode: string) => void;
+  /** 이 도시에서 잘지 당일치기로 다녀올지 바꾼다. */
+  onLodging: (city: string, how: 'sleep' | 'daytrip') => void;
+  /** 날이 모자랄 때 이 도시를 뺀다. */
+  onDropCity: (city: string) => void;
 }) {
-  const { plans, dropped } = useMemo(() => {
-    const built = buildPlans({ items, groups, startDate, days, lastDayPlan, prefs, priorities });
+  const { plans, overflow } = useMemo(() => {
+    const built = buildPlans({ items, itinerary, startDate, days, lastDayPlan, prefs, priorities });
     onPlans(built.plans);
     return built;
     // onPlans 는 저장만 하므로 의존성에서 제외한다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, groups, startDate, days, lastDayPlan, prefs, priorities]);
+  }, [items, itinerary, startDate, days, lastDayPlan, prefs, priorities]);
 
   const active = plans.find((p) => p.style === chosen) ?? plans[0];
   const cityName = (slug: string) => cities.find((c) => c.slug === slug)?.name ?? slug;
@@ -58,11 +66,30 @@ export default function Step5Plans({
       <h2>계획 3가지</h2>
       <p className="lede">같은 우선순위로 하루 밀도만 다르게 짰습니다. 탭으로 비교해 보세요.</p>
 
-      {dropped.length > 0 && (
+      {overflow.length > 0 && (
         <div className="notice" style={{ marginBottom: 16 }}>
-          날짜가 모자라 {dropped.join(' · ')}은 넣지 못했습니다. 일정을 늘리거나 1단계에서 도시를 줄여 보세요.
+          <p style={{ margin: '0 0 8px' }}>
+            <b>{days}일로는 {overflow.reduce((a, o) => a + o.days, 0)}일이 모자랍니다.</b>{' '}
+            아래 도시가 일정 끝에서 밀려났습니다. <b>무엇을 뺄지 직접 고르세요</b> —
+            앱이 조용히 정하지 않습니다.
+          </p>
+          <div className="chips">
+            {overflow.map((o) => (
+              <button
+                key={o.city} type="button" className="chip"
+                onClick={() => onDropCity(o.city)}
+              >
+                {o.name} 빼기 ({o.days}일)
+              </button>
+            ))}
+          </div>
+          <p className="help" style={{ margin: '8px 0 0' }}>
+            도시를 빼는 대신 3단계에서 아이템을 줄이거나, 1단계에서 날짜를 늘려도 됩니다.
+          </p>
         </div>
       )}
+
+      <ItineraryBar itinerary={itinerary} cities={cities} onLodging={onLodging} />
 
       <div className="plan-tabs" role="group">
         {plans.map((p) => (
@@ -98,7 +125,7 @@ export default function Step5Plans({
       {active.days.map((day) => (
         <Day
           key={day.dayIndex} day={day} pool={pool} prefs={prefs}
-          cityName={cityName} onSwap={onSwap}
+          cityName={cityName} onSwap={onSwap} onMode={onMode}
         />
       ))}
     </>
@@ -107,13 +134,14 @@ export default function Step5Plans({
 
 /** 하루치. 대안은 여기서 한 번에 뽑아 자리마다 나눠 준다. */
 function Day({
-  day, pool, prefs, cityName, onSwap,
+  day, pool, prefs, cityName, onSwap, onMode,
 }: {
   day: PlanDay;
   pool: Item[];
   prefs: Preferences;
   cityName: (slug: string) => string;
   onSwap: (out: Item, inItems: Item[]) => void;
+  onMode: (from: string, to: string, mode: string) => void;
 }) {
   const altsByItem = useMemo(() => alternativesForDay(day, pool, prefs), [day, pool, prefs]);
   return (
@@ -135,6 +163,9 @@ function Day({
               </span>
             )}
           </div>
+          {day.travel && (
+            <TravelBlock travel={day.travel} cityName={cityName} onMode={onMode} />
+          )}
           <div className="card">
             {day.entries.length === 0 ? (
               <div className="empty">이 날에 넣을 항목이 부족합니다. 3단계에서 더 담아주세요.</div>
@@ -206,6 +237,126 @@ function Alternatives({
                 : a.deltaMin > 0 ? `${a.deltaMin}분 더 걸림` : `${-a.deltaMin}분 짧음`}
             </div>
           </button>
+        ))}
+      </div>
+    </details>
+  );
+}
+
+/**
+ * 도시를 옮기는 구간.
+ *
+ * 무엇을 타고, 몇 시에 나서서, 몇 시에 닿는지를 적는다. 예전에는 이 구간이
+ * 아예 없어서 오후 1시에 도착하는 도시에 오전 일정이 들어가 있었다.
+ *
+ * 대안 수단을 함께 놓고 그 자리에서 바꾸게 한다. 바꾸면 도착 시각이 달라져
+ * 그날 일정이 다시 짜인다 — 비행기로 바꾸면 오후가 통째로 사라지는 것이
+ * 눈에 보여야 한다.
+ */
+function TravelBlock({
+  travel, cityName, onMode,
+}: {
+  travel: PlanTravel;
+  cityName: (slug: string) => string;
+  onMode: (from: string, to: string, mode: string) => void;
+}) {
+  const c = travel.chosen;
+  return (
+    <div className="travel-block">
+      <div className="travel-head">
+        <span className="travel-icon">{c.icon}</span>
+        <div>
+          <div className="travel-route">
+            {cityName(travel.from)} → {cityName(travel.to)}
+          </div>
+          <div className="travel-when">
+            {fmtHm(travel.leaveAt)} 숙소 출발 · {fmtHm(travel.departAt)} 탑승 · {fmtHm(travel.arriveAt)} 도착
+          </div>
+        </div>
+        <div className="travel-total">{fmtDur(travel.arriveAt - travel.leaveAt)}</div>
+      </div>
+      <div className="travel-meta">
+        {c.label}
+        {c.transfers > 0 && ` · 환승 ${c.transfers}회`}
+        {travel.waitMin > 0 && ` · ${c.mode === 'flight' ? '공항' : c.mode === 'bus' ? '터미널' : '역'}에서 대기 ${travel.waitMin}분`}
+        {c.costEur > 0 && ` · 약 €${c.costEur}`}
+        {c.estimated && ' · 시간은 추정치입니다'}
+      </div>
+      {c.note && <div className="travel-note">{c.note}</div>}
+
+      {travel.options.length > 1 && (
+        <details className="travel-alts">
+          <summary>다른 수단 {travel.options.length - 1}가지</summary>
+          <div className="mode-list">
+            {travel.options.map((o) => (
+              <button
+                key={o.mode} type="button"
+                className={`mode${o.mode === c.mode ? ' is-on' : ''}`}
+                aria-pressed={o.mode === c.mode}
+                onClick={() => onMode(travel.from, travel.to, o.mode)}
+              >
+                <span className="mode-icon">{o.icon}</span>
+                <span className="mode-body">
+                  <span className="mode-label">{o.label}</span>
+                  <span className="mode-sub">
+                    문앞~문앞 {fmtDur(o.totalMin)}
+                    {o.costEur > 0 && ` · €${o.costEur}`}
+                  </span>
+                </span>
+                {o.mode === c.mode && <span className="mode-on">선택됨</span>}
+              </button>
+            ))}
+          </div>
+          {travel.unavailable.length > 0 && (
+            <p className="help" style={{ margin: '8px 0 0' }}>
+              그날 막차가 끊겨 못 쓰는 수단: {travel.unavailable.join(' · ')}
+            </p>
+          )}
+        </details>
+      )}
+    </div>
+  );
+}
+
+/**
+ * 여정 요약 — 도시 순서와 숙박.
+ *
+ * 어디서 자고 어디를 당일치기로 다녀오는지가 계획 전체를 좌우하므로
+ * 맨 위에 놓고, 그 자리에서 바꿀 수 있게 한다.
+ */
+function ItineraryBar({
+  itinerary, cities, onLodging,
+}: {
+  itinerary: Itinerary;
+  cities: City[];
+  onLodging: (city: string, how: 'sleep' | 'daytrip') => void;
+}) {
+  const name = (slug: string) => cities.find((c) => c.slug === slug)?.name ?? slug;
+  return (
+    <details className="itin">
+      <summary>
+        <b>동선</b>{' '}
+        {itinerary.stops.map((s) => s.city.name).join(' → ')}
+        {' · '}이동 합계 {fmtDur(itinerary.transitMin)}
+      </summary>
+      <div className="itin-body">
+        <p className="help" style={{ margin: '0 0 10px' }}>
+          도시 간 이동 시간이 가장 짧은 순서로 짰습니다. 숙박은 하루치를 채우는 도시에서만 하고,
+          짧게 볼 곳은 가까운 숙박지에서 다녀옵니다. 아래에서 바꿀 수 있습니다.
+        </p>
+        {itinerary.stops.map((s) => (
+          <div className="itin-row" key={s.city.slug}>
+            <span className="itin-city">{s.city.name}</span>
+            <span className="itin-state">
+              {s.sleep ? `${s.nights}박` : `당일치기 ← ${name(s.base ?? '')}`}
+            </span>
+            <button
+              type="button" className="itin-swap"
+              onClick={() => onLodging(s.city.slug, s.sleep ? 'daytrip' : 'sleep')}
+            >
+              {s.sleep ? '당일치기로' : '여기서 자기'}
+            </button>
+          </div>
         ))}
       </div>
     </details>

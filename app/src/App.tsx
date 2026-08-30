@@ -7,6 +7,7 @@ import { SaveStatus } from './components/SaveStatus';
 import { ResumeBanner, StorageWarning } from './components/ResumeBanner';
 import { assignBases, orderGroups } from './lib/basing';
 import { airportOf, cityForAirport } from './lib/airports';
+import { buildItinerary } from './lib/itinerary';
 import { inferHints, inferThemes } from './lib/taste';
 import Step1Basics, { tripDays } from './steps/Step1Basics';
 import Step2Preferences from './steps/Step2Preferences';
@@ -203,6 +204,49 @@ export default function App() {
       return { ...s, priorities: next };
     });
 
+  /**
+   * 여정 — 도시 순서·숙박·이동 수단.
+   *
+   * 3단계에서 담은 아이템으로 각 도시에 며칠이 필요한지 계산하고, 도시 간
+   * 총 이동 시간이 가장 짧은 순서를 찾는다. 1단계에서 보여 준 도시별 일수는
+   * 가이드일 뿐이고, 실제 일수는 여기서 아이템에 맞춰 다시 정해진다.
+   */
+  const pickedItems = useMemo(
+    () => items.filter((i) => (state.priorities[i.id] ?? 0) > 0),
+    [items, state.priorities],
+  );
+  const itinerary = useMemo(() => {
+    if (!index || tripCities.length === 0) return null;
+    return buildItinerary(
+      tripCities, pickedItems, state.prefs,
+      arrival?.slug ?? null, departure?.slug ?? null, index.cities,
+      { lodging: state.lodging, picks: state.modePicks },
+    );
+  }, [index, tripCities, pickedItems, state.prefs, arrival?.slug, departure?.slug,
+    state.lodging, state.modePicks]);
+
+  const setMode = (from: string, to: string, mode: string) =>
+    setState((s) => ({ ...s, modePicks: { ...s.modePicks, [`${from}>${to}`]: mode } }));
+  const setLodging = (city: string, how: 'sleep' | 'daytrip') =>
+    setState((s) => ({ ...s, lodging: { ...s.lodging, [city]: how } }));
+  /** 날이 모자랄 때 도시를 뺀다. 그 도시에 딸린 선택도 함께 정리한다. */
+  const dropCity = (city: string) =>
+    setState((s) => {
+      const next: Priorities = {};
+      for (const [id, v] of Object.entries(s.priorities)) {
+        if (itemCityOf.get(id) !== city) next[id] = v;
+      }
+      const courses = { ...s.courses };
+      delete courses[city];
+      const lodging = { ...s.lodging };
+      delete lodging[city];
+      return {
+        ...s,
+        basics: { ...s.basics, cities: s.basics.cities.filter((c) => c !== city) },
+        priorities: next, courses, lodging,
+      };
+    });
+
   const handlePlans = useCallback((plans: Plan[]) => { plansRef.current = plans; }, []);
   const choosePlan = (style: PlanStyle) => setState((s) => ({ ...s, chosenPlan: style }));
 
@@ -319,14 +363,14 @@ export default function App() {
               />
             )
         )}
-        {state.step === 4 && (
+        {state.step === 4 && itinerary && (
           <Step5Plans
-            items={items} cities={index.cities} groups={groups}
+            items={items} cities={index.cities} itinerary={itinerary!}
             startDate={state.basics.startDate} days={days}
             lastDayPlan={state.basics.lastDayPlan}
             prefs={state.prefs} priorities={state.priorities}
             chosen={state.chosenPlan} onChoose={choosePlan} onPlans={handlePlans}
-            onSwap={swapEntry}
+            onSwap={swapEntry} onMode={setMode} onLodging={setLodging} onDropCity={dropCity}
           />
         )}
         {state.step === 5 && (

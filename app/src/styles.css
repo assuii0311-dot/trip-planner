@@ -600,3 +600,102 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
 .airport-note p:last-child { margin-bottom: 0; }
 .airport-note b { color: var(--text); }
 .airport-caveat { color: var(--accent); }
+
+/* --- 4단계: 도시 간 이동 구간 --- */
+
+.travel-block {
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+}
+.travel-head { display: flex; align-items: flex-start; gap: 10px; }
+.travel-icon { font-size: 22px; line-height: 1.1; }
+.travel-route { font-size: 15px; font-weight: 700; }
+.travel-when { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.travel-total {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.travel-meta { font-size: 12px; color: var(--muted); margin-top: 8px; }
+.travel-note { font-size: 12px; color: var(--muted); margin-top: 4px; font-style: italic; }
+
+.travel-alts { margin-top: 10px; }
+.travel-alts > summary {
+  font-size: 12.5px;
+  color: var(--accent);
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+}
+.travel-alts > summary::-webkit-details-marker { display: none; }
+.travel-alts > summary:after { content: " ▾"; }
+.travel-alts[open] > summary:after { content: " ▴"; }
+
+.mode-list { display: flex; flex-direction: column; gap: 6px; margin-top: 9px; }
+.mode {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.mode.is-on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.mode-icon { font-size: 18px; }
+.mode-body { display: flex; flex-direction: column; min-width: 0; }
+.mode-label { font-size: 13.5px; font-weight: 600; }
+.mode-sub { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+.mode-on { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--accent); }
+
+/* --- 4단계: 여정 요약 --- */
+
+.itin {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.itin > summary {
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.itin > summary::-webkit-details-marker { display: none; }
+.itin > summary:after { content: "＋"; float: right; color: var(--muted); }
+.itin[open] > summary:after { content: "－"; }
+.itin-body { padding: 0 14px 14px; border-top: 1px solid var(--line); padding-top: 12px; }
+.itin-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.itin-row:last-child { border-bottom: none; }
+.itin-city { font-size: 14px; font-weight: 600; }
+.itin-state { font-size: 12.5px; color: var(--muted); }
+.itin-swap {
+  margin-left: auto;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}

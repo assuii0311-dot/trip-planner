@@ -189,6 +189,35 @@ export interface PlanEntry {
   returnLeg?: { from: string; to: string; minutes: number };
 }
 
+/** 한 수단으로 도시를 옮기는 구간. 대안을 함께 담아 그 자리에서 바꿀 수 있다. */
+export interface TravelOption {
+  mode: string;
+  label: string;
+  icon: string;
+  /** 문앞에서 문앞까지(분). 대기 제외. */
+  totalMin: number;
+  rideMin: number;
+  costEur: number;
+  transfers: number;
+  estimated: boolean;
+  note?: string;
+}
+
+export interface PlanTravel {
+  from: string;
+  to: string;
+  chosen: TravelOption;
+  /** 숙소에서 나서는 시각 / 탈것이 떠나는 시각 / 목적지 도심에 닿는 시각(분). */
+  leaveAt: number;
+  departAt: number;
+  arriveAt: number;
+  waitMin: number;
+  /** 시간 효율 순 대안. chosen 을 포함한다. */
+  options: TravelOption[];
+  /** 그날 막차가 끊겨 갈 수 없는 수단들. */
+  unavailable: string[];
+}
+
 export interface PlanDay {
   date: string;
   dayIndex: number;
@@ -196,6 +225,10 @@ export interface PlanDay {
   isDayTrip: boolean;
   /** 반나절 근교인 경우 오후에 돌아올 거점. 몬세라트는 오전만으로 충분하다. */
   returnTo: string | null;
+  /** 이 날 아침에 도시를 옮긴다면 그 구간. 일정은 도착 시각부터 시작한다. */
+  travel: PlanTravel | null;
+  /** 이 날 밤 어디서 자는가. */
+  sleepAt: string | null;
   entries: PlanEntry[];
   walkKm: number;
 }
@@ -225,6 +258,10 @@ export interface TripState {
   baseOverrides: Record<number, string>;
   /** 도시 slug → 고른 코스. 코스를 고른 뒤 개별 아이템을 더하고 뺄 수 있다. */
   courses: Record<string, CourseId>;
+  /** 도시 간 이동 수단을 직접 고른 경우. '출발>도착' → mode. */
+  modePicks: Record<string, string>;
+  /** 숙박을 직접 정한 경우. 도시 slug → 자기/당일치기. */
+  lodging: Record<string, 'sleep' | 'daytrip'>;
   /** 2단계에서 역산 결과를 한 번이라도 확인했는지. */
   tasteConfirmed?: boolean;
   /** 마지막으로 저장된 시각(epoch ms). 저장할 때 store 가 찍는다. */
