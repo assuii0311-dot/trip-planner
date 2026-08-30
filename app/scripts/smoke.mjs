@@ -3,7 +3,7 @@
  *   node scripts/smoke.mjs [base-url]
  */
 import { chromium } from 'playwright';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
 
 const base = process.argv[2] ?? 'http://localhost:4174/0829_kos_basic_001/';
 const outDir = new URL('../../pipeline/out/shots/', import.meta.url);
@@ -11,7 +11,7 @@ await mkdir(outDir, { recursive: true });
 
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 const browser = await chromium.launch({ executablePath, args: ['--no-sandbox'] });
-const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 });
+const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, acceptDownloads: true });
 
 const errors = [];
 page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
@@ -112,12 +112,39 @@ await page.waitForTimeout(400);
 const relaxed = await page.locator('.stat .v').first().innerText();
 console.log(`  알찬형 ${stats[0]} vs 여유형 ${relaxed}`);
 await shot('step4-relaxed');
+await page.getByRole('button', { name: /균형형/ }).click();
+await page.waitForTimeout(400);
 await next(5);
 
 // 5단계
 await page.waitForSelector('details.guide');
 await page.locator('details.guide').nth(1).click();
 await shot('step5-guide');
+
+// 지도 내보내기 — 파일 이름에 확장자가 살아 있어야 한다.
+// 한글 파일명은 브라우저가 통째로 버려 'download' 가 되고, 그러면 구글이
+// KML 로 알아보지 못해 가져오기가 실패한다. 실제로 겪은 일이라 검사한다.
+for (const label of ['전체 장소', '여행 경로만']) {
+  const [dl] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: new RegExp(label) }).click(),
+  ]);
+  const name = dl.suggestedFilename();
+  console.log(`  ${label} → ${name}`);
+  if (!name.endsWith('.kml')) throw new Error(`${label}: 파일 이름이 .kml 로 끝나지 않습니다 (${name})`);
+  const xml = (await readFile(await dl.path(), 'utf8'));
+  if (!xml.includes('<kml xmlns="http://www.opengis.net/kml/2.2">')) {
+    throw new Error(`${label}: KML 네임스페이스가 없습니다`);
+  }
+  const marks = (xml.match(/<Placemark>/g) ?? []).length;
+  const folders = (xml.match(/<Folder>/g) ?? []).length;
+  console.log(`    장소 ${marks} · 레이어 ${folders}`);
+  if (marks === 0) throw new Error(`${label}: 장소가 하나도 없습니다`);
+  // 구글 '내 지도' 제한
+  if (folders > 10) throw new Error(`${label}: 레이어 ${folders}개 — 구글 상한 10개 초과`);
+  if (marks > 10000) throw new Error(`${label}: 장소 ${marks}개 — 구글 상한 10000개 초과`);
+  await page.waitForTimeout(400);
+}
 
 await browser.close();
 if (errors.length) {

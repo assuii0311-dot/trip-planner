@@ -297,7 +297,14 @@ export default function App() {
             onSwap={swapEntry}
           />
         )}
-        {state.step === 5 && <Step6Guide plan={chosenPlan} cities={index.cities} />}
+        {state.step === 5 && (
+          <Step6Guide
+            plan={chosenPlan} cities={index.cities} allItems={items}
+            attribution={index.attribution}
+            tripName={`${index.name} ${state.basics.startDate}`}
+            fileBase={`${state.basics.country}-${state.basics.startDate}`}
+          />
+        )}
 
         <div className="toolbar">
           <button type="button" onClick={() => exportState(state)}>계획 내보내기</button>

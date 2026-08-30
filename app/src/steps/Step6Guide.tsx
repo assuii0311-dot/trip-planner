@@ -1,7 +1,8 @@
-import type { City, Plan } from '../types';
+import type { City, Item, Plan } from '../types';
 import { ItemDetail } from '../components/ItemDetail';
 import { bookingLinks, directionsUrl, intercityLinks, mapsPlaceUrl } from '../lib/deeplinks';
 import { formatTime, SLOT_LABEL } from '../lib/planner';
+import { MapExport } from '../components/MapExport';
 
 function LinkRow({ label, note, url }: { label: string; note: string; url: string }) {
   return (
@@ -17,8 +18,16 @@ function LinkRow({ label, note, url }: { label: string; note: string; url: strin
 
 /** 5단계 — 선택한 계획의 이동과 예약 방법을 안내한다. */
 export default function Step6Guide({
-  plan, cities,
-}: { plan: Plan | null; cities: City[] }) {
+  plan, cities, allItems, attribution, tripName, fileBase,
+}: {
+  plan: Plan | null;
+  cities: City[];
+  /** 고른 도시의 전체 아이템 — 지도 내보내기 ①번에 쓴다. */
+  allItems: Item[];
+  attribution: string[];
+  tripName: string;
+  fileBase: string;
+}) {
   if (!plan) {
     return <div className="empty">먼저 4단계에서 계획을 하나 선택해 주세요.</div>;
   }
@@ -33,6 +42,14 @@ export default function Step6Guide({
         각 일정의 길찾기와 예약 경로를 정리했습니다.
         실시간 영업시간과 평점은 링크를 눌러 지도에서 확인하세요.
       </p>
+
+      <section className="block" style={{ marginBottom: 26 }}>
+        <h3>내 구글 지도에 담아 가기</h3>
+        <MapExport
+          allItems={allItems} plan={plan} cities={cities}
+          attribution={attribution} tripName={tripName} fileBase={fileBase}
+        />
+      </section>
 
       {plan.days.map((day) => (
         <div className="day" key={day.dayIndex}>
