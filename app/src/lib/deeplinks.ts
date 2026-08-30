@@ -68,3 +68,36 @@ export function intercityLinks(fromCity: City, toCity: City): BookingLink[] {
     { label: '구글 지도 경로', url: `https://www.google.com/maps/dir/?api=1&origin=${q(fromCity.nameEn)}&destination=${q(toCity.nameEn)}&travelmode=transit`, note: `${pair} 실제 소요 시간과 환승을 확인하세요.` },
   ];
 }
+
+/**
+ * 아이템 대표 사진 주소.
+ *
+ * 대표급은 앱에 함께 들어 있어 오프라인에서도 뜬다. 나머지는 커먼즈에서
+ * 그때그때 받아오므로 망이 없으면 안 뜬다 — 부르는 쪽에서 실패를 감안해야 한다.
+ */
+export function photoUrl(item: Item): string | null {
+  if (!item.photo) return null;
+  if (item.photo.bundled) return `${import.meta.env.BASE_URL}item/${item.id}.jpg`;
+  return `https://commons.wikimedia.org/wiki/Special:FilePath/${q(item.photo.file)}?width=400`;
+}
+
+/** 사진 출처 — CC BY-SA 표기 의무상 저작자·라이선스와 함께 걸어야 한다. */
+export function photoSourceUrl(file: string): string {
+  return `https://commons.wikimedia.org/wiki/File:${q(file)}`;
+}
+
+/**
+ * 블로그 후기 검색.
+ *
+ * 후기 본문은 저장하지 않는다. 블로그 글에는 저작권이 있고 포털 약관은
+ * 수집을 금지하므로, 요약본을 만들어 앱에 담는 것은 불가능하다.
+ * 대신 구글 지도와 같은 방식으로 검색 결과에 넘긴다 — 저장하지 않으므로
+ * 걸리는 것이 없고, 오래된 요약본보다 최신 후기가 낫다.
+ */
+export function blogSearchUrl(item: Item, city?: City): string {
+  // 괄호 부연은 검색어로 쓰면 오히려 결과를 좁힌다.
+  // '메스키타(코르도바 대성당)' → '메스키타'. 도시명은 앞에 따로 붙는다.
+  const name = item.name.replace(/[(（].*$/, '').trim() || item.name;
+  const term = `${city?.name ?? ''} ${name}`.trim();
+  return `https://search.naver.com/search.naver?ssc=tab.blog.all&query=${q(term)}`;
+}

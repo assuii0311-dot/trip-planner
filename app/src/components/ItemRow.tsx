@@ -1,6 +1,7 @@
 import type { City, Item, Priorities } from '../types';
-import { mapsPlaceUrl } from '../lib/deeplinks';
+import { mapsPlaceUrl, blogSearchUrl } from '../lib/deeplinks';
 import { ItemDetail } from './ItemDetail';
+import { ItemPhoto } from './ItemPhoto';
 
 const STAR_LABEL = ['', '관심', '가고 싶다', '꼭 간다'];
 
@@ -44,9 +45,20 @@ export function ItemRow({
         <span aria-hidden style={{ fontSize: 18, lineHeight: '22px' }}>·</span>
       )}
       <div className="body">
-        <div className="title">{item.name}</div>
-        <div className="sub">{item.nameLocal ?? item.nameEn}{item.city !== city?.slug ? '' : ''}</div>
-        {item.summary && <div className="desc">{item.summary}</div>}
+        {/* 사진은 왼쪽 작은 썸네일로 둔다. 한 테마에 40개가 넘게 들어가므로
+            가로로 꽉 찬 사진을 매 줄에 깔면 목록을 훑을 수가 없다. */}
+        <div className="item-head">
+          <ItemPhoto item={item} />
+          <div className="item-text">
+            <div className="title">{item.name}</div>
+            {/* 테마별로 묶여 여러 도시가 섞여 나온다. 어느 도시인지 없으면 목록을 읽을 수 없다. */}
+            <div className="sub">
+              {city && <span className="city-badge">{city.name}</span>}
+              {item.nameLocal ?? item.nameEn}
+            </div>
+            {item.summary && <div className="desc">{item.summary}</div>}
+          </div>
+        </div>
         <ItemMeta item={item} />
         <details className="more">
           <summary>자세히</summary>
@@ -68,6 +80,11 @@ export function ItemRow({
         <div style={{ marginTop: 8 }}>
           <a className="tag" style={{ textDecoration: 'none' }} href={mapsPlaceUrl(item, city)} target="_blank" rel="noreferrer">
             지도에서 보기 ↗
+          </a>
+          {/* 후기 본문은 저장하지 않는다. 저작권·약관 때문이기도 하고,
+              굳은 요약본보다 지금 올라온 글이 낫기 때문이기도 하다. */}
+          <a className="tag" style={{ textDecoration: 'none', marginLeft: 6 }} href={blogSearchUrl(item, city)} target="_blank" rel="noreferrer">
+            블로그 후기 ↗
           </a>
         </div>
       </div>

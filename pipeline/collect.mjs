@@ -30,6 +30,17 @@ const { COUNTRY, CITIES, ATTRIBUTION } = registry;
 /** 도시 성격 프로필과 사진. 1단계 카드와 취향 역산에 쓴다. */
 const { CHARACTER, MACRO_REGIONS } = await import(`./registry/${countrySlug}-character.mjs`);
 const media = JSON.parse(await readFile(new URL(`./out/${countrySlug}-media.json`, import.meta.url), 'utf8').catch(() => '{}'));
+/**
+ * 아이템 대표 사진 — fetch-item-media.mjs 가 모아 둔 것.
+ * 대표급은 app/public/item/ 에 파일로 함께 넣고, 나머지는 앱이 커먼즈
+ * 축소본을 원격으로 띄운다. 어느 쪽인지는 파일이 실제로 있는지로 정한다.
+ */
+const itemMedia = JSON.parse(await readFile(new URL(`./out/${countrySlug}-item-media.json`, import.meta.url), 'utf8').catch(() => '{}'));
+const bundled = new Set(
+  (await readdir(new URL('../app/public/item/', import.meta.url)).catch(() => []))
+    .filter((f) => f.endsWith('.jpg'))
+    .map((f) => f.slice(0, -4)),
+);
 const macroOf = (region) => MACRO_REGIONS.find((m) => m.regions.includes(region))?.id ?? 'other';
 
 /** 도시당 아이템 상한. 거점은 더 많이, 근교는 하루치면 충분하다. */
@@ -55,6 +66,15 @@ const FLOOR = 20;
  * 전수 점검에서 나온 두 건뿐이라 그냥 이름으로 지운다.
  */
 const DROP_IDS = new Set([
+  // Wikidata 근접 검색이 반경 안이라는 이유로 끌어온, 다른 지자체의 대상들.
+  // 시체스에 묵는 사람이 15~25km 떨어진 카녜예스 성을 보러 가지 않는다.
+  'sitges-wd-sant-julia-de-l-arboc',          // 라르보스 (약 20km)
+  'sitges-wd-castell-de-canyelles',           // 카녜예스 (약 15km)
+  'sitges-wd-castell-convent-de-penyafort',   // 산타마르가리다 (약 25km)
+  'sitges-wd-platges-de-cunit',               // 쿠닛 해변 — 시체스에도 해변이 있다
+  'sitges-wd-mediterranean-technology-park',  // 연구단지. 관광 대상이 아니다
+  'pollenca-wd-ses-cases-de-son-serra',       // 무로 (약 20km)
+  'penyiscola-wd-vinaros-bullring',           // 비나로스 (약 25km)
   'teruel-wd-la-escalinata',   // = teruel-escalinata-neo-mudejar
   'jerez-damajuana',           // = jerez-damajuana-cafe-bar
   'girona-wd-museo-de-historia-de-girona', // = girona-museu-d-historia-de-girona
@@ -407,6 +427,11 @@ for (const [i, city] of selected.entries()) {
     it.why = why;
     it.practical = practical;
     it.caution = caution;
+    // 사진. 저작자 표기가 안 되는 것은 라이선스 이행이 불가능하므로 붙이지 않는다.
+    const m = itemMedia[it.id];
+    it.photo = m && m.license
+      ? { file: m.file, bundled: bundled.has(it.id), author: m.author, license: m.license }
+      : null;
     delete it.desc;
     delete it.busy;
   }

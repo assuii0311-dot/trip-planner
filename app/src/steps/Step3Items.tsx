@@ -3,6 +3,9 @@ import type { City, Item, Preferences, Priorities, ThemeId } from '../types';
 import { THEMES } from '../lib/themes';
 import { rankItems } from '../lib/scoring';
 import { ItemRow } from '../components/ItemRow';
+import { ItemPhoto } from '../components/ItemPhoto';
+import { recommend } from '../lib/recommend';
+import { mapsPlaceUrl } from '../lib/deeplinks';
 
 /**
  * 3단계 — 아이템을 활동 테마로 묶어 보여준다.
@@ -28,6 +31,7 @@ export default function Step3Items({
 
   const cityOf = (slug: string) => cities.find((c) => c.slug === slug);
   const totalCities = new Set(items.map((i) => i.city)).size;
+  const picks = useMemo(() => recommend(items, cities, prefs), [items, cities, prefs]);
 
   return (
     <>
@@ -36,6 +40,32 @@ export default function Step3Items({
         {totalCities}개 도시에서 아이템 {items.length}개를 찾아 8개 활동 테마로 나눴습니다.
         관심도가 높은 테마부터 보여드립니다.
       </p>
+
+      {picks.length > 0 && (
+        <section className="recommend">
+          <h3>추천 장소</h3>
+          {/* 근거를 밝히지 않는 추천은 이 앱에서 금지다. 무엇으로 골랐는지 먼저 적는다. */}
+          <p className="basis">
+            여행자에게 가장 널리 알려진 곳을 <strong>위키백과 언어판 수</strong>로 재고,
+            2단계에서 답하신 취향으로 다시 걸렀습니다. 한 도시에 몰리지 않게 도시당 2곳까지만 뽑습니다.
+          </p>
+          <div className="pick-grid">
+            {picks.map(({ item, city, reason }) => (
+              <a
+                key={item.id} className="pick"
+                href={mapsPlaceUrl(item, city)} target="_blank" rel="noreferrer"
+              >
+                <ItemPhoto item={item} size="wide" />
+                <div className="pick-body">
+                  <div className="pick-city">{city?.name}</div>
+                  <div className="pick-name">{item.name}</div>
+                  <div className="pick-why">{reason}</div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {THEMES.map((t) => {
         const list = byTheme.get(t.id) ?? [];

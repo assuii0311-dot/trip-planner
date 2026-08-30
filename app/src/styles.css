@@ -374,3 +374,74 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
 
 .entry-summary { font-size: 12.5px; color: var(--muted); margin-top: 3px; line-height: 1.5; }
 .entry-flag { font-size: 12px; margin-top: 4px; color: #b45309; font-weight: 600; }
+
+/* --- 3단계: 아이템 사진 · 도시 표기 · 추천 --- */
+
+/* 사진은 절반 남짓만 있다. 없는 자리를 비워 두면 목록이 들쭉날쭉해지므로
+   있을 때만 나타나고, 원격 사진이 실패하면 흔적 없이 사라진다(ItemPhoto). */
+.item-head { display: flex; gap: 10px; align-items: flex-start; }
+.item-text { min-width: 0; flex: 1; }
+
+/* 정사각 썸네일. 목록을 훑는 속도를 해치지 않는 크기여야 한다. */
+.item-photo {
+  flex: 0 0 68px;
+  width: 68px;
+  height: 68px;
+  object-fit: cover;
+  display: block;
+  border-radius: 9px;
+  background: var(--surface-2);
+}
+
+.city-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  margin-right: 6px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.recommend { margin: 0 0 24px; }
+.recommend h3 { font-size: 15px; margin: 0 0 4px; }
+.recommend .basis {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 0 0 12px;
+  line-height: 1.6;
+}
+.recommend .basis strong { color: var(--text); font-weight: 600; }
+
+/* 가로 스크롤 — 세로로 8개를 쌓으면 테마 목록이 화면 밖으로 밀려난다. */
+.pick-grid {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.pick {
+  flex: 0 0 168px;
+  scroll-snap-align: start;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+}
+.item-photo-wide {
+  width: 100%;
+  height: 104px;
+  object-fit: cover;
+  display: block;
+  background: var(--surface-2);
+}
+.pick-body { padding: 9px 11px 11px; }
+.pick-city { font-size: 11px; font-weight: 700; color: var(--accent); }
+.pick-name { font-size: 14px; font-weight: 600; line-height: 1.35; margin-top: 1px; }
+.pick-why { font-size: 11.5px; color: var(--muted); margin-top: 5px; line-height: 1.45; }

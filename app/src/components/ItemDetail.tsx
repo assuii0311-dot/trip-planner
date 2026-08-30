@@ -1,4 +1,5 @@
 import type { Item } from '../types';
+import { PhotoCredit } from './ItemPhoto';
 
 /**
  * 아이템 설명의 뒷부분 — 왜 가는가 / 실무 정보 / 주의점.
@@ -30,6 +31,8 @@ export function ItemDetail({ item }: { item: Item }) {
         ))}
       </dl>
       {item.caution && <p className="caution">⚠ {item.caution}</p>}
+      {/* CC BY-SA 이행 — 사진을 쓴 이상 저작자와 라이선스는 반드시 보여야 한다. */}
+      <PhotoCredit item={item} />
     </div>
   );
 }

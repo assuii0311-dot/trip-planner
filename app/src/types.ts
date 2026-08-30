@@ -25,6 +25,22 @@ export interface Practical {
   hours: string | null;
 }
 
+/**
+ * 아이템 대표 사진 — 위키미디어 커먼즈.
+ *
+ * bundled 인 것은 앱에 함께 들어 있어 오프라인에서도 뜨고,
+ * 아닌 것은 커먼즈에서 원격으로 받아온다(망이 없으면 안 뜬다).
+ * author/license 는 표기 의무 때문에 반드시 함께 다닌다.
+ */
+export interface Photo {
+  /** 커먼즈 파일명. 원격 URL과 출처 링크를 여기서 만든다. */
+  file: string;
+  /** 앱에 함께 넣은 사진인가. */
+  bundled: boolean;
+  author: string | null;
+  license: string;
+}
+
 /** 여행 아이템 — 하나의 완결된 활동. */
 export interface Item {
   id: string;
@@ -58,6 +74,8 @@ export interface Item {
   energy: number;
   tags: string[];
   url: string | null;
+  /** 대표 사진. 없으면 null — 절반 남짓만 있다. */
+  photo: Photo | null;
   wikidata: string | null;
   source: 'wikivoyage' | 'osm' | 'manual';
   attribution: string;
