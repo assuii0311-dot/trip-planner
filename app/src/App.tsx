@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Basics, CourseId, Item, Plan, PlanStyle, Preferences, Priorities, ThemeId, TripState } from './types';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { Basics, CourseId, Item, PlanStyle, Preferences, Priorities, ThemeId, TripState } from './types';
 import { loadCountry, loadItemsFor, loadRail, type CountryIndex } from './lib/data';
 import type { RailTable } from './lib/rail';
 import { clearState, defaultState, exportState, importState, isInstalled, loadState, saveState } from './lib/store';
@@ -8,6 +8,7 @@ import { SaveStatus } from './components/SaveStatus';
 import { ResumeBanner, StorageWarning } from './components/ResumeBanner';
 import { airportOf, cityForAirport } from './lib/airports';
 import { buildItinerary } from './lib/itinerary';
+import { buildPlans } from './lib/planner';
 import { inferHints, inferThemes } from './lib/taste';
 import Step1Basics, { tripDays } from './steps/Step1Basics';
 import Step2Preferences from './steps/Step2Preferences';
@@ -25,7 +26,6 @@ export default function App() {
   const [items, setItems] = useState<Item[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loadingItems, setLoadingItems] = useState(false);
-  const plansRef = useRef<Plan[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [saved, setSaved] = useState<SaveResult | null>(null);
@@ -243,8 +243,7 @@ export default function App() {
   /** 하루 안에서 일정을 한 칸 옮긴다. 시각은 플래너가 다시 계산한다. */
   const moveEntry = (date: string, itemId: string, dir: -1 | 1) =>
     setState((s) => {
-      const plan = plansRef.current.find((pl) => pl.style === (s.chosenPlan ?? plansRef.current[0]?.style));
-      const day = plan?.days.find((d) => d.date === date);
+      const day = chosenPlan?.days.find((d) => d.date === date);
       const cur = s.dayOrder[date] ?? day?.entries.map((e) => e.item.id) ?? [];
       const i = cur.indexOf(itemId);
       const j = i + dir;
@@ -254,7 +253,41 @@ export default function App() {
       return { ...s, dayOrder: { ...s.dayOrder, [date]: next } };
     });
 
-  const handlePlans = useCallback((plans: Plan[]) => { plansRef.current = plans; }, []);
+  /**
+   * 계획 3안.
+   *
+   * 예전에는 4단계 화면 안에서 만들어 ref 에 넣어 두었다. 그래서 5단계에서
+   * 새로고침하면 - 4단계 화면이 한 번도 그려지지 않으므로 - 계획이 없는
+   * 상태가 되어 지도도 예약 안내도 빈 화면이 됐다. 저장해 둔 계획으로
+   * 돌아왔는데 마지막 장이 비어 있는 것은 저장이 안 된 것과 같다.
+   *
+   * 이제 여기서 만든다. 어느 단계를 보고 있든 계획은 존재한다.
+   */
+  const built = useMemo(() => {
+    if (!itinerary || items.length === 0) return null;
+    return buildPlans({
+      items, itinerary,
+      startDate: state.basics.startDate,
+      days,
+      lastDayPlan: state.basics.lastDayPlan,
+      prefs: state.prefs,
+      priorities: state.priorities,
+      dayOrder: state.dayOrder,
+    });
+  }, [itinerary, items, state.basics.startDate, days, state.basics.lastDayPlan,
+    state.prefs, state.priorities, state.dayOrder]);
+
+  const plans = built?.plans ?? [];
+
+  /**
+   * 지금 보고 있는 계획.
+   *
+   * 고르지 않았으면 첫 번째다 - 4단계도 같은 규칙으로 보여 준다. 예전에는
+   * 4단계가 '첫 번째' 를 보여 주면서 상태에는 아무것도 기록하지 않아,
+   * 화면에는 선택된 것처럼 보이는데 5단계로 넘어가면 '고른 계획이 없다' 는
+   * 화면이 나왔다.
+   */
+  const chosenPlan = plans.find((p) => p.style === state.chosenPlan) ?? plans[0] ?? null;
   const choosePlan = (style: PlanStyle) => setState((s) => ({ ...s, chosenPlan: style }));
 
   const picked = Object.values(state.priorities).filter((v) => v > 0).length;
@@ -263,7 +296,7 @@ export default function App() {
       case 1: return state.basics.cities.length > 0 && days > 0;
       case 2: return true;
       case 3: return picked >= minimumPicks(days);
-      case 4: return state.chosenPlan !== null || plansRef.current.length > 0;
+      case 4: return plans.length > 0;
       default: return false;
     }
   })();
@@ -297,7 +330,6 @@ export default function App() {
     return <div className="app"><main><div className="spinner">여행지 데이터를 불러오는 중…</div></main></div>;
   }
 
-  const chosenPlan = plansRef.current.find((p) => p.style === state.chosenPlan) ?? null;
 
   return (
     <div className="app">
@@ -370,13 +402,12 @@ export default function App() {
               />
             )
         )}
-        {state.step === 4 && itinerary && (
+        {state.step === 4 && itinerary && chosenPlan && (
           <Step5Plans
             items={items} cities={index.cities} itinerary={itinerary!}
-            startDate={state.basics.startDate} days={days}
-            lastDayPlan={state.basics.lastDayPlan}
-            prefs={state.prefs} priorities={state.priorities}
-            chosen={state.chosenPlan} onChoose={choosePlan} onPlans={handlePlans}
+            days={days} prefs={state.prefs}
+            plans={plans} overflow={built?.overflow ?? []} spare={built?.spare ?? 0}
+            chosen={chosenPlan.style} onChoose={choosePlan}
             onSwap={swapEntry} onMode={setMode} onLodging={setLodging} onDropCity={dropCity}
             onMoveCity={moveCity} onMoveEntry={moveEntry} manualOrder={state.dayOrder}
           />

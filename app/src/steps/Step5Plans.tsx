@@ -1,28 +1,28 @@
 import { useMemo } from 'react';
-import type { City, Item, LastDayPlan, Plan, PlanDay, PlanStyle, PlanTravel, Preferences, Priorities } from '../types';
+import type { City, Item, Plan, PlanDay, PlanStyle, PlanTravel, Preferences } from '../types';
 import type { Itinerary } from '../lib/itinerary';
 import { fmtDur, fmtHm } from '../lib/routing';
-import { buildPlans, formatTime, SLOT_LABEL } from '../lib/planner';
+import { formatTime, SLOT_LABEL } from '../lib/planner';
 import { alternativesForDay } from '../lib/alternatives';
 import type { Alternative } from '../lib/alternatives';
 import { THEME_ICON, THEME_LABEL } from '../lib/themes';
 
 /** 4단계 — 담은 곳을 바탕으로 밀도가 다른 3가지 안을 만든다. */
 export default function Step5Plans({
-  items, cities, itinerary, startDate, days, lastDayPlan, prefs, priorities, chosen,
-  onChoose, onPlans, onSwap, onMode, onLodging, onDropCity, onMoveCity, onMoveEntry, manualOrder,
+  items, cities, itinerary, days, prefs, plans, overflow, spare, chosen,
+  onChoose, onSwap, onMode, onLodging, onDropCity, onMoveCity, onMoveEntry, manualOrder,
 }: {
   items: Item[];
   cities: City[];
   itinerary: Itinerary;
-  startDate: string;
   days: number;
-  lastDayPlan: LastDayPlan;
   prefs: Preferences;
-  priorities: Priorities;
-  chosen: PlanStyle | null;
+  /** 계획은 App 이 만든다. 어느 단계를 보고 있든 존재해야 하기 때문이다. */
+  plans: Plan[];
+  overflow: { city: string; name: string; days: number }[];
+  spare: number;
+  chosen: PlanStyle;
   onChoose: (style: PlanStyle) => void;
-  onPlans: (plans: Plan[]) => void;
   /** 일정 하나를 빼고 다른 곳(들)을 넣는다. 계획은 우선순위에서 다시 만들어진다. */
   onSwap: (out: Item, inItems: Item[]) => void;
   /** 도시 간 이동 수단을 바꾼다. 바꾸면 도착 시각이 달라져 그날 일정이 다시 짜인다. */
@@ -38,16 +38,6 @@ export default function Step5Plans({
   /** 사용자가 순서를 손댄 날짜들. 되돌리기 버튼을 띄우는 데 쓴다. */
   manualOrder: Record<string, string[]>;
 }) {
-  const { plans, overflow, spare } = useMemo(() => {
-    const built = buildPlans({
-      items, itinerary, startDate, days, lastDayPlan, prefs, priorities, dayOrder: manualOrder,
-    });
-    onPlans(built.plans);
-    return built;
-    // onPlans 는 저장만 하므로 의존성에서 제외한다.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, itinerary, startDate, days, lastDayPlan, prefs, priorities, manualOrder]);
-
   const active = plans.find((p) => p.style === chosen) ?? plans[0];
   const cityName = (slug: string) => cities.find((c) => c.slug === slug)?.name ?? slug;
 

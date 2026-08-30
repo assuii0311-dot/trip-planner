@@ -112,13 +112,22 @@ await page.waitForTimeout(400);
 const relaxed = await page.locator('.stat .v').first().innerText();
 console.log(`  알찬형 ${stats[0]} vs 여유형 ${relaxed}`);
 await shot('step4-relaxed');
-await page.getByRole('button', { name: /균형형/ }).click();
-await page.waitForTimeout(400);
+// 일부러 계획 탭을 다시 누르지 않고 넘어간다.
+// 사용자가 가장 흔히 하는 행동이고, 예전에는 이 경로에서 5단계가 빈 화면이 됐다.
 await next(5);
 
 // 5단계
 await page.waitForSelector('details.guide');
 await page.locator('details.guide').nth(1).click();
+// 지도 — 이 검사가 없어서 '계획을 안 고르면 지도가 사라지는' 결함을 놓쳤다.
+await page.waitForSelector('.trip-map', { timeout: 20000 });
+const mapCities = await page.$$eval('.map-name', (els) => els.map((e) => e.textContent));
+const mapHops = await page.$$eval('.map-mode text', (els) => els.map((e) => e.textContent));
+console.log(`  지도: 도시 ${mapCities.length}곳 (${mapCities.join(' · ')}) · 이동 ${mapHops.length}구간`);
+if (mapCities.length === 0) throw new Error('지도에 도시가 하나도 없습니다');
+if ((await page.locator('.map-land path').count()) === 0) throw new Error('지도에 국경선이 없습니다');
+if ((await page.locator('.map-legend > li').count()) === 0) throw new Error('지도 범례가 비었습니다');
+
 await shot('step5-guide');
 
 // 지도 내보내기 — 파일 이름에 확장자가 살아 있어야 한다.
@@ -145,6 +154,12 @@ for (const label of ['전체 장소', '여행 경로만']) {
   if (marks > 10000) throw new Error(`${label}: 장소 ${marks}개 — 구글 상한 10000개 초과`);
   await page.waitForTimeout(400);
 }
+
+// 새로고침해도 마지막 화면이 살아 있는가.
+// 계획을 4단계 화면 안에서만 만들던 때에는 여기서 지도가 사라졌다.
+await page.reload({ waitUntil: 'domcontentloaded' });
+await page.waitForSelector('.trip-map', { timeout: 20000 });
+console.log(`  새로고침 후에도 지도 유지 · ${await page.locator('.map-name').count()}곳`);
 
 await browser.close();
 if (errors.length) {
