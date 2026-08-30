@@ -1,5 +1,7 @@
 import type { City } from '../types';
 import { distanceKm } from './geo';
+import type { RailDeparture } from './rail';
+import { railBetween, railOnDay } from './rail';
 
 /**
  * 도시 간 이동 엔진.
@@ -70,6 +72,11 @@ export interface Service {
   /** 시간표를 확인한 값이 아니라 운행 패턴에서 추정한 값인가. */
   estimated: boolean;
   note?: string;
+  /**
+   * 실제 시간표(Renfe GTFS). 있으면 첫차·배차 대신 이 목록에서 고른다.
+   * 없는 구간만 운행 패턴으로 어림한다.
+   */
+  timetable?: RailDeparture[];
 }
 
 /** 실제로 몇 시에 타고 몇 시에 닿는지. */
@@ -275,6 +282,38 @@ function flightService(a: City, b: City, km: number): Service | null {
 }
 
 /**
+ * Renfe 실제 시간표에서 서비스를 만든다.
+ *
+ * 소요 시간은 편마다 다르므로(마드리드~바르셀로나 3시간 2분~3시간 48분)
+ * 대표값으로 중앙값을 쓴다. 실제로 몇 시에 타고 몇 시에 닿는지는
+ * nextDeparture 가 목록에서 골라 정확히 계산한다.
+ */
+function railService(list: RailDeparture[]): Service {
+  const rides = list.map((r) => r.a - r.d).sort((a, b) => a - b);
+  const ride = rides[Math.floor(rides.length / 2)];
+  const kinds = [...new Set(list.map((r) => r.n))];
+  const fast = kinds.some((k) => /AVE|AVLO|AVANT|EUROMED|ALVIA/i.test(k));
+  return {
+    mode: fast ? 'ave' : 'train',
+    label: kinds.slice(0, 2).join('·'),
+    accessMin: 30,
+    rideMin: ride,
+    egressMin: 15,
+    totalMin: ride + 45,
+    transfers: 0,
+    // 요금은 시간표에 없다. 좌석 등급과 예매 시점에 따라 몇 배가 달라지므로
+    // 지어내지 않고 0(모름)으로 둔다. 화면에서는 요금 줄을 아예 안 보여 준다.
+    costEur: 0,
+    firstDep: Math.min(...list.map((r) => r.d)),
+    lastDep: Math.max(...list.map((r) => r.d)),
+    headwayMin: 0,
+    estimated: false,
+    note: `하루 ${list.length}편. Renfe 공개 시간표입니다.`,
+    timetable: list,
+  };
+}
+
+/**
  * 실측 구간을 서비스 하나로 바꾼다.
  * 조사해 둔 51개 구간은 소요 시간이 확인된 값이라 추정 대신 이것을 쓴다.
  */
@@ -307,9 +346,16 @@ function measuredService(minutes: number, mode: string, note?: string): Service 
  */
 export function servicesBetween(
   a: City, b: City, measured?: { minutes: number; mode: string; note?: string },
+  /** 0=일요일. 주면 그 요일에 실제로 다니는 편만 본다. */
+  weekday: number | null = null,
 ): Service[] {
   const km = Math.round(distanceKm(a, b));
   const out: Service[] = [];
+
+  // 실제 시간표가 있으면 그것이 최우선이다.
+  const rail = railBetween(a.slug, b.slug);
+  const onDay = rail ? railOnDay(rail, weekday) : null;
+  const real = onDay && onDay.length ? railService(onDay) : null;
 
   if (crossesSea(a, b)) {
     const f = flightService(a, b, km);
@@ -318,9 +364,12 @@ export function servicesBetween(
     return out;
   }
 
-  if (measured) out.push(measuredService(measured.minutes, measured.mode, measured.note));
-  const ave = aveService(a, b, km);
-  if (ave) out.push(ave);
+  if (real) out.push(real);
+  else if (measured) out.push(measuredService(measured.minutes, measured.mode, measured.note));
+  if (!real) {
+    const ave = aveService(a, b, km);
+    if (ave) out.push(ave);
+  }
   out.push(trainService(a, b, km));
   out.push(busService(km));
   const f = flightService(a, b, km);
@@ -350,6 +399,25 @@ export function servicesBetween(
 export function nextDeparture(service: Service, readyAt: number): Departure | null {
   // 역·공항에 닿는 시각. 이보다 이르게는 탈 수 없다.
   const atStation = readyAt + service.accessMin;
+
+  /*
+   * 실제 시간표가 있으면 그 목록에서 고른다.
+   * 어림한 배차 간격으로 '35분 대기' 라고 말하는 것과, 실제로 09:24 열차가
+   * 있다고 말하는 것은 다르다. 소요 시간도 편마다 다르므로 그 편의 값을 쓴다.
+   */
+  if (service.timetable && service.timetable.length) {
+    const next = service.timetable.find((r) => r.d >= atStation);
+    if (!next) return null;                    // 그날 남은 편이 없다
+    const arriveAt = next.a + service.egressMin;
+    return {
+      service,
+      leaveAt: readyAt,
+      departAt: next.d,
+      arriveAt,
+      waitMin: next.d - atStation,
+      doorToDoorMin: arriveAt - readyAt,
+    };
+  }
 
   let departAt: number;
   if (service.headwayMin === 0) {
@@ -388,8 +456,10 @@ export function departuresFrom(services: Service[], readyAt: number): Departure[
 }
 
 /** 이동 시간 효율만 본 최선. 동선 계산의 기준값이다. */
-export function fastest(a: City, b: City, measured?: { minutes: number; mode: string }): Service {
-  const list = servicesBetween(a, b, measured);
+export function fastest(
+  a: City, b: City, measured?: { minutes: number; mode: string }, weekday: number | null = null,
+): Service {
+  const list = servicesBetween(a, b, measured, weekday);
   return list[0] ?? carService(Math.round(distanceKm(a, b)));
 }
 

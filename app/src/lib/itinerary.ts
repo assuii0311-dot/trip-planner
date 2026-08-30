@@ -272,6 +272,8 @@ export function buildHops(
   picks: Record<string, string> = {},
   /** 왕복이면 마지막에 돌아갈 도시. 그 구간도 실제로 타야 하므로 넣는다. */
   returnTo?: City,
+  /** 0=일요일. 주면 그 요일에 실제로 다니는 편만 본다. */
+  weekday: number | null = null,
 ): Hop[] {
   const sleeping = stops.filter((s) => s.sleep).map((s) => s.city);
   if (returnTo && sleeping.length && sleeping[sleeping.length - 1].slug !== returnTo.slug) {
@@ -281,7 +283,7 @@ export function buildHops(
   for (let i = 1; i < sleeping.length; i++) {
     const from = sleeping[i - 1];
     const to = sleeping[i];
-    const options = servicesBetween(from, to, measured.get(mkey(from.slug, to.slug)));
+    const options = servicesBetween(from, to, measured.get(mkey(from.slug, to.slug)), weekday);
     const wanted = picks[`${from.slug}>${to.slug}`];
     const chosen = options.find((o) => o.mode === wanted) ?? options[0];
     hops.push({ from, to, options, chosen });
@@ -305,6 +307,8 @@ export function buildItinerary(
     picks?: Record<string, string>;
     /** 사용자가 직접 정한 도시 순서. 있으면 최적화 대신 이것을 쓴다. */
     order?: string[];
+    /** 여행 시작 요일(0=일). 요일마다 운행이 다른 편이 있다. */
+    weekday?: number | null;
   } = {},
 ): Itinerary {
   const measured = measuredTable(allCities);
@@ -346,7 +350,7 @@ export function buildItinerary(
   const back = startSlug && startSlug === endSlug
     ? ordered.find((c) => c.slug === startSlug)
     : undefined;
-  const hops = buildHops(stops, measured, opts.picks, back);
+  const hops = buildHops(stops, measured, opts.picks, back, opts.weekday ?? null);
 
   const transitMin = hops.reduce((a, h) => a + h.chosen.totalMin, 0);
   const travelDays = hops.reduce((a, h) => (

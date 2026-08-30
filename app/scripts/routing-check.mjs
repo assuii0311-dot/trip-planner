@@ -50,4 +50,44 @@ console.log('\n=== 섬: 바르셀로나 → 팔마 ===');
 for (const s of servicesBetween(city('barcelona'), city('palma'))) {
   console.log(`  ${MODE_ICON[s.mode]} ${s.label} · 문앞~문앞 ${fmtDur(s.totalMin)}`);
 }
+
+
+// ── 실제 시간표(Renfe GTFS) 검증 ────────────────────────────────────────
+const { setRailTable, railBetween, railOnDay } = await import('../src/lib/rail.ts');
+let rail = null;
+try {
+  rail = JSON.parse(await readFile(new URL('../public/data/spain-rail.json', import.meta.url), 'utf8'));
+} catch { /* 없으면 건너뛴다 */ }
+
+if (!rail) {
+  console.log('\n실제 시간표 파일이 없습니다. pipeline/fetch-renfe-gtfs.mjs 를 먼저 돌리세요.');
+} else {
+  setRailTable(rail);
+  console.log(`\n=== 실제 시간표 (${rail.source}, ${rail.validFrom}~${rail.validTo}) ===`);
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  if (today > rail.validTo) { console.log(`✗ 시간표가 ${rail.validTo} 로 만료됐습니다. 다시 받아야 합니다.`); bad++; }
+
+  // 알려진 최단 소요와 대조한다. 시간표는 편마다 다르므로 가장 빠른 편으로 본다.
+  const FASTEST = [
+    ['madrid', 'barcelona', 150, 200],
+    ['madrid', 'seville', 140, 180],
+    ['seville', 'cordoba', 35, 60],
+    ['madrid', 'malaga', 150, 200],
+    ['madrid', 'bilbao', 280, 340],
+  ];
+  for (const [a, b, lo, hi] of FASTEST) {
+    const list = railBetween(a, b);
+    if (!list) { console.log(`  ${a}→${b}: 직통 없음 ✗`); bad++; continue; }
+    const best = Math.min(...list.map((r) => r.a - r.d));
+    const ok = best >= lo && best <= hi;
+    if (!ok) bad++;
+    console.log(`  ${(city(a).name + '→' + city(b).name).padEnd(24)} ${String(list.length).padStart(3)}편 · 최단 ${best}분 (기대 ${lo}~${hi}) ${ok ? '✓' : '✗'}`);
+  }
+
+  // 요일 필터가 실제로 거르는지
+  const mon = railOnDay(railBetween('madrid', 'barcelona'), 1);
+  const sun = railOnDay(railBetween('madrid', 'barcelona'), 0);
+  console.log(`  요일 필터: 월 ${mon.length}편 · 일 ${sun.length}편 ${mon.length && sun.length ? '✓' : '✗'}`);
+  if (!mon.length || !sun.length) bad++;
+}
 process.exit(bad ? 1 : 0);

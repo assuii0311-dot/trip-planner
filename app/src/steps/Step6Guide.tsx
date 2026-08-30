@@ -45,6 +45,11 @@ export default function Step6Guide({
         실시간 영업시간과 평점은 링크를 눌러 지도에서 확인하세요.
       </p>
 
+      <p className="footnote" style={{ margin: '0 0 20px' }}>
+        열차 시간표: Renfe 공개 데이터 (CC BY 4.0) ·
+        실제 운행은 <a href="https://www.renfe.com" target="_blank" rel="noreferrer">renfe.com</a> 에서 확인하세요.
+      </p>
+
       <section className="block" style={{ marginBottom: 26 }}>
         <h3>한눈에 보기</h3>
         <p className="help" style={{ margin: '0 0 10px' }}>

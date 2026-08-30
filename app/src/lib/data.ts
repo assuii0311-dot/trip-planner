@@ -1,4 +1,6 @@
 import type { City, Item } from '../types';
+import type { RailTable } from './rail';
+import { setRailTable } from './rail';
 
 export interface CountryIndex {
   country: string;
@@ -22,6 +24,24 @@ async function getJSON<T>(path: string): Promise<T> {
 }
 
 export const loadCountry = (country: string) => getJSON<CountryIndex>(`data/${country}.json`);
+
+/**
+ * 실제 철도 시간표(Renfe GTFS 에서 뽑은 것)를 받아 라우팅 엔진에 심는다.
+ *
+ * 없어도 앱은 돈다 — 그때는 운행 패턴으로 추정한다. 그래서 실패해도
+ * 오류로 만들지 않고 조용히 추정으로 넘어간다. 다만 화면에는 추정이라고
+ * 표시되므로 사용자가 속지는 않는다.
+ */
+export async function loadRail(country: string): Promise<RailTable | null> {
+  try {
+    const t = await getJSON<RailTable>(`data/${country}-rail.json`);
+    setRailTable(t);
+    return t;
+  } catch {
+    setRailTable(null);
+    return null;
+  }
+}
 
 export const loadCityItems = (slug: string) => getJSON<Item[]>(`data/cities/${slug}.json`);
 

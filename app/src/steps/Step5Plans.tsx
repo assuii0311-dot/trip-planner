@@ -315,7 +315,7 @@ function TravelBlock({
         {c.transfers > 0 && ` · 환승 ${c.transfers}회`}
         {travel.waitMin > 0 && ` · ${c.mode === 'flight' ? '공항' : c.mode === 'bus' ? '터미널' : '역'}에서 대기 ${travel.waitMin}분`}
         {c.costEur > 0 && ` · 약 €${c.costEur}`}
-        {c.estimated && ' · 시간은 추정치입니다'}
+        {c.estimated ? ' · 시간은 추정치입니다' : ' · Renfe 실제 시간표'}
       </div>
       {c.note && <div className="travel-note">{c.note}</div>}
 
@@ -336,6 +336,7 @@ function TravelBlock({
                   <span className="mode-sub">
                     문앞~문앞 {fmtDur(o.totalMin)}
                     {o.costEur > 0 && ` · €${o.costEur}`}
+                    {!o.estimated && ' · 실제 시간표'}
                   </span>
                 </span>
                 {o.mode === c.mode && <span className="mode-on">선택됨</span>}

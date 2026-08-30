@@ -29,6 +29,8 @@
 목록용 한 줄 요약, 왜 가는가, 실무 정보(예약·휴관·붐빔·소요·요금), 주의점.
 거점 도시를 고르면 근교 당일치기 후보가 자동으로 따라옵니다.
 
+철도 시간표는 Renfe 공개 데이터(CC BY 4.0)에서 받습니다 — `node pipeline/fetch-renfe-gtfs.mjs spain`.
+
 데이터 출처와 그 선택 이유는 [docs/01-data-sourcing.md](docs/01-data-sourcing.md),
 단계별 정의는 [docs/02-spec.md](docs/02-spec.md),
 동선·교통 엔진은 [docs/06-routing.md](docs/06-routing.md) 에 있습니다.

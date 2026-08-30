@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Basics, CourseId, Item, Plan, PlanStyle, Preferences, Priorities, ThemeId, TripState } from './types';
-import { loadCountry, loadItemsFor, type CountryIndex } from './lib/data';
+import { loadCountry, loadItemsFor, loadRail, type CountryIndex } from './lib/data';
+import type { RailTable } from './lib/rail';
 import { clearState, defaultState, exportState, importState, isInstalled, loadState, saveState } from './lib/store';
 import type { SaveResult } from './lib/store';
 import { SaveStatus } from './components/SaveStatus';
@@ -55,8 +56,11 @@ export default function App() {
   const pickedCount = Object.values(state.priorities).filter((v) => v > 0).length;
   const showStorageWarning = !warnDismissed && !isInstalled() && pickedCount >= 5;
 
+  const [rail, setRail] = useState<RailTable | null>(null);
   useEffect(() => {
     loadCountry(state.basics.country).then(setIndex).catch((e: Error) => setError(e.message));
+    // 실제 시간표는 없어도 앱이 돌아가므로 따로 받고 실패해도 넘어간다.
+    loadRail(state.basics.country).then(setRail);
   }, [state.basics.country]);
 
   const days = tripDays(state.basics);
@@ -183,10 +187,16 @@ export default function App() {
     return buildItinerary(
       tripCities, pickedItems, state.prefs,
       arrival?.slug ?? null, departure?.slug ?? null, index.cities,
-      { lodging: state.lodging, picks: state.modePicks, order: state.cityOrder },
+      {
+        lodging: state.lodging,
+        picks: state.modePicks,
+        order: state.cityOrder,
+        // 요일마다 안 다니는 편이 있다. 출발일 요일로 거른다.
+        weekday: new Date(`${state.basics.startDate}T00:00:00`).getDay(),
+      },
     );
   }, [index, tripCities, pickedItems, state.prefs, arrival?.slug, departure?.slug,
-    state.lodging, state.modePicks, state.cityOrder]);
+    state.lodging, state.modePicks, state.cityOrder, state.basics.startDate, rail]);
 
   const setMode = (from: string, to: string, mode: string) =>
     setState((s) => ({ ...s, modePicks: { ...s.modePicks, [`${from}>${to}`]: mode } }));
