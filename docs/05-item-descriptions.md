@@ -87,7 +87,7 @@ node pipeline/coverage.mjs                # 진행률
 
 ## 5.5 결과
 
-60개 도시 2,137개 아이템 전부를 새 형식으로 다시 썼다. `coverage.mjs` 기준 100%.
+60개 도시 2,131개 아이템 전부를 새 형식으로 다시 썼다. `coverage.mjs` 기준 100%.
 
 작업 중 자동 판정이 못 잡은 중복 아이템 24건을 찾아 `DROP_IDS` 로 지웠다
 (같은 장소가 Wikivoyage 리스팅과 Wikidata 보강에서 각각 들어온 경우 —

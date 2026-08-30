@@ -455,14 +455,50 @@ for (const [i, city] of selected.entries()) {
 }
 process.stderr.write('\n');
 
+/**
+ * 나라 인덱스에 담을 도시 목록.
+ *
+ * 이번 실행이 전체 수집이면 방금 만든 것이 곧 전부다.
+ * --only / --exclude / 대화식 제외로 일부만 돌렸다면 이것은 '전부'가 아니다.
+ * 그대로 쓰면 60곳짜리 인덱스가 수집한 도시 수만큼으로 줄어들고,
+ * 앱은 이 인덱스로 도시 목록을 그리므로 나머지 도시가 통째로 사라진다.
+ * 그래서 부분 수집일 때는 기존 인덱스를 읽어 해당 도시만 갈아 끼운다.
+ *
+ * 순서는 항상 레지스트리(CITIES) 순서로 맞춘다. 갈아 끼운 도시가 뒤로
+ * 밀리면 앱의 권역별 목록 순서가 흐트러진다.
+ */
+const indexPath = new URL(`../app/public/data/${countrySlug}.json`, import.meta.url);
+const partial = selected.length < CITIES.length;
+let cities = outCities;
+
+if (partial) {
+  const prev = await readFile(indexPath, 'utf8')
+    .then((t) => JSON.parse(t).cities)
+    .catch(() => null);
+  if (Array.isArray(prev)) {
+    const merged = new Map(prev.map((c) => [c.slug, c]));
+    for (const c of outCities) merged.set(c.slug, c);
+    const order = new Map(CITIES.map((c, i) => [c.slug, i]));
+    // 레지스트리에서 빠진 도시가 인덱스에 남아 있으면 맨 뒤로 보낸다.
+    cities = [...merged.values()].sort(
+      (a, b) => (order.get(a.slug) ?? Infinity) - (order.get(b.slug) ?? Infinity),
+    );
+    console.log(`부분 수집 — 기존 인덱스 ${prev.length}곳에 ${outCities.length}곳을 갱신해 ${cities.length}곳 유지`);
+  } else {
+    console.log(`⚠ 부분 수집인데 기존 인덱스를 읽지 못했습니다. `
+      + `인덱스가 이번에 수집한 ${outCities.length}곳만 남게 됩니다. `
+      + `되돌리려면 전체 수집(node pipeline/collect.mjs ${countrySlug})을 한 번 돌리세요.`);
+  }
+}
+
 await writeFile(
-  new URL(`../app/public/data/${countrySlug}.json`, import.meta.url),
+  indexPath,
   JSON.stringify({
     country: COUNTRY.slug, name: COUNTRY.name,
     generatedAt: new Date().toISOString().slice(0, 10),
     attribution: ATTRIBUTION,
     macroRegions: MACRO_REGIONS,
-    cities: outCities,
+    cities,
   }),
 );
 

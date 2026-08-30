@@ -83,7 +83,7 @@ Wikivoyage (아이템 후보 · 설명 · 요금 · 영업시간 텍스트)
 
 ### 실제 결과
 
-60개 도시, 아이템 2,137개, 도시당 평균 35.6개.
+60개 도시, 아이템 2,131개, 도시당 평균 35.5개.
 하한(20개)에 못 미치는 도시는 세 곳이고, 그 처리는 [04-data-volume.md](04-data-volume.md) 에 있다.
 파일 크기는 도시당 8~30KB이고 앱은 선택한 도시만 지연 로딩한다.
 
@@ -112,3 +112,26 @@ Wikivoyage (아이템 후보 · 설명 · 요금 · 영업시간 텍스트)
 - Wikidata: CC0 — 의무 없음
 - OpenStreetMap: ODbL — `© OpenStreetMap contributors` 표기
 - Google: 저장하지 않으므로 귀속 의무 발생 지점이 없다 (링크만 제공)
+
+## 1.7 부분 수집
+
+도시 하나만 다시 긁고 싶을 때가 있다.
+
+```
+node pipeline/collect.mjs spain --only barcelona      # 이 도시만
+node pipeline/collect.mjs spain --exclude teruel      # 이 도시만 빼고
+```
+
+이때 나라 인덱스(`app/public/data/spain.json`)의 `cities` 는 **기존 것을 읽어
+해당 도시만 갈아 끼운다.** 앱은 이 인덱스로 도시 목록을 그리므로, 수집한
+도시만 남기고 덮어쓰면 나머지 59곳이 화면에서 통째로 사라진다. 실제로 한 번
+그렇게 만들어 스모크 테스트가 깨진 적이 있다.
+
+순서는 항상 `pipeline/registry/spain.mjs` 의 `CITIES` 순서로 다시 정렬한다.
+갈아 끼운 도시가 배열 뒤로 밀리면 앱의 권역별 목록 순서가 흐트러진다.
+
+인덱스 파일이 없거나 읽지 못하면 이번에 수집한 도시만 담긴 인덱스를 쓰되,
+경고를 출력한다. 그 경우 전체 수집을 한 번 돌리면 복구된다.
+
+도시별 아이템 파일(`app/public/data/cities/*.json`)은 원래 도시 단위로 따로
+쓰므로 부분 수집의 영향을 받지 않는다.
