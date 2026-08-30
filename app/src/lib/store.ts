@@ -1,4 +1,5 @@
 import type { Basics, Preferences, Priorities, ThemeId, TripState } from '../types';
+import { AIRPORTS } from './airports';
 
 const KEY = 'trip-planner.v1';
 
@@ -18,8 +19,8 @@ export function defaultState(): TripState {
     endDate: end.toISOString().slice(0, 10),
     lastDayPlan: 'morning',
     partySize: 2,
-    startCity: null,
-    endCity: null,
+    startAirport: null,
+    endAirport: null,
   };
   const prefs: Preferences = {
     themes: { ...DEFAULT_THEMES },
@@ -47,9 +48,20 @@ export function defaultState(): TripState {
  * 취향은 그대로 쓸 수 있으니 버리지 않는다 - 2천 개에서 골라낸 것을
  * 구조가 바뀌었다는 이유로 날리면 안 된다.
  */
+/**
+ * v2 초기에는 출도착을 '도시' 로 받았다. 공항으로 바꾸면서, 예전에 고른
+ * 도시에 공항이 있으면 그 공항으로 옮긴다. 없으면 비운다 - 엉뚱한 공항을
+ * 짐작해 넣느니 앱이 알아서 정하게 두는 편이 낫다.
+ */
+function airportForCity(slug: string | null | undefined): string | null {
+  if (!slug) return null;
+  return AIRPORTS.find((a) => a.city === slug)?.iata ?? null;
+}
+
 function migrate(parsed: TripState): TripState {
   const base = defaultState();
   const legacy = (parsed.version as number) < 2;
+  const old = parsed.basics as unknown as { startCity?: string; endCity?: string };
   // v1 의 3·4단계는 v2 의 3단계 하나다. 5·6단계는 4·5단계로 당겨진다.
   const step = legacy && parsed.step >= 4 ? parsed.step - 1 : parsed.step;
   return {
@@ -57,7 +69,12 @@ function migrate(parsed: TripState): TripState {
     ...parsed,
     version: 2,
     step: Math.min(5, Math.max(1, step || 1)),
-    basics: { ...base.basics, ...parsed.basics },
+    basics: {
+      ...base.basics,
+      ...parsed.basics,
+      startAirport: parsed.basics?.startAirport ?? airportForCity(old.startCity),
+      endAirport: parsed.basics?.endAirport ?? airportForCity(old.endCity),
+    },
     prefs: { ...base.prefs, ...parsed.prefs, themes: { ...base.prefs.themes, ...parsed.prefs?.themes } },
     priorities: parsed.priorities ?? {},
     courses: parsed.courses ?? {},

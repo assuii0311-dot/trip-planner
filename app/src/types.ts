@@ -145,14 +145,16 @@ export interface Basics {
   lastDayPlan: LastDayPlan;
   partySize: number;
   /**
-   * 입국 도시와 출국 도시.
+   * 입국 공항과 출국 공항의 IATA 코드.
    *
-   * 마드리드로 들어와 바르셀로나에서 나가는 일정과, 둘 다 마드리드인 일정은
-   * 도시 순서도 마지막 날 쓰는 법도 다르다. 고른 도시 중에서 고르며,
+   * 도시가 아니라 공항 기준이다 — 비행기표를 먼저 끊고 일정을 짜기 때문에,
+   * 이미 표를 들고 있는 사람에게 물어야 할 것은 도시가 아니라 공항이다.
+   * 마드리드로 들어와 바르셀로나에서 나가는 일정과 둘 다 마드리드인 일정은
+   * 도시 순서도 마지막 날 쓰는 법도 다르다.
    * null 이면 앱이 동선을 보고 알아서 정한다.
    */
-  startCity: string | null;
-  endCity: string | null;
+  startAirport: string | null;
+  endAirport: string | null;
 }
 
 export type Budget = 'low' | 'mid' | 'high';

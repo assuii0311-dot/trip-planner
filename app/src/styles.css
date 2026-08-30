@@ -585,3 +585,18 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
   .entry-alts { grid-column: 3; margin-top: 0; }
   .course { flex-basis: 268px; }
 }
+
+/* 공항 선택 아래 안내 — 어느 도시로 이어지는지, 어긋나면 얼마나 먼지. */
+.airport-note {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.airport-note p { margin: 0 0 5px; }
+.airport-note p:last-child { margin-bottom: 0; }
+.airport-note b { color: var(--text); }
+.airport-caveat { color: var(--accent); }

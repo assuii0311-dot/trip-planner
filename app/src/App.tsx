@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Basics, CourseId, Item, Plan, PlanStyle, Preferences, Priorities, ThemeId, TripState } from './types';
+import type { Basics, City, CourseId, Item, Plan, PlanStyle, Preferences, Priorities, ThemeId, TripState } from './types';
 import { loadCountry, loadItemsFor, type CountryIndex } from './lib/data';
 import { clearState, defaultState, exportState, importState, isInstalled, loadState, saveState } from './lib/store';
 import type { SaveResult } from './lib/store';
 import { SaveStatus } from './components/SaveStatus';
 import { ResumeBanner, StorageWarning } from './components/ResumeBanner';
 import { assignBases, orderGroups } from './lib/basing';
+import { airportOf, cityForAirport } from './lib/airports';
 import { inferHints, inferThemes } from './lib/taste';
 import Step1Basics, { tripDays } from './steps/Step1Basics';
 import Step2Preferences from './steps/Step2Preferences';
@@ -64,14 +65,46 @@ export default function App() {
     [index, state.basics.cities],
   );
 
-  /** 1단계에서 고른 도시를 거점 단위로 묶는다. 사용자가 거점을 바꾼 경우를 반영한다. */
+  /**
+   * 거점 묶기. 공항 순서를 반영하기 전의 원본이다.
+   *
+   * 공항이 어느 도시로 이어지는지는 '실제로 방문하는 도시' 를 알아야 정할 수
+   * 있는데, 그 목록에는 사용자가 고르지 않았지만 앱이 거점으로 제안한 도시도
+   * 들어간다. 말라가를 고르지 않았어도 앱이 말라가에 묵으라고 했다면 AGP 는
+   * 말라가 공항이 맞다. 그래서 순서를 돌리기 전에 이것부터 계산한다.
+   */
+  const rawGroups = useMemo(
+    () => (index ? assignBases(selectedCities, index.cities, days) : []),
+    [index, selectedCities, days],
+  );
+
+  /** 이번 여행에서 실제로 밟는 도시 — 제안된 거점까지 포함한다. */
+  const tripCities = useMemo(() => {
+    const seen = new Map<string, City>();
+    for (const g of rawGroups) {
+      seen.set(g.base.slug, g.base);
+      for (const t of g.dayTrips) seen.set(t.city.slug, t.city);
+    }
+    return [...seen.values()];
+  }, [rawGroups]);
+
+  /**
+   * 입·출국 공항이 실제로 어느 도시로 이어지는지.
+   * 공항 도시가 이번 여행에 없으면 가장 가까운 도시로 붙는다.
+   */
+  const arrival = useMemo(
+    () => cityForAirport(airportOf(state.basics.startAirport), tripCities),
+    [state.basics.startAirport, tripCities],
+  );
+  const departure = useMemo(
+    () => cityForAirport(airportOf(state.basics.endAirport), tripCities),
+    [state.basics.endAirport, tripCities],
+  );
+
+  /** 공항 순서를 반영하고, 사용자가 거점을 바꾼 경우도 반영한다. */
   const groups = useMemo(() => {
     if (!index) return [];
-    // 입국·출국 도시를 지정했으면 그 순서로 돌린다.
-    const base = orderGroups(
-      assignBases(selectedCities, index.cities, days),
-      state.basics.startCity, state.basics.endCity,
-    );
+    const base = orderGroups(rawGroups, arrival?.slug ?? null, departure?.slug ?? null);
     return base.map((g, i) => {
       const override = state.baseOverrides[i];
       if (!override || override === g.base.slug) return g;
@@ -87,7 +120,7 @@ export default function App() {
         reason: `${swap.name}에 묵는 것으로 바꾸셨습니다.`,
       };
     });
-  }, [index, selectedCities, days, state.baseOverrides, state.basics.startCity, state.basics.endCity]);
+  }, [index, rawGroups, state.baseOverrides, arrival?.slug, departure?.slug]);
 
   /** 거점으로 제안된 도시는 사용자가 고르지 않았어도 아이템이 필요하다. */
   const cityScope = useMemo(() => {
@@ -119,11 +152,10 @@ export default function App() {
   const patchBasics = (patch: Partial<Basics>) =>
     setState((s) => {
       const basics = { ...s.basics, ...patch };
-      // 도시를 빼면 거기에 걸려 있던 입국·출국 지정과 코스 선택도 함께 지운다.
-      // 남겨 두면 고르지 않은 도시가 동선을 결정하게 된다.
+      // 도시를 빼면 그 도시의 코스 선택도 함께 지운다.
+      // 공항은 도시 선택과 무관하므로 건드리지 않는다 - 표를 이미 끊은
+      // 사람이 도시를 바꿨다고 항공권이 바뀌지는 않는다.
       const live = new Set(basics.cities);
-      if (basics.startCity && !live.has(basics.startCity)) basics.startCity = null;
-      if (basics.endCity && !live.has(basics.endCity)) basics.endCity = null;
       const courses = Object.fromEntries(
         Object.entries(s.courses).filter(([slug]) => live.has(slug)),
       );
@@ -263,7 +295,7 @@ export default function App() {
         {state.step === 1 && (
           <Step1Basics
             basics={state.basics} cities={index.cities} macroRegions={index.macroRegions}
-            groups={groups}
+            groups={groups} arrival={arrival} departure={departure}
             overrides={state.baseOverrides} onChange={patchBasics} onOverride={setOverride}
           />
         )}

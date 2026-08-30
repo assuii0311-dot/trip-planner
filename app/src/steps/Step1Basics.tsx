@@ -4,6 +4,8 @@ import { Block, Field, Segmented } from '../components/Controls';
 import CityCard from '../components/CityCard';
 import BasePlan from '../components/BasePlan';
 import type { BaseGroup } from '../lib/basing';
+import { AIRPORT_GROUPS, airportOf } from '../lib/airports';
+import { withJosa } from '../lib/korean';
 
 export function tripDays(basics: Basics): number {
   const a = new Date(`${basics.startDate}T00:00:00`);
@@ -19,7 +21,7 @@ export function tripDays(basics: Basics): number {
  * 효율적인지 판단할 근거가 없기 때문이다. 도시를 고르면 앱이 묶어 준다.
  */
 export default function Step1Basics({
-  basics, cities, macroRegions, groups, overrides, onChange, onOverride,
+  basics, cities, macroRegions, groups, arrival, departure, overrides, onChange, onOverride,
 }: {
   basics: Basics;
   cities: City[];
@@ -30,6 +32,9 @@ export default function Step1Basics({
    * 여기에 반영되지 않아 화면과 실제 계획이 어긋난다.
    */
   groups: BaseGroup[];
+  /** 입·출국 공항이 실제로 이어지는 도시. App 이 계산해 내려 준다. */
+  arrival: { slug: string; transferKm: number } | null;
+  departure: { slug: string; transferKm: number } | null;
   overrides: Record<number, string>;
   onChange: (patch: Partial<Basics>) => void;
   onOverride: (index: number, slug: string) => void;
@@ -40,6 +45,9 @@ export default function Step1Basics({
   const days = tripDays(basics);
   const nights = Math.max(0, days - 1);
   const selected = cities.filter((c) => basics.cities.includes(c.slug));
+  const inAirport = airportOf(basics.startAirport);
+  const outAirport = airportOf(basics.endAirport);
+  const cityName = (slug: string) => cities.find((c) => c.slug === slug)?.name ?? slug;
   const toggle = (slug: string) => {
     const next = basics.cities.includes(slug)
       ? basics.cities.filter((s) => s !== slug)
@@ -92,6 +100,92 @@ export default function Step1Basics({
         </Field>
       </Block>
 
+      {/*
+        출도착은 공항 기준이다. 비행기표를 먼저 끊고 일정을 짜기 때문에
+        날짜 바로 다음에 온다. 도시 선택과는 무관하므로 언제나 고를 수 있다.
+      */}
+      <Block
+        title="입국 · 출국 공항"
+        help="항공권에 찍힌 공항을 고르세요. 왕복이면 둘을 같은 공항으로 두시면 됩니다."
+      >
+        <div className="date-pair">
+          <Field label="도착" hint="스페인에 내리는 공항">
+            <select
+              value={basics.startAirport ?? ''}
+              onChange={(e) => onChange({ startAirport: e.target.value || null })}
+            >
+              <option value="">아직 안 정함</option>
+              {AIRPORT_GROUPS.map((g) => (
+                <optgroup key={g.label} label={g.label}>
+                  {g.list.map((a) => (
+                    <option key={a.iata} value={a.iata}>{a.name} ({a.iata})</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </Field>
+          <Field label="출발" hint="돌아갈 때 타는 공항">
+            <select
+              value={basics.endAirport ?? ''}
+              onChange={(e) => onChange({ endAirport: e.target.value || null })}
+            >
+              <option value="">아직 안 정함</option>
+              {AIRPORT_GROUPS.map((g) => (
+                <optgroup key={g.label} label={g.label}>
+                  {g.list.map((a) => (
+                    <option key={a.iata} value={a.iata}>{a.name} ({a.iata})</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </Field>
+        </div>
+
+        {(inAirport || outAirport) && (
+          <div className="airport-note">
+            {inAirport && (
+              <p>
+                <b>도착 {inAirport.name}</b>
+                {arrival
+                  ? arrival.transferKm === 0
+                    ? ` — ${cityName(arrival.slug)}에서 여행을 시작합니다.`
+                    : ` — 이번 여행에 ${withJosa(cityName(inAirport.city), '이가')} 없어, 가장 가까운 ${cityName(arrival.slug)}까지 약 ${arrival.transferKm}km 이동한 뒤 시작합니다.`
+                  : ' — 도시를 고르시면 어디서 시작할지 알려 드립니다.'}
+              </p>
+            )}
+            {outAirport && (
+              <p>
+                <b>출발 {outAirport.name}</b>
+                {departure
+                  ? departure.transferKm === 0
+                    ? ` — ${cityName(departure.slug)}에서 마무리합니다.`
+                    : ` — 이번 여행에 ${withJosa(cityName(outAirport.city), '이가')} 없어, ${cityName(departure.slug)}에서 마무리하고 약 ${departure.transferKm}km 이동해 공항으로 갑니다.`
+                  : ' — 도시를 고르시면 어디서 마무리할지 알려 드립니다.'}
+              </p>
+            )}
+            {(arrival?.transferKm ?? 0) > 150 && (
+              <p className="airport-caveat">
+                공항과 첫 도시가 {arrival?.transferKm}km 떨어져 있습니다. 기차나 국내선으로 반나절이
+                걸릴 수 있으니, 도착 당일 일정은 비워 두시는 편이 안전합니다.
+              </p>
+            )}
+            {(departure?.transferKm ?? 0) > 150 && (
+              <p className="airport-caveat">
+                마지막 도시에서 공항까지 {departure?.transferKm}km입니다. 출국 전날 공항 근처로
+                옮기는 것을 고려하세요.
+              </p>
+            )}
+            {inAirport?.note && <p className="airport-caveat">{inAirport.iata} · {inAirport.note}</p>}
+            {outAirport?.note && outAirport.iata !== inAirport?.iata && (
+              <p className="airport-caveat">{outAirport.iata} · {outAirport.note}</p>
+            )}
+            {inAirport && outAirport && inAirport.iata !== outAirport.iata && (
+              <p>편도 두 장(오픈조) 일정입니다. 같은 곳으로 돌아오지 않으므로 마지막 날 짐을 옮길 일이 없습니다.</p>
+            )}
+          </div>
+        )}
+      </Block>
+
       <Block title="인원">
         <Segmented
           value={String(basics.partySize)}
@@ -101,53 +195,6 @@ export default function Step1Basics({
           ]}
           onChange={(v) => onChange({ partySize: Number(v) })}
         />
-      </Block>
-
-      {/*
-        날짜·인원과 같은 '기본 정보' 로 인식되는 항목이라 위쪽에 둔다.
-        예전에는 도시 목록 뒤에 있었는데, 60개 도시 아코디언 때문에 화면
-        상단에서 3,000px 아래로 밀려 사실상 보이지 않았다.
-        고른 도시가 2곳이 안 되면 고를 것이 없지만, 그때도 자리는 보여 준다 —
-        비어 있으면 이런 항목이 있다는 사실 자체를 알 수 없다.
-      */}
-      <Block
-        title="들어가고 나오는 도시"
-        help="마드리드로 들어와 바르셀로나에서 나오는 일정이라면 도시 순서가 달라집니다. 왕복 항공권이면 둘을 같은 도시로 두세요."
-      >
-        {selected.length > 1 ? (
-          <>
-            <div className="date-pair">
-              <Field label="첫 도시" hint="도착 공항">
-                <select
-                  value={basics.startCity ?? ''}
-                  onChange={(e) => onChange({ startCity: e.target.value || null })}
-                >
-                  <option value="">앱이 정하도록</option>
-                  {selected.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
-                </select>
-              </Field>
-              <Field label="마지막 도시" hint="출국 공항">
-                <select
-                  value={basics.endCity ?? ''}
-                  onChange={(e) => onChange({ endCity: e.target.value || null })}
-                >
-                  <option value="">앱이 정하도록</option>
-                  {selected.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
-                </select>
-              </Field>
-            </div>
-            {basics.startCity && basics.endCity && basics.startCity !== basics.endCity && (
-              <p className="help">
-                편도 두 장(오픈조) 일정입니다. 같은 도시로 돌아오지 않으므로 마지막 날 짐을 옮길 일이 없습니다.
-              </p>
-            )}
-          </>
-        ) : (
-          <p className="help" style={{ margin: 0 }}>
-            아래에서 <b>도시를 2곳 이상</b> 고르시면 여기서 정할 수 있습니다.
-            {selected.length === 1 && ' 지금은 한 곳이라 들어가고 나오는 도시가 같습니다.'}
-          </p>
-        )}
       </Block>
 
       <Block title="가고 싶은 도시" help={`${cities.length}곳 전부를 권역별로 묶었습니다. 여러 곳을 골라도 됩니다.`}>
