@@ -702,22 +702,73 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
 
 /* --- 여행 지도 --- */
 
-.trip-map { display: block; background: var(--surface-2); border-radius: 10px; }
-.map-land path { fill: var(--surface); stroke: var(--line); stroke-width: 0.8; }
-.map-route line {
-  stroke: var(--accent);
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-dasharray: 5 4;
-  opacity: 0.75;
+.map-wrap { position: relative; }
+.trip-map {
+  display: block;
+  background: var(--surface-2);
+  border-radius: 10px;
+  touch-action: none;          /* 핀치·끌기를 우리가 처리한다 */
+  cursor: grab;
+  user-select: none;
 }
-.map-mode circle { fill: var(--surface); stroke: var(--accent); stroke-width: 1.2; }
-.map-mode text { font-size: 9px; }
-.map-city circle.is-sleep { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
-.map-city circle.is-trip { fill: var(--surface); stroke: var(--accent); stroke-width: 2; }
-.map-name { font-size: 9.5px; font-weight: 700; fill: var(--text); }
-.map-days { font-size: 8.5px; fill: var(--muted); }
-.map-islands text { font-size: 9px; fill: var(--muted); }
+.trip-map:active { cursor: grabbing; }
+.map-land path { fill: var(--surface); stroke: var(--line); }
+.map-route line { stroke: var(--accent); stroke-linecap: round; opacity: 0.7; }
+.map-mode circle { fill: var(--surface); stroke: var(--accent); }
+.map-pin { cursor: pointer; }
+.map-city circle.is-sleep { fill: var(--accent); stroke: var(--surface); }
+.map-city circle.is-trip { fill: var(--surface); stroke: var(--accent); }
+.map-pin.is-on circle.is-sleep,
+.map-pin.is-on circle.is-trip { stroke: var(--text); }
+.map-name { font-weight: 700; fill: var(--text); paint-order: stroke; stroke: var(--surface-2); stroke-width: 2px; }
+.map-days { fill: var(--muted); paint-order: stroke; stroke: var(--surface-2); stroke-width: 2px; }
+
+.map-tools { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.map-tools button {
+  min-width: 38px; min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit; font-size: 15px; line-height: 1;
+  cursor: pointer;
+}
+.map-tools .map-reset { margin-left: auto; font-size: 12px; padding: 0 12px; color: var(--muted); }
+.map-zoom { font-size: 12px; color: var(--muted); min-width: 34px; text-align: center; }
+.map-hint { margin: 6px 0 0; }
+
+/* 도시를 눌렀을 때 나오는 그 도시 일정 */
+.map-card {
+  margin-top: 12px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.map-card-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--accent-soft);
+}
+.map-card-close {
+  margin-left: auto;
+  width: 30px; height: 30px;
+  border: none; border-radius: 8px;
+  background: transparent; color: var(--muted);
+  font: inherit; font-size: 20px; line-height: 1;
+  cursor: pointer;
+}
+.map-card-day { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.map-card-day:last-child { border-bottom: none; }
+.map-card-date { font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+.map-card-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.map-card-list > li { display: flex; gap: 9px; align-items: flex-start; }
+.map-card-list .item-photo { flex: 0 0 52px; width: 52px; height: 52px; border-radius: 8px; }
+.map-card-body { min-width: 0; }
+.map-card-time { font-size: 11.5px; font-weight: 700; color: var(--accent); }
+.map-card-name { font-size: 13.5px; font-weight: 600; line-height: 1.35; }
+.map-card-sum { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.45; }
 
 .map-legend { list-style: none; margin: 14px 0 0; padding: 0; }
 .map-legend > li { padding: 10px 0; border-top: 1px solid var(--line); }
@@ -791,3 +842,74 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
 }
 .entry-move button:disabled, .itin-move button:disabled { opacity: 0.3; cursor: default; }
 .itin-move { flex: 0 0 auto; }
+
+/* 3단계: 일수 ↔ 아이템 양방향 */
+.days-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.days-label { font-size: 13px; font-weight: 600; }
+.days-step { display: flex; align-items: center; gap: 2px; margin-left: auto; }
+.days-step button {
+  width: 36px; height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit; font-size: 15px; line-height: 1;
+  cursor: pointer;
+}
+.days-step button:disabled { opacity: 0.35; cursor: default; }
+.days-value {
+  min-width: 52px;
+  text-align: center;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.days-hint { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+/* 4단계 대안 — 설명과 펼치기 */
+.alt {
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.alt-sum { font-size: 12px; color: var(--text); margin-top: 3px; line-height: 1.45; }
+.alt-acts { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.alt-take {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--accent);
+  font: inherit; font-size: 12.5px; font-weight: 600;
+  cursor: pointer;
+}
+.alt-more > summary {
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+}
+.alt-more > summary::-webkit-details-marker { display: none; }
+.alt-more > summary:after { content: " ▾"; }
+.alt-more[open] > summary:after { content: " ▴"; }
+.alt-detail {
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+}
+.alt-item + .alt-item { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.alt-item-head { display: flex; gap: 9px; align-items: flex-start; margin-bottom: 6px; }
+.alt-item-head .item-photo { flex: 0 0 52px; width: 52px; height: 52px; border-radius: 8px; }
+.alt-item-name { font-size: 13.5px; font-weight: 700; }
+.alt-item-sub { font-size: 11.5px; color: var(--muted); }

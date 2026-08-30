@@ -2,6 +2,9 @@ import { useMemo } from 'react';
 import type { City, Item, Plan, PlanDay, PlanStyle, PlanTravel, Preferences } from '../types';
 import type { Itinerary } from '../lib/itinerary';
 import { fmtDur, fmtHm } from '../lib/routing';
+import { mapsPlaceUrl } from '../lib/deeplinks';
+import { ItemDetail } from '../components/ItemDetail';
+import { ItemPhoto } from '../components/ItemPhoto';
 import { formatTime, SLOT_LABEL } from '../lib/planner';
 import { alternativesForDay } from '../lib/alternatives';
 import type { Alternative } from '../lib/alternatives';
@@ -250,18 +253,48 @@ function Alternatives({
       <summary>대안 {alts.length}</summary>
       <div className="alt-list">
         {alts.map((a) => (
-          <button
-            key={a.items.map((i) => i.id).join('+')}
-            type="button" className="alt"
-            onClick={() => onSwap(target, a.items)}
-          >
+          <div className="alt" key={a.items.map((i) => i.id).join('+')}>
             <div className="alt-name">{a.items.map((i) => i.name).join(' + ')}</div>
+            {/* 이름만 보고는 바꿀지 못 정한다. 무엇인지 한 줄로 먼저 알려 준다. */}
+            {a.items.map((i) => i.summary).filter(Boolean).length > 0 && (
+              <div className="alt-sum">
+                {a.items.map((i) => i.summary).filter(Boolean).join(' · ')}
+              </div>
+            )}
             <div className="alt-why">{a.reason}</div>
             <div className="alt-delta">
               {a.deltaMin === 0 ? '소요 같음'
                 : a.deltaMin > 0 ? `${a.deltaMin}분 더 걸림` : `${-a.deltaMin}분 짧음`}
             </div>
-          </button>
+            <div className="alt-acts">
+              <button type="button" className="alt-take" onClick={() => onSwap(target, a.items)}>
+                이걸로 바꾸기
+              </button>
+              <details className="alt-more">
+                <summary>자세히</summary>
+                <div className="alt-detail">
+                  {a.items.map((i) => (
+                    <div key={i.id} className="alt-item">
+                      <div className="alt-item-head">
+                        <ItemPhoto item={i} />
+                        <div>
+                          <div className="alt-item-name">{i.name}</div>
+                          <div className="alt-item-sub">{i.nameLocal ?? i.nameEn}</div>
+                        </div>
+                      </div>
+                      <ItemDetail item={i} />
+                      <a
+                        className="tag" style={{ textDecoration: 'none', display: 'inline-block', marginTop: 6 }}
+                        href={mapsPlaceUrl(i)} target="_blank" rel="noreferrer"
+                      >
+                        지도에서 보기 ↗
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            </div>
+          </div>
         ))}
       </div>
     </details>
@@ -350,6 +383,11 @@ function TravelBlock({
  * 어디서 자고 어디를 당일치기로 다녀오는지가 계획 전체를 좌우하므로
  * 맨 위에 놓고, 그 자리에서 바꿀 수 있게 한다.
  */
+/*
+ * 기본으로 펼쳐 둔다.
+ * 접어 두었더니 "숙박은 어디서 정하느냐" 는 질문이 나왔다. 숙박과 도시 순서는
+ * 계획 전체를 좌우하는데, 찾을 수 없으면 없는 기능이나 마찬가지다.
+ */
 function ItineraryBar({
   itinerary, cities, onLodging, onMoveCity,
 }: {
@@ -360,9 +398,9 @@ function ItineraryBar({
 }) {
   const name = (slug: string) => cities.find((c) => c.slug === slug)?.name ?? slug;
   return (
-    <details className="itin">
+    <details className="itin" open>
       <summary>
-        <b>동선</b>{' '}
+        <b>동선 · 숙박 바꾸기</b>{' '}
         {itinerary.stops.map((s) => s.city.name).join(' → ')}
         {' · '}이동 합계 {fmtDur(itinerary.transitMin)}
       </summary>

@@ -1,36 +1,40 @@
-import type { City, Item, Plan } from '../types';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import type { City, Item, Plan, PlanEntry } from '../types';
 import { SPAIN_OUTLINE } from '../lib/spain-outline';
+import { formatTime } from '../lib/planner';
+import { ItemPhoto } from './ItemPhoto';
 
 /**
  * 여행 전체를 스페인 지도 한 장에 그린다.
- *
- * 일자별 목록만으로는 "이 여행이 나라 안에서 어떻게 생겼는지" 가 보이지
- * 않는다. 어디를 얼마나 머물고 무엇을 타고 옮기는지를 한눈에 보려면
- * 지도가 있어야 한다.
  *
  * SVG 로 직접 그린다. 지도 타일을 쓰면 오프라인에서 비고, 타일 제공자의
  * 약관과 저작자 표시가 따라붙는다. 국경선은 Natural Earth 퍼블릭 도메인
  * 데이터라 그런 제약이 없다.
  *
- * 카나리아 제도는 본토에서 1,000km 넘게 떨어져 있어 같은 축척으로 그리면
- * 본토가 손톱만해진다. 지도에서 흔히 하듯 따로 떼어 왼쪽 아래에 넣는다.
+ * 처음에는 고정 크기로 그렸는데, 안달루시아처럼 도시가 몰린 여행에서는
+ * 점과 이름이 겹쳐 무엇이 어디인지 읽을 수 없었다. 그래서
+ *   - 점과 글자를 줄이고
+ *   - 확대·축소와 끌기를 넣고
+ *   - 도시를 누르면 그 도시 일정을 사진과 함께 아래에 펼치도록
+ * 바꿨다. 겹치는 것은 확대해서 풀고, 자세한 것은 눌러서 본다.
  */
 
-/** 화면 좌표계. 메르카토르는 위도 36~44 구간에서 과하므로 등장방형으로 충분하다. */
 const PAD = 16;
+/** 스페인 본토 경계에 맞춘 고정 범위. 여행마다 축척이 달라지면 비교가 안 된다. */
+const LON: [number, number] = [-9.6, 4.5];
+const LAT: [number, number] = [35.6, 44.2];
 
-interface Placed { city: City; x: number; y: number }
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 8;
 
 export interface MapStop {
   city: City;
-  /** 이 도시에서 보내는 일수. */
   days: number;
-  /** 여기서 자는가. */
   sleep: boolean;
-  /** 이 도시에서 볼 아이템. */
   items: Item[];
-  /** 여정에서 몇 번째인가. */
   order: number;
+  /** 이 도시에서 보내는 날들. 눌렀을 때 펼칠 일정. */
+  schedule: { date: string; dayIndex: number; entries: PlanEntry[] }[];
 }
 
 export interface MapHop {
@@ -44,95 +48,240 @@ export interface MapHop {
 export function TripMap({
   stops, hops, width = 340,
 }: { stops: MapStop[]; hops: MapHop[]; width?: number }) {
-  // 본토만으로 축척을 잡는다. 섬은 따로 그린다.
-  const mainland = stops.filter((s) => s.city.lon > -12);
-  const islands = stops.filter((s) => s.city.lon <= -12);
+  const mainland = useMemo(() => stops.filter((s) => s.city.lon > -12), [stops]);
+  const islands = useMemo(() => stops.filter((s) => s.city.lon <= -12), [stops]);
 
-  // 스페인 본토 경계에 맞춘 고정 범위. 도시 위치에 따라 축척이 흔들리면
-  // 여행마다 지도 모양이 달라져 비교가 안 된다.
-  const LON = [-9.6, 4.5];
-  const LAT = [35.6, 44.2];
   const w = width - PAD * 2;
   const h = Math.round(w * ((LAT[1] - LAT[0]) / (LON[1] - LON[0])) * 0.78);
-  const px = (lon: number) => PAD + ((lon - LON[0]) / (LON[1] - LON[0])) * w;
-  const py = (lat: number) => PAD + ((LAT[1] - lat) / (LAT[1] - LAT[0])) * h;
-
-  const placed: Placed[] = mainland.map((s) => ({ city: s.city, x: px(s.city.lon), y: py(s.city.lat) }));
-  const at = new Map(placed.map((p) => [p.city.slug, p]));
-
   const height = h + PAD * 2;
+  const px = useCallback((lon: number) => PAD + ((lon - LON[0]) / (LON[1] - LON[0])) * w, [w]);
+  const py = useCallback((lat: number) => PAD + ((LAT[1] - lat) / (LAT[1] - LAT[0])) * h, [h]);
+
+  /** 보이는 영역. 확대·끌기는 이것만 바꾼다. */
+  const [view, setView] = useState({ x: 0, y: 0, z: 1 });
+  const [picked, setPicked] = useState<string | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const drag = useRef<{ x: number; y: number; vx: number; vy: number } | null>(null);
+  const pinch = useRef<{ dist: number; z: number } | null>(null);
+
+  const clamp = useCallback((v: { x: number; y: number; z: number }) => {
+    const z = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, v.z));
+    const vw = width / z;
+    const vh = height / z;
+    return {
+      z,
+      x: Math.min(width - vw, Math.max(0, v.x)),
+      y: Math.min(height - vh, Math.max(0, v.y)),
+    };
+  }, [width, height]);
+
+  /** 화면의 한 점을 기준으로 확대한다. 그 점이 제자리에 있어야 자연스럽다. */
+  const zoomAt = useCallback((factor: number, cx: number, cy: number) => {
+    setView((v) => {
+      const z = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, v.z * factor));
+      const k = 1 / v.z - 1 / z;
+      return clamp({ z, x: v.x + cx * k, y: v.y + cy * k });
+    });
+  }, [clamp]);
+
+  /** 화면 좌표를 지도 좌표로. 확대돼 있어도 맞아야 한다. */
+  const toMap = (clientX: number, clientY: number) => {
+    const r = svgRef.current?.getBoundingClientRect();
+    if (!r) return { x: 0, y: 0 };
+    return {
+      x: ((clientX - r.left) / r.width) * width,
+      y: ((clientY - r.top) / r.height) * height,
+    };
+  };
+
+  const at = useMemo(() => {
+    const m = new Map<string, { x: number; y: number }>();
+    for (const s of mainland) m.set(s.city.slug, { x: px(s.city.lon), y: py(s.city.lat) });
+    return m;
+  }, [mainland, px, py]);
+
   const path = (poly: [number, number][]) =>
     `${poly.map(([lo, la], i) => `${i ? 'L' : 'M'}${px(lo).toFixed(1)},${py(la).toFixed(1)}`).join('')}Z`;
 
+  // 확대할수록 점과 글자를 줄여, 화면에서 보이는 크기를 일정하게 유지한다.
+  const k = 1 / view.z;
+  const chosen = stops.find((s) => s.city.slug === picked) ?? null;
+
   return (
-    <svg
-      className="trip-map" viewBox={`0 0 ${width} ${height}`}
-      width="100%" role="img"
-      aria-label={`여행 경로 지도: ${stops.map((s) => s.city.name).join(' → ')}`}
-    >
-      {/* 국경선 — 본토와 발레아레스만. 카나리아는 범위 밖이라 자동으로 빠진다. */}
-      <g className="map-land">
-        {SPAIN_OUTLINE.map((poly, i) => <path key={i} d={path(poly)} />)}
-      </g>
+    <div className="map-wrap">
+      <svg
+        ref={svgRef}
+        className="trip-map"
+        viewBox={`${view.x} ${view.y} ${width / view.z} ${height / view.z}`}
+        width="100%" role="img"
+        aria-label={`여행 경로 지도: ${stops.map((s) => s.city.name).join(' → ')}`}
+        onWheel={(e) => {
+          e.preventDefault();
+          const p = toMap(e.clientX, e.clientY);
+          zoomAt(e.deltaY < 0 ? 1.15 : 1 / 1.15, p.x, p.y);
+        }}
+        onPointerDown={(e) => {
+          (e.target as Element).setPointerCapture?.(e.pointerId);
+          drag.current = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
+        }}
+        onPointerMove={(e) => {
+          if (!drag.current) return;
+          const r = svgRef.current?.getBoundingClientRect();
+          if (!r) return;
+          const dx = ((e.clientX - drag.current.x) / r.width) * (width / view.z);
+          const dy = ((e.clientY - drag.current.y) / r.height) * (height / view.z);
+          setView(clamp({ z: view.z, x: drag.current.vx - dx, y: drag.current.vy - dy }));
+        }}
+        onPointerUp={() => { drag.current = null; }}
+        onPointerCancel={() => { drag.current = null; }}
+        onTouchStart={(e) => {
+          if (e.touches.length !== 2) return;
+          const [a, b] = [e.touches[0], e.touches[1]];
+          pinch.current = { dist: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), z: view.z };
+          drag.current = null;
+        }}
+        onTouchMove={(e) => {
+          if (e.touches.length !== 2 || !pinch.current) return;
+          const [a, b] = [e.touches[0], e.touches[1]];
+          const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+          const p = toMap((a.clientX + b.clientX) / 2, (a.clientY + b.clientY) / 2);
+          setView((v) => {
+            const z = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, pinch.current!.z * (d / pinch.current!.dist)));
+            const kk = 1 / v.z - 1 / z;
+            return clamp({ z, x: v.x + p.x * kk, y: v.y + p.y * kk });
+          });
+        }}
+        onTouchEnd={() => { pinch.current = null; }}
+      >
+        <g className="map-land">
+          {SPAIN_OUTLINE.map((poly, i) => (
+            <path key={i} d={path(poly)} strokeWidth={0.8 * k} />
+          ))}
+        </g>
 
-      {/* 이동 경로 */}
-      <g className="map-route">
-        {hops.map((hp) => {
-          const a = at.get(hp.from);
-          const b = at.get(hp.to);
-          if (!a || !b) return null;
-          return (
-            <line key={`${hp.from}-${hp.to}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y} />
-          );
-        })}
-      </g>
-
-      {/* 이동 수단 아이콘 — 경로 가운데에 */}
-      <g className="map-mode">
-        {hops.map((hp) => {
-          const a = at.get(hp.from);
-          const b = at.get(hp.to);
-          if (!a || !b) return null;
-          const mx = (a.x + b.x) / 2;
-          const my = (a.y + b.y) / 2;
-          return (
-            <g key={`m-${hp.from}-${hp.to}`}>
-              <circle cx={mx} cy={my} r="9" />
-              <text x={mx} y={my + 3.5} textAnchor="middle">{hp.icon}</text>
-            </g>
-          );
-        })}
-      </g>
-
-      {/* 도시 */}
-      <g className="map-city">
-        {mainland.map((s) => {
-          const p = at.get(s.city.slug)!;
-          return (
-            <g key={s.city.slug}>
-              <circle
-                cx={p.x} cy={p.y} r={s.sleep ? 6.5 : 4.5}
-                className={s.sleep ? 'is-sleep' : 'is-trip'}
+        <g className="map-route">
+          {hops.map((hp) => {
+            const a = at.get(hp.from);
+            const b = at.get(hp.to);
+            if (!a || !b) return null;
+            return (
+              <line
+                key={`${hp.from}-${hp.to}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y}
+                strokeWidth={1.6 * k} strokeDasharray={`${4 * k} ${3 * k}`}
               />
-              <text x={p.x} y={p.y - 10} textAnchor="middle" className="map-name">
-                {s.city.name}
-              </text>
-              <text x={p.x} y={p.y + 17} textAnchor="middle" className="map-days">
-                {s.sleep ? `${s.days}일` : '당일'}
-              </text>
-            </g>
-          );
-        })}
-      </g>
+            );
+          })}
+        </g>
+
+        <g className="map-mode">
+          {hops.map((hp) => {
+            const a = at.get(hp.from);
+            const b = at.get(hp.to);
+            if (!a || !b) return null;
+            const mx = (a.x + b.x) / 2;
+            const my = (a.y + b.y) / 2;
+            return (
+              <g key={`m-${hp.from}-${hp.to}`}>
+                <circle cx={mx} cy={my} r={4.6 * k} strokeWidth={0.8 * k} />
+                <text x={mx} y={my + 1.8 * k} textAnchor="middle" fontSize={5 * k}>{hp.icon}</text>
+              </g>
+            );
+          })}
+        </g>
+
+        <g className="map-city">
+          {mainland.map((s) => {
+            const p = at.get(s.city.slug)!;
+            const on = picked === s.city.slug;
+            return (
+              <g
+                key={s.city.slug}
+                className={`map-pin${on ? ' is-on' : ''}`}
+                onClick={(e) => { e.stopPropagation(); setPicked(on ? null : s.city.slug); }}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                {/* 손가락으로 누를 수 있게 보이지 않는 넓은 과녁을 둔다. */}
+                <circle cx={p.x} cy={p.y} r={11 * k} fill="transparent" />
+                <circle
+                  cx={p.x} cy={p.y} r={(s.sleep ? 3.6 : 2.6) * k}
+                  strokeWidth={1.4 * k}
+                  className={s.sleep ? 'is-sleep' : 'is-trip'}
+                />
+                <text
+                  x={p.x} y={p.y - 6 * k} textAnchor="middle"
+                  className="map-name" fontSize={6.2 * k}
+                >
+                  {s.city.name}
+                </text>
+                <text
+                  x={p.x} y={p.y + 10 * k} textAnchor="middle"
+                  className="map-days" fontSize={5.4 * k}
+                >
+                  {s.sleep ? `${s.days}일` : '당일'}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+      </svg>
+
+      <div className="map-tools">
+        <button type="button" aria-label="축소" onClick={() => zoomAt(1 / 1.4, width / 2, height / 2)}>−</button>
+        <span className="map-zoom">{view.z.toFixed(1)}×</span>
+        <button type="button" aria-label="확대" onClick={() => zoomAt(1.4, width / 2, height / 2)}>＋</button>
+        <button type="button" className="map-reset" onClick={() => { setView({ x: 0, y: 0, z: 1 }); setPicked(null); }}>
+          처음으로
+        </button>
+      </div>
+      <p className="help map-hint">
+        손가락으로 벌려 확대하거나 끌어서 움직일 수 있습니다. 도시를 누르면 그날 일정이 아래에 나옵니다.
+      </p>
 
       {islands.length > 0 && (
-        <g className="map-islands">
-          <text x={PAD} y={height - 8}>
-            ✈ 카나리아 제도: {islands.map((s) => `${s.city.name}(${s.sleep ? `${s.days}일` : '당일'})`).join(' · ')}
-          </text>
-        </g>
+        <p className="help" style={{ margin: '4px 0 0' }}>
+          ✈ 카나리아 제도: {islands.map((s) => `${s.city.name}(${s.sleep ? `${s.days}일` : '당일'})`).join(' · ')}
+        </p>
       )}
-    </svg>
+
+      {chosen && <CityCard stop={chosen} onClose={() => setPicked(null)} />}
+    </div>
+  );
+}
+
+/** 지도에서 도시를 눌렀을 때 나오는 그 도시의 일정. 사진을 함께 보여 준다. */
+function CityCard({ stop, onClose }: { stop: MapStop; onClose: () => void }) {
+  return (
+    <div className="map-card">
+      <div className="map-card-head">
+        <span className="leg-no">{stop.order}</span>
+        <span className="leg-city">{stop.city.name}</span>
+        <span className={`leg-stay${stop.sleep ? '' : ' is-trip'}`}>
+          {stop.sleep ? `${stop.days}일 머묾 · 숙박` : '당일치기'}
+        </span>
+        <button type="button" className="map-card-close" aria-label="닫기" onClick={onClose}>×</button>
+      </div>
+      {stop.schedule.map((d) => (
+        <div className="map-card-day" key={d.date}>
+          <div className="map-card-date">{d.dayIndex}일차 · {d.date}</div>
+          {d.entries.length === 0
+            ? <div className="help">이 날은 이동과 휴식입니다.</div>
+            : (
+              <ul className="map-card-list">
+                {d.entries.map((e) => (
+                  <li key={e.item.id}>
+                    <ItemPhoto item={e.item} />
+                    <div className="map-card-body">
+                      <div className="map-card-time">{formatTime(e.startMin)}</div>
+                      <div className="map-card-name">{e.item.name}</div>
+                      {e.item.summary && <div className="map-card-sum">{e.item.summary}</div>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -177,6 +326,7 @@ export function mapDataOf(plan: Plan, cities: City[]): { stops: MapStop[]; hops:
   const days = new Map<string, number>();
   const sleep = new Map<string, boolean>();
   const items = new Map<string, Item[]>();
+  const sched = new Map<string, MapStop['schedule']>();
   const hops: MapHop[] = [];
 
   for (const d of plan.days) {
@@ -187,6 +337,9 @@ export function mapDataOf(plan: Plan, cities: City[]): { stops: MapStop[]; hops:
     const list = items.get(d.city) ?? [];
     list.push(...d.entries.filter((e) => e.item.city === d.city).map((e) => e.item));
     items.set(d.city, list);
+    const sc = sched.get(d.city) ?? [];
+    sc.push({ date: d.date, dayIndex: d.dayIndex, entries: d.entries });
+    sched.set(d.city, sc);
     if (d.travel) {
       hops.push({
         from: d.travel.from,
@@ -208,6 +361,7 @@ export function mapDataOf(plan: Plan, cities: City[]): { stops: MapStop[]; hops:
         sleep: sleep.get(slug) ?? false,
         items: items.get(slug) ?? [],
         order: i + 1,
+        schedule: sched.get(slug) ?? [],
       };
     })
     .filter((s): s is MapStop => s !== null);

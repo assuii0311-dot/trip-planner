@@ -308,6 +308,20 @@ export default function App() {
    * 것이 계속 남으면, 세 코스를 다 눌러 본 사람은 세 코스를 합친 목록을
    * 갖게 된다. 다른 도시의 선택은 건드리지 않는다.
    */
+  /**
+   * 일수를 정해 그 도시의 아이템을 갈아 끼운다.
+   * 코스 선택과 같은 규칙이다 — 더하지 않고 그 도시 것만 바꾼다.
+   */
+  const setCityDays = (city: string, nextItems: Item[]) =>
+    setState((s) => {
+      const next: Priorities = {};
+      for (const [id, v] of Object.entries(s.priorities)) {
+        if (itemCityOf.get(id) !== city) next[id] = v;
+      }
+      for (const it of nextItems) next[it.id] = 2;
+      return { ...s, priorities: next };
+    });
+
   const chooseCourse = (city: string, course: CourseId, courseItems: Item[]) =>
     setState((s) => {
       const next: Priorities = {};
@@ -398,6 +412,7 @@ export default function App() {
                 courses={state.courses} days={days}
                 ui={state.ui ?? {}}
                 onSet={setPriority} onBulk={setPriorities} onCourse={chooseCourse}
+                onDays={setCityDays}
                 onUi={(next) => setState((s) => ({ ...s, ui: { ...s.ui, ...next } }))}
               />
             )

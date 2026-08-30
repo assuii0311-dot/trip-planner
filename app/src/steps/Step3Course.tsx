@@ -3,7 +3,7 @@ import type { City, CourseId, Item, Preferences, Priorities, ThemeId } from '../
 import type { Itinerary } from '../lib/itinerary';
 import { THEMES } from '../lib/themes';
 import { rankItems } from '../lib/scoring';
-import { coursesFor } from '../lib/course';
+import { coursesFor, itemsForDays } from '../lib/course';
 import { estimateDays } from '../lib/capacity';
 import { recommend } from '../lib/recommend';
 import { mapsPlaceUrl } from '../lib/deeplinks';
@@ -19,7 +19,8 @@ import { ItemPhoto } from '../components/ItemPhoto';
  * "이 도시는 보통 이렇게 돕니다" 를 먼저 주고, 거기서 빼고 더한다.
  */
 export default function Step3Course({
-  items, cities, itinerary, prefs, priorities, courses, days, ui, onSet, onBulk, onCourse, onUi,
+  items, cities, itinerary, prefs, priorities, courses, days, ui,
+  onSet, onBulk, onCourse, onDays, onUi,
 }: {
   items: Item[];
   cities: City[];
@@ -33,6 +34,8 @@ export default function Step3Course({
   onSet: (id: string, v: 0 | 1 | 2 | 3) => void;
   onBulk: (next: Priorities) => void;
   onCourse: (city: string, course: CourseId, items: Item[]) => void;
+  /** 이 도시에 며칠을 쓸지 정하면 그 일수에 맞는 아이템으로 갈아 끼운다. */
+  onDays: (city: string, items: Item[]) => void;
   onUi: (next: { openCity?: string | null; openTheme?: ThemeId | null; onlyPicked?: boolean }) => void;
 }) {
   /** 방문 순서대로. 여기에 배정된 밤 수가 코스 분량을 정한다. */
@@ -106,7 +109,7 @@ export default function Step3Course({
                 priorities={priorities} course={courses[city.slug]} onlyPicked={onlyPicked}
                 openTheme={ui.openTheme === undefined ? THEMES[0].id : ui.openTheme}
                 onSet={onSet} onBulk={onBulk} onCourse={onCourse} onUi={onUi}
-                cities={cities}
+                onDays={onDays} cities={cities}
               />
             )}
           </div>
@@ -144,7 +147,7 @@ export default function Step3Course({
 /** 한 도시의 코스 카드 세 장과, 그 아래 전체 아이템 목록. */
 function CityPanel({
   city, cityItems, nights, prefs, priorities, course, onlyPicked, openTheme,
-  cities, onSet, onBulk, onCourse, onUi,
+  cities, onSet, onBulk, onCourse, onDays, onUi,
 }: {
   city: City;
   cityItems: Item[];
@@ -158,6 +161,7 @@ function CityPanel({
   onSet: (id: string, v: 0 | 1 | 2 | 3) => void;
   onBulk: (next: Priorities) => void;
   onCourse: (city: string, course: CourseId, items: Item[]) => void;
+  onDays: (city: string, items: Item[]) => void;
   onUi: (next: { openTheme?: ThemeId | null; onlyPicked?: boolean }) => void;
 }) {
   const courses = useMemo(
@@ -165,6 +169,7 @@ function CityPanel({
     [city, cityItems, prefs, nights],
   );
   const pickedIds = new Set(cityItems.filter((i) => (priorities[i.id] ?? 0) > 0).map((i) => i.id));
+  const pickedDays = estimateDays(cityItems.filter((i) => pickedIds.has(i.id)), prefs);
 
   const byTheme = useMemo(() => {
     const map = new Map<ThemeId, Item[]>();
@@ -212,6 +217,30 @@ function CityPanel({
           })}
         </div>
       )}
+
+      {/*
+        일수 ↔ 아이템은 양방향이다.
+        아이템을 담으면 일수가 나오고, 일수를 정하면 그 일수에 맞는 아이템이 담긴다.
+        "이 도시는 이틀만" 이 먼저 정해지는 경우가 많은데, 이틀치를 직접 세어 가며
+        담는 것은 사람이 할 일이 아니다.
+      */}
+      <div className="days-row">
+        <span className="days-label">{city.name}에 며칠</span>
+        <div className="days-step" role="group" aria-label={`${city.name} 일수`}>
+          <button
+            type="button" aria-label="하루 줄이기" disabled={pickedDays <= 0.5}
+            onClick={() => onDays(city.slug, itemsForDays(city, cityItems, prefs, Math.max(1, Math.round(pickedDays) - 1), course))}
+          >−</button>
+          <span className="days-value">{pickedDays === 0 ? '—' : `${pickedDays}일`}</span>
+          <button
+            type="button" aria-label="하루 늘리기"
+            onClick={() => onDays(city.slug, itemsForDays(city, cityItems, prefs, Math.round(pickedDays) + 1, course))}
+          >＋</button>
+        </div>
+        <span className="days-hint">
+          {pickedIds.size}곳 담김
+        </span>
+      </div>
 
       <div className="toolbar" style={{ marginTop: 12, marginBottom: 12 }}>
         <button type="button" onClick={() => onUi({ onlyPicked: !onlyPicked })}>

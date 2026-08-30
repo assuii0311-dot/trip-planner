@@ -38,6 +38,23 @@ function targetCount(items: Item[], prefs: Preferences, nights: number): number 
 }
 
 /**
+ * 일수를 정해 주면 그 일수에 맞는 아이템을 골라 준다.
+ *
+ * 반대 방향이다. 지금까지는 아이템을 담으면 일수가 나왔는데, 실제로는
+ * "이 도시는 이틀만 볼 거야" 가 먼저 정해지는 경우가 많다. 그때 이틀치를
+ * 직접 세어 가며 담는 것은 사람이 할 일이 아니다.
+ *
+ * 고른 코스의 성격(균형/강조)은 유지한 채 분량만 바꾼다.
+ */
+export function itemsForDays(
+  city: City, cityItems: Item[], prefs: Preferences, days: number, keep: CourseId | undefined,
+): Item[] {
+  const list = coursesFor(city, cityItems, prefs, days);
+  const course = list.find((c) => c.id === keep) ?? list[0];
+  return course ? course.items : [];
+}
+
+/**
  * 테마별 몫을 정해 두고 점수순으로 채운다.
  *
  * 그냥 점수순으로 자르면 관심도가 가장 높은 테마가 목록을 독식해서,
