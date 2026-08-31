@@ -2,6 +2,7 @@ import type { City, Item, Preferences } from '../types';
 import type { Service } from './routing';
 import { fastest, servicesBetween } from './routing';
 import { estimateDays } from './capacity';
+import { chooseBases, explainBase, DAY_TRIP_MAX_MIN } from './basecity';
 
 /**
  * 도시 순서 · 숙박 · 도시 간 이동을 한꺼번에 정하는 엔진.
@@ -34,6 +35,8 @@ export interface Stop {
   base: string | null;
   /** 왕복 이동 시간(당일치기일 때만). */
   dayTripMin: number;
+  /** 왜 이렇게 잡혔는지 한 줄. 화면에서 그대로 보여 준다. */
+  why: string;
 }
 
 export interface Hop {
@@ -54,8 +57,6 @@ export interface Itinerary {
   transitMin: number;
 }
 
-/** 당일치기로 다녀올 만한 편도 한계(분). 왕복이면 하루의 3분의 1이다. */
-export const DAY_TRIP_ONE_WAY_MAX = 110;
 
 /** 조사해 둔 구간표. dayTrips 에 들어 있는 실측값이다. */
 export function measuredTable(cities: City[]): Map<string, { minutes: number; mode: string }> {
@@ -214,78 +215,47 @@ function heuristicOrder(n: number, cost: number[][], start: number, end: number,
 }
 
 /**
- * 순서가 정해진 도시들에 숙박과 당일치기를 배정한다.
+ * 거점과 당일치기를 배정한다.
  *
- * 하루치도 안 되는 도시를 위해 짐을 풀고 싸는 것은 낭비다. 앞이나 뒤의
- * 숙박지에서 왕복 4시간 안에 다녀올 수 있으면 당일치기로 붙인다.
- * 그럴 수 없으면 짧게라도 거기서 잔다 — 왕복 6시간을 쓰느니 자는 편이 낫다.
+ * 기준은 {@link chooseBases} 에 있다 — 다섯 요소의 가중합으로 거점을 고르고
+ * 편도 {@link DAY_TRIP_MAX_MIN} 분 안의 도시를 흡수한다. 여기서는 그 결과를
+ * 방문 순서에 맞춰 Stop 으로 옮기고 날 수를 센다.
+ *
+ * 중요한 것은 이 함수가 '순서를 정하기 전에' 불린다는 점이다. 예전에는
+ * 순서를 먼저 정하고 숙박을 나중에 정해서, 세고비아 → 톨레도처럼 실제로는
+ * 아무도 타지 않는 구간이 생겼다.
  */
 export function assignLodging(
   ordered: City[], itemDaysOf: (slug: string) => number,
   measured: Map<string, { minutes: number; mode: string }>,
   overrides: Record<string, 'sleep' | 'daytrip'> = {},
+  endpoints: (string | null)[] = [],
 ): Stop[] {
-  const stops: Stop[] = ordered.map((city) => ({
-    city,
-    itemDays: itemDaysOf(city.slug),
-    nights: 0,
-    sleep: true,
-    base: null,
-    dayTripMin: 0,
-  }));
+  const { bases, attach, scores } = chooseBases(ordered, itemDaysOf, measured, endpoints, overrides);
+  const isBase = new Set(bases.map((b) => b.slug));
+  const nameOf = (slug: string) => ordered.find((c) => c.slug === slug)?.name ?? slug;
 
-  for (let i = 0; i < stops.length; i++) {
-    const s = stops[i];
-    const forced = overrides[s.city.slug];
-    if (forced === 'sleep') continue;
-    // 하루를 다 쓸 만큼 볼 것이 있으면 거기서 잔다.
-    if (forced !== 'daytrip' && s.itemDays >= 0.75) continue;
-
-    /*
-     * 앞뒤의 숙박 도시 중 가까운 쪽에서 다녀온다.
-     *
-     * 110분 한계는 '앱이 알아서 정할 때' 의 기준이지, 사용자가 직접 고른
-     * 것을 물릴 근거가 아니다. 예전에는 이 한계를 사용자 지시에도 적용해서,
-     * 마드리드를 당일치기로 바꿔 달라고 눌러도(편도 3시간 17분) 아무 일도
-     * 일어나지 않았다. 눌러도 아무 반응이 없는 것이 가장 나쁘다.
-     *
-     * 직접 고른 경우에는 거리를 따지지 않고 가장 가까운 숙박지에 붙이고,
-     * 왕복 몇 시간이 드는지 화면에서 보여 준다. 판단은 사람이 한다.
-     */
-    let best: { idx: number; min: number } | null = null;
-    for (const j of [i - 1, i + 1]) {
-      if (j < 0 || j >= stops.length || !stops[j].sleep) continue;
-      const leg = fastest(s.city, stops[j].city, measured.get(mkey(s.city.slug, stops[j].city.slug)));
-      const within = forced === 'daytrip' || leg.totalMin <= DAY_TRIP_ONE_WAY_MAX;
-      if (within && (!best || leg.totalMin < best.min)) {
-        best = { idx: j, min: leg.totalMin };
-      }
-    }
-    if (best) {
-      s.sleep = false;
-      s.base = stops[best.idx].city.slug;
-      s.dayTripMin = best.min * 2;
-    }
-  }
+  const stops: Stop[] = ordered.map((city) => {
+    const sleep = isBase.has(city.slug);
+    const base = sleep ? null : attach.get(city.slug) ?? null;
+    const sc = scores.get(city.slug);
+    return {
+      city,
+      itemDays: itemDaysOf(city.slug),
+      nights: 0,
+      sleep,
+      base,
+      dayTripMin: base
+        ? fastest(city, ordered.find((c) => c.slug === base)!,
+          measured.get(mkey(city.slug, base))).totalMin * 2
+        : 0,
+      why: sc ? explainBase(sc, sleep, base ? nameOf(base) : undefined) : '',
+    };
+  });
 
   /*
-   * 아무도 자지 않는 여정은 성립하지 않는다.
-   * 도시를 전부 당일치기로 바꾸면 그런 상태가 되므로, 첫 도시는 되돌린다.
-   */
-  if (stops.length && !stops.some((s) => s.sleep)) {
-    stops[0].sleep = true;
-    stops[0].base = null;
-    stops[0].dayTripMin = 0;
-    for (const s of stops.slice(1)) if (!s.sleep) s.base = stops[0].city.slug;
-  }
-
-  /*
-   * 숙박 도시가 달력에서 차지하는 날 — 자기 아이템 일수 + 붙은 당일치기 수.
-   *
-   * 예전에는 올림이었다. 그래서 3.1일치를 담으면 4일을 잡아 0.1일을 위해
-   * 하루를 통째로 비워 뒀고, 도시마다 최대 하루씩 부풀었다. 반올림하면
-   * 담은 만큼만 잡는다 - 넘치는 아이템은 플래너가 따로 알린다.
-   * 당일치기는 하루를 통째로 쓰므로 그대로 더한다.
+   * 거점이 차지하는 날 = 자기 아이템 일수 + 자기에게 붙은 당일치기 수.
+   * 당일치기는 낮을 통째로 쓰고 저녁에 거점으로 돌아오므로 하루로 센다.
    */
   for (const s of stops) {
     if (!s.sleep) continue;
@@ -371,10 +341,35 @@ export function buildItinerary(
   const manual = opts.order?.length
     ? opts.order.map((slug) => cities.find((c) => c.slug === slug)).filter((c): c is City => !!c)
     : null;
-  const ordered = manual && manual.length === cities.length
-    ? manual
-    : orderCities(cities, startSlug, endSlug, measured);
-  const stops = assignLodging(ordered, itemDaysOf, measured, opts.lodging);
+
+  /*
+   * 거점을 먼저 고르고, 거점끼리만 순서를 정한다.
+   *
+   * 순서를 먼저 정하면 '총 이동 시간 최소' 가 도시를 한 줄로 꿰어, 마드리드
+   * → 세고비아 → 톨레도 같은 순서가 나오고 세고비아에서 톨레도로 가는
+   * 렌터카 2시간 26분 구간이 생긴다. 실제로는 둘 다 마드리드에서 다녀온다.
+   * 거점을 먼저 정하면 그런 구간이 아예 만들어지지 않는다.
+   */
+  const placed = assignLodging(cities, itemDaysOf, measured, opts.lodging, [startSlug, endSlug]);
+  const baseCities = placed.filter((s) => s.sleep).map((s) => s.city);
+  const baseOrder = manual && manual.length === cities.length
+    ? manual.filter((c) => baseCities.some((b) => b.slug === c.slug))
+    : orderCities(baseCities, startSlug, endSlug, measured);
+
+  /*
+   * 화면에 보이는 순서: 거점 순서대로 놓되, 그 거점에서 다녀오는 당일치기
+   * 도시를 바로 뒤에 붙인다. 여행자가 실제로 지나가는 순서다.
+   */
+  const ordered: City[] = [];
+  for (const b of baseOrder) {
+    ordered.push(b);
+    for (const s of placed) if (!s.sleep && s.base === b.slug) ordered.push(s.city);
+  }
+  for (const s of placed) if (!ordered.some((c) => c.slug === s.city.slug)) ordered.push(s.city);
+
+  const byOrder = new Map(ordered.map((c, i) => [c.slug, i]));
+  const stops = [...placed].sort((a, b) =>
+    (byOrder.get(a.city.slug) ?? 0) - (byOrder.get(b.city.slug) ?? 0));
   // 왕복이면 마지막 도시에서 출발 도시로 돌아오는 구간도 실제로 타야 한다.
   const back = startSlug && startSlug === endSlug
     ? ordered.find((c) => c.slug === startSlug)

@@ -1,7 +1,7 @@
 import type { Item, LastDayPlan, Plan, PlanDay, PlanEntry, PlanStyle, PlanTravel, Preferences, Priorities, Slot, ThemeId, TravelOption } from '../types';
 import type { Itinerary } from './itinerary';
 import type { Service } from './routing';
-import { MODE_ICON, nextDeparture } from './routing';
+import { MODE_ICON, nextDeparture, servicesBetween } from './routing';
 import { rankItems } from './scoring';
 import { distanceKm, hasCoords, travelMinutes, walkKmOf } from './geo';
 
@@ -113,10 +113,11 @@ function buildDay(
   /** 이 날 아침에 도시를 옮겼다면 그 구간. 일정은 도착 시각부터 시작한다. */
   travel: PlanTravel | null = null,
   sleepAt: string | null = null,
+  dayTripMode: PlanDay['dayTripMode'] = undefined,
 ): PlanDay {
   const inCity = pool.filter((p) => !used.has(p.item.id) && p.item.city === city);
   const anchor = inCity.find((p) => p.item.theme !== 'food' && p.item.theme !== 'nightlife');
-  if (!anchor) return { date, dayIndex, city, isDayTrip, returnTo, travel, sleepAt, entries: [], walkKm: 0 };
+  if (!anchor) return { date, dayIndex, city, isDayTrip, returnTo, travel, sleepAt, dayTripMode, entries: [], walkKm: 0 };
 
   const proximity = (item: Item) => {
     if (!hasCoords(item) || !hasCoords(anchor.item)) return 0.6;
@@ -182,7 +183,7 @@ function buildDay(
   }
 
   return {
-    date, dayIndex, city, isDayTrip, returnTo, travel, sleepAt, entries,
+    date, dayIndex, city, isDayTrip, returnTo, travel, sleepAt, dayTripMode, entries,
     walkKm: walkKmOf(entries.map((e) => e.item)),
   };
 }
@@ -222,6 +223,8 @@ export interface DayPlanSlot {
   returnAfter: 'afternoon' | 'dinner';
   travel: PlanTravel | null;
   sleepAt: string | null;
+  /** 근교를 다녀오는 날 무엇을 타고 가는가. */
+  dayTripMode?: { icon: string; label: string; minutes: number };
 }
 
 /** 이만큼도 안 되는 도시에 하루를 통째로 주면 오후가 빈다. 실측으로 정한 값이다. */
@@ -287,6 +290,10 @@ export function scheduleFromItinerary(
     // 근교는 거점 일정 사이에 끼운다. 이동한 날 바로 근교로 보내지 않는다.
     const insertAt = schedule.length - baseDays + Math.min(1, baseDays);
     trips.forEach((t, k) => {
+      // 근교로 무엇을 타고 가는가. 렌터카는 뺀다 — 근교 하루를 위해 차를
+      // 빌리지는 않는다. 정기편이 없는 구간에서만 차가 남는다.
+      const svc = servicesBetween(stop.city, t.city);
+      const ride = svc.find((x) => x.mode !== 'car') ?? svc[0];
       schedule.splice(insertAt + k, 0, {
         city: t.city.slug,
         isDayTrip: true,
@@ -295,6 +302,9 @@ export function scheduleFromItinerary(
         returnAfter: t.city.itemCount < HALF_DAY_ITEM_FLOOR ? 'afternoon' : 'dinner',
         travel: null,
         sleepAt: stop.city.slug,
+        dayTripMode: ride
+          ? { icon: MODE_ICON[ride.mode], label: ride.label, minutes: ride.totalMin }
+          : undefined,
       });
     });
   });
@@ -400,13 +410,13 @@ export function buildPlans(input: PlanInput): {
         return {
           date: addDays(input.startDate, i), dayIndex: i + 1, city: s.city,
           isDayTrip: s.isDayTrip, returnTo: null, travel: s.travel, sleepAt: s.sleepAt,
-          entries: [], walkKm: 0,
+          dayTripMode: s.dayTripMode, entries: [], walkKm: 0,
         };
       }
       return buildDay(
         ranked, used, spec, input.prefs, addDays(input.startDate, i), i + 1,
         s.city, s.isDayTrip, lastDay === 'morning', s.returnTo, s.returnMinutes, s.returnAfter,
-        s.travel, s.sleepAt,
+        s.travel, s.sleepAt, s.dayTripMode,
       );
     });
 

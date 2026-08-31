@@ -1027,3 +1027,45 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
   .car-sum.is-warn .v, .car-sum.is-warn .k { color: #f0c08a; }
   .car-delta.is-slow { color: #f0c08a; }
 }
+
+/* 4단계 — '여기서 자기 / 당일치기' 가 무슨 뜻인지 */
+.itin-legend {
+  margin: 0 0 10px;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: var(--surface-2);
+}
+.itin-legend p { margin: 0 0 5px; font-size: 12.5px; line-height: 1.6; }
+.itin-legend p:last-child { margin-bottom: 0; }
+/*
+  사유는 늘 제 줄에서 시작한다. 버튼 옆에 끼면 '짐 옮기기 | 마드리드에서
+  다녀오는 편이…' 처럼 버튼 문구와 이어져 읽힌다.
+*/
+.itin-why {
+  flex-basis: 100%;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.itin-swap { flex: none; }
+
+/* 하루 머리줄 — 그날 밤 어디서 자는가 */
+.day-sleep {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* 도시 안 이동 — 무엇을 타고 몇 분 */
+.travel a { color: inherit; }
+.travel-tip {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+/* 지도 — 근교 왕복은 짐을 옮기는 구간보다 가늘게 */
+.map-route line.is-daytrip { opacity: 0.55; }
+.day-ride { font-size: 11.5px; color: var(--muted); white-space: nowrap; }

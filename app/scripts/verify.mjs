@@ -114,24 +114,35 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
 
   const daysVal = async () => (await page.locator('.days-value').first().innerText());
   const before = await daysVal();
-  await page.getByRole('button', { name: '하루 늘리기' }).first().click();
+  await page.getByRole('button', { name: '반나절 늘리기' }).first().click();
   await page.waitForTimeout(900);
   const after = await daysVal();
   const s1 = await summary();
   check('일수 ＋ → 아이템이 늘어난다', before !== after && Number(s1[1]) > Number(s0[1]),
     `${before} → ${after} · ${s0[1]}일→${s1[1]}일`);
-  await page.getByRole('button', { name: '하루 줄이기' }).first().click();
+  await page.getByRole('button', { name: '반나절 줄이기' }).first().click();
   await page.waitForTimeout(900);
   check('일수 − → 되돌아온다', (await daysVal()) === before, `${after} → ${await daysVal()}`);
 
   /*
-   * 일수가 정수로만 나오는가.
+   * 0.5일 단위로 조절되는가.
    *
-   * 예전에는 머리줄이 '2일'(달력에서 잡은 날), 아래 조절기가 '1.1일'(담은
-   * 분량)을 아무 설명 없이 같이 띄웠다. 둘은 다른 값인데 이름이 같아 보였다.
+   * 하루가 한 도시라는 법이 없다. 근교를 다녀오는 날은 낮과 저녁이 다른
+   * 도시라 실제로 반나절씩 쪼개진다. '0.5일' 이 아니라 '반나절' 로 읽힌다.
    */
+  await page.getByRole('button', { name: '반나절 줄이기' }).first().click();
+  await page.waitForTimeout(900);
+  const half = await daysVal();
+  const asDays = (t) => (t === '반나절' ? 0.5
+    : Number((t.match(/(\d+)/) ?? [0])[1]) + (/반$/.test(t) ? 0.5 : 0));
+  check('반나절 단위로 줄어든다',
+    Math.abs(asDays(before) - asDays(half) - 0.5) < 1e-9, `${before} → ${half}`);
+  await page.getByRole('button', { name: '반나절 늘리기' }).first().click();
+  await page.waitForTimeout(900);
+  check('반나절 단위로 되돌아온다', (await daysVal()) === before, `${half} → ${await daysVal()}`);
+
   const allDays = await page.locator('.days-value').allInnerTexts();
-  check('3단계 일수가 정수로만 나온다', allDays.every((t) => /^\d+일$/.test(t)),
+  check('3단계 일수가 사람 말로 나온다', allDays.every((t) => /^(반나절|\d+일( 반)?)$/.test(t)),
     allDays.join(' | '));
 
   /*
@@ -142,7 +153,7 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
    * 2일 → 3일 → 4일 → 5일 로 불어났다.
    */
   const headDays = async () => (await page.locator('.city-head .theme-head').allInnerTexts())
-    .map((t) => (t.match(/(\d+일|당일치기)/) ?? ['?'])[0]).join(' | ');
+    .map((t) => (t.match(/(반나절|\d+일( 반)?|당일치기)/) ?? ['?'])[0]).join(' | ');
   const h0 = await headDays();
   for (let r = 0; r < 3; r++) {
     for (const head of await page.locator('main > .theme-group > .city-head > .theme-head').all()) {
@@ -239,6 +250,20 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
    * 앱이 어느 도시에서 잘지는 정해 주면서 어느 자리에 잡을지는 말하지
    * 않았다 — 4단계에서 찾아도 없었다.
    */
+  /*
+   * '여기서 자기 / 당일치기' 가 무슨 뜻인지 화면에 있는가.
+   * 무엇을 고르는 것인지 모르겠다는 말이 반복해서 나왔다.
+   */
+  const legend = await page.locator('.itin-legend').innerText().catch(() => '');
+  check('짐을 옮기는 선택이라는 것이 적혀 있다',
+    /짐을.*옮기고/.test(legend) && /짐은 거점에 둔 채/.test(legend),
+    legend.replace(/\n/g, ' ').slice(0, 80));
+  check('당일치기는 저녁에 거점으로 돌아온다고 적혀 있다',
+    /저녁 전에 돌아옵니다/.test(legend) && /저녁·밤은 거점에서/.test(legend));
+  const why = await page.locator('.itin-why').allInnerTexts();
+  check('도시마다 왜 그렇게 잡혔는지 나온다', why.length > 0 && why.every((t) => t.trim().length > 4),
+    why.join(' | ').slice(0, 90));
+
   const lodgeRows = await page.locator('.lodge-row').count();
   check('4단계에 숙소 추천이 나온다', lodgeRows > 0, `${lodgeRows}곳`);
 
@@ -348,6 +373,22 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
   check('지도에 국경선이 있다', (await page.locator('.map-land path').count()) > 0);
   const icons = await page.$$eval('.map-mode text', (e) => e.map((x) => x.textContent));
   check('지도에 이동 수단 아이콘이 있다', icons.length > 0, icons.join(' '));
+
+  /*
+   * 도시 안 이동에 수단이 붙는가.
+   * "약 18분 이동" 만으로는 걷는 18분인지 지하철 18분인지 알 수 없었다.
+   */
+  await page.getByRole('button', { name: '이전' }).click();
+  await page.waitForTimeout(1200);
+  const moves = await page.locator('.entry .travel').allInnerTexts();
+  const withMode = moves.filter((t) => /(도보|지하철|버스|택시)/.test(t));
+  check('아이템 사이 이동에 수단이 붙는다', withMode.length > 0,
+    withMode[0]?.replace(/\n/g, ' ').slice(0, 60) ?? `이동 줄 ${moves.length}개`);
+  check('이동에 길찾기 링크가 있다',
+    (await page.locator('.entry .travel a').count()) > 0,
+    (await page.locator('.entry .travel a').first().getAttribute('href') ?? '').slice(0, 60));
+  await page.getByRole('button', { name: /^이 계획으로 진행$/ }).click();
+  await page.waitForTimeout(1400);
   const z0 = await page.locator('.map-zoom').innerText();
   await page.getByRole('button', { name: '확대' }).click(); await page.waitForTimeout(300);
   await page.getByRole('button', { name: '확대' }).click(); await page.waitForTimeout(300);

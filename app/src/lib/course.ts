@@ -30,11 +30,17 @@ export interface Course {
   mix: { theme: ThemeId; label: string; count: number }[];
 }
 
-/** 이 도시에 쓸 일수로 코스 크기를 정한다. 최소 하루치는 담는다. */
+/**
+ * 이 도시에 쓸 일수로 코스 크기를 정한다.
+ *
+ * 0.5(반나절) 을 받을 수 있어야 한다. 근교를 다녀오는 날은 낮이 한 도시,
+ * 저녁이 거점이라 실제로 반나절씩 쪼개지기 때문이다. 반나절이면 하루치의
+ * 절반을 담되, 하루가 성립하려면 최소 두 곳은 있어야 한다.
+ */
 function targetCount(items: Item[], prefs: Preferences, wantDays: number): number {
   const perDay = itemsPerDay(items, prefs);
-  const days = Math.max(1, wantDays);
-  return Math.min(items.length, Math.max(perDay, Math.round(perDay * days)));
+  const days = Math.max(0.5, wantDays);
+  return Math.min(items.length, Math.max(2, Math.round(perDay * days)));
 }
 
 /**

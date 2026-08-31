@@ -109,7 +109,7 @@ export default function Step3Course({
               >
                 <span style={{ fontWeight: 700 }}>{city.name}</span>
                 <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-                  {isDayTrip ? '당일치기' : `${wantDays}일`}
+                  {isDayTrip ? `당일치기 ${fmtDays(wantDays)}` : fmtDays(wantDays)}
                 </span>
                 <span className="count">
                   {picked.length > 0 && <span className="picked">{picked.length}곳 </span>}
@@ -175,6 +175,13 @@ export default function Step3Course({
   );
 }
 
+/** 0.5 는 '반나절' 로 읽는다. '0.5일' 은 사람이 쓰는 말이 아니다. */
+function fmtDays(d: number): string {
+  if (d === 0.5) return '반나절';
+  const whole = Math.floor(d);
+  return d % 1 === 0 ? `${whole}일` : `${whole}일 반`;
+}
+
 /** 한 도시의 코스 카드 세 장과, 그 아래 전체 아이템 목록. */
 function CityPanel({
   city, cityItems, wantDays, prefs, priorities, course, onlyPicked, openTheme,
@@ -215,9 +222,16 @@ function CityPanel({
 
   const cityOf = (slug: string) => cities.find((c) => c.slug === slug);
 
-  /** 일수를 바꾸면 그 일수에 맞는 아이템으로 갈아 끼운다. 양방향이다. */
+  /**
+   * 일수를 바꾸면 그 일수에 맞는 아이템으로 갈아 끼운다. 양방향이다.
+   *
+   * 0.5일 단위인 이유: 하루가 한 도시라는 법이 없다. 근교를 다녀오는 날은
+   * 낮이 한 도시, 저녁이 거점이라 실제로는 반나절씩 쪼개진다. 1일 단위로만
+   * 잡으면 '톨레도 반나절 + 마드리드 저녁' 같은, 실제로 가장 흔한 하루를
+   * 표현할 수가 없다.
+   */
   const setDays = (n: number) => {
-    const next = Math.min(7, Math.max(1, n));
+    const next = Math.min(7, Math.max(0.5, Math.round(n * 2) / 2));
     onDays(city.slug, next, itemsForDays(city, cityItems, prefs, next, course));
   };
 
@@ -266,13 +280,13 @@ function CityPanel({
         <span className="days-label">{city.name} 며칠</span>
         <div className="days-step" role="group" aria-label={`${city.name} 일수`}>
           <button
-            type="button" aria-label="하루 줄이기" disabled={wantDays <= 1}
-            onClick={() => setDays(wantDays - 1)}
+            type="button" aria-label="반나절 줄이기" disabled={wantDays <= 0.5}
+            onClick={() => setDays(wantDays - 0.5)}
           >−</button>
-          <span className="days-value">{wantDays}일</span>
+          <span className="days-value">{fmtDays(wantDays)}</span>
           <button
-            type="button" aria-label="하루 늘리기" disabled={wantDays >= 7}
-            onClick={() => setDays(wantDays + 1)}
+            type="button" aria-label="반나절 늘리기" disabled={wantDays >= 7}
+            onClick={() => setDays(wantDays + 0.5)}
           >＋</button>
         </div>
         <span className="days-hint">
@@ -289,9 +303,9 @@ function CityPanel({
       {pickedIds.size > 0 && Math.abs(pickedDays - wantDays) >= 0.5 && (
         <p className={pickedDays > wantDays ? 'days-off is-over' : 'days-off'}>
           {pickedDays > wantDays
-            ? `${wantDays}일로 잡으셨는데 담은 것은 ${pickedDays}일치입니다. `
+            ? `${fmtDays(wantDays)}로 잡으셨는데 담은 것은 ${pickedDays}일치입니다. `
               + `${Math.round((pickedDays - wantDays) * 10) / 10}일치가 계획에서 밀려납니다.`
-            : `${wantDays}일로 잡으셨는데 담은 것은 ${pickedDays}일치뿐입니다. `
+            : `${fmtDays(wantDays)}로 잡으셨는데 담은 것은 ${pickedDays}일치뿐입니다. `
               + '＋ 를 누르면 그 일수에 맞게 더 담아 드립니다.'}
         </p>
       )}

@@ -43,6 +43,8 @@ export interface MapHop {
   icon: string;
   label: string;
   minutes: number;
+  /** 거점에서 왕복하는 근교 구간인가. 짐을 옮기는 구간과 구분해 그린다. */
+  dayTrip?: boolean;
 }
 
 export function TripMap({
@@ -57,8 +59,46 @@ export function TripMap({
   const px = useCallback((lon: number) => PAD + ((lon - LON[0]) / (LON[1] - LON[0])) * w, [w]);
   const py = useCallback((lat: number) => PAD + ((LAT[1] - lat) / (LAT[1] - LAT[0])) * h, [h]);
 
+  /**
+   * 처음 보여 줄 영역 — 고른 도시들이 화면을 채우게 맞춘다.
+   *
+   * 예전에는 언제나 스페인 전도로 시작했다. 마드리드에 묵으며 톨레도·
+   * 세고비아를 다녀오는 계획은 세 도시가 반경 70km 안에 몰려 있어, 점과
+   * 이름이 서로 겹쳐 아무것도 읽을 수 없었다. 거점 하나에 근교를 붙이는
+   * 여행이 이제 가장 흔한 모양이므로, 그 경우가 기본이 되어야 한다.
+   */
+  const home = useMemo(() => {
+    if (mainland.length === 0) return { x: 0, y: 0, z: 1 };
+    const xs = mainland.map((s) => px(s.city.lon));
+    const ys = mainland.map((s) => py(s.city.lat));
+    /*
+     * 이름표와 아이콘이 들어갈 여백. 도시가 하나뿐이면 넉넉히 둔다.
+     * 여백을 크게 잡으면 그만큼 덜 확대되는데, 글자는 확대해도 화면에서
+     * 같은 크기이므로(1/z 로 줄인다) 확대할수록 이름표가 서로 떨어진다.
+     * 그래서 여백은 최소로 두는 편이 읽기에 낫다.
+     */
+    const m = mainland.length === 1 ? 90 : 24;
+    const x0 = Math.min(...xs) - m;
+    const x1 = Math.max(...xs) + m;
+    const y0 = Math.min(...ys) - m;
+    const y1 = Math.max(...ys) + m;
+    const z = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM,
+      Math.min(width / Math.max(1, x1 - x0), height / Math.max(1, y1 - y0))));
+    const vw = width / z;
+    const vh = height / z;
+    return {
+      z,
+      x: Math.min(width - vw, Math.max(0, (x0 + x1) / 2 - vw / 2)),
+      y: Math.min(height - vh, Math.max(0, (y0 + y1) / 2 - vh / 2)),
+    };
+  }, [mainland, px, py, width, height]);
+
   /** 보이는 영역. 확대·끌기는 이것만 바꾼다. */
-  const [view, setView] = useState({ x: 0, y: 0, z: 1 });
+  const [view, setView] = useState(home);
+  // 도시가 바뀌면 다시 맞춘다. 사용자가 확대해 둔 것을 덮지 않도록 키로 건다.
+  const fitted = useRef('');
+  const fitKey = mainland.map((s) => s.city.slug).join(',');
+  if (fitted.current !== fitKey) { fitted.current = fitKey; if (view !== home) setView(home); }
   const [picked, setPicked] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const drag = useRef<{ x: number; y: number; vx: number; vy: number } | null>(null);
@@ -165,9 +205,16 @@ export function TripMap({
             const b = at.get(hp.to);
             if (!a || !b) return null;
             return (
+              /*
+                짐을 옮기는 구간은 굵은 실선에 가까운 파선으로, 거점에서 왕복만
+                하는 근교는 가늘게 그린다. 같은 굵기로 그리면 마드리드에 계속
+                묵는 여행이 도시 세 곳을 옮겨 다니는 것처럼 보인다.
+              */
               <line
                 key={`${hp.from}-${hp.to}`} x1={a.x} y1={a.y} x2={b.x} y2={b.y}
-                strokeWidth={1.6 * k} strokeDasharray={`${4 * k} ${3 * k}`}
+                className={hp.dayTrip ? 'is-daytrip' : undefined}
+                strokeWidth={(hp.dayTrip ? 0.9 : 1.6) * k}
+                strokeDasharray={hp.dayTrip ? `${2 * k} ${2.6 * k}` : `${4 * k} ${3 * k}`}
               />
             );
           })}
@@ -229,7 +276,7 @@ export function TripMap({
         <button type="button" aria-label="축소" onClick={() => zoomAt(1 / 1.4, width / 2, height / 2)}>−</button>
         <span className="map-zoom">{view.z.toFixed(1)}×</span>
         <button type="button" aria-label="확대" onClick={() => zoomAt(1.4, width / 2, height / 2)}>＋</button>
-        <button type="button" className="map-reset" onClick={() => { setView({ x: 0, y: 0, z: 1 }); setPicked(null); }}>
+        <button type="button" className="map-reset" onClick={() => { setView(home); setPicked(null); }}>
           처음으로
         </button>
       </div>
@@ -348,6 +395,26 @@ export function mapDataOf(plan: Plan, cities: City[]): { stops: MapStop[]; hops:
         label: d.travel.chosen.label,
         minutes: d.travel.arriveAt - d.travel.leaveAt,
       });
+    }
+    /*
+     * 근교 왕복도 실제로 타는 구간이다.
+     *
+     * 예전에는 거점 사이 이동(d.travel)만 그렸다. 그래서 마드리드에 묵으며
+     * 톨레도·세고비아를 다녀오는 계획은 지도에 선이 하나도 없었다 - 실제로
+     * 네 번을 타는데 지도에는 점 세 개만 있었다.
+     */
+    if (d.isDayTrip && d.returnTo && d.dayTripMode) {
+      const key = `${d.returnTo}>${d.city}`;
+      if (!hops.some((h) => `${h.from}>${h.to}` === key)) {
+        hops.push({
+          from: d.returnTo,
+          to: d.city,
+          icon: d.dayTripMode.icon,
+          label: d.dayTripMode.label,
+          minutes: d.dayTripMode.minutes,
+          dayTrip: true,
+        });
+      }
     }
   }
 

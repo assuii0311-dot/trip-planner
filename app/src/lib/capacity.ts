@@ -33,7 +33,11 @@ export function itemMinutes(item: Item): number {
 export function estimateDays(items: Item[], prefs: Preferences): number {
   if (!items.length) return 0;
   const total = items.reduce((a, i) => a + itemMinutes(i), 0);
-  return Math.max(1, Math.round((total / dailyMinutes(prefs)) * 10) / 10);
+  /*
+   * 하한이 1 이었다. 그래서 두 곳만 담아도 '1일' 로 나왔고, 반나절 근교를
+   * 표현할 수가 없었다. 하루가 한 도시라는 전제가 여기에도 박혀 있었다.
+   */
+  return Math.max(0.5, Math.round((total / dailyMinutes(prefs)) * 10) / 10);
 }
 
 /** 하루에 몇 곳이 들어가는지 — 코스 크기를 정할 때 쓴다. */

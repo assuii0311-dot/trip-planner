@@ -3,6 +3,7 @@ import type { City, Item, Plan, PlanDay, PlanStyle, PlanTravel, Preferences } fr
 import type { Itinerary } from '../lib/itinerary';
 import { carNotes, carPlanOf } from '../lib/car';
 import { lodgingLinks, lodgingPlan } from '../lib/lodging';
+import { cityMove, transitTip } from '../lib/citymove';
 import { fmtDur, fmtHm } from '../lib/routing';
 import { mapsPlaceUrl } from '../lib/deeplinks';
 import { ItemDetail } from '../components/ItemDetail';
@@ -142,7 +143,7 @@ export default function Step5Plans({
 
       {active.days.map((day) => (
         <Day
-          key={day.dayIndex} day={day} pool={pool} prefs={prefs}
+          key={day.dayIndex} day={day} pool={pool} prefs={prefs} cities={cities}
           cityName={cityName} onSwap={onSwap} onMode={onMode}
           onMoveEntry={onMoveEntry} touched={Boolean(manualOrder[day.date])}
         />
@@ -153,11 +154,12 @@ export default function Step5Plans({
 
 /** 하루치. 대안은 여기서 한 번에 뽑아 자리마다 나눠 준다. */
 function Day({
-  day, pool, prefs, cityName, onSwap, onMode, onMoveEntry, touched,
+  day, pool, prefs, cities, cityName, onSwap, onMode, onMoveEntry, touched,
 }: {
   day: PlanDay;
   pool: Item[];
   prefs: Preferences;
+  cities: City[];
   cityName: (slug: string) => string;
   onSwap: (out: Item, inItems: Item[]) => void;
   onMode: (from: string, to: string, mode: string) => void;
@@ -173,7 +175,7 @@ function Day({
               {day.date} · {cityName(day.city)}
               {day.returnTo && (
                 day.entries.some((e) => e.returnLeg && (e.slot === 'afternoon' || e.slot === 'evening'))
-                  ? ` (오전) → ${cityName(day.returnTo)} (오후)`
+                  ? ` (오전) → ${cityName(day.returnTo)} (오후·저녁)`
                   : ` → ${cityName(day.returnTo)} (저녁)`
               )}
             </span>
@@ -182,6 +184,21 @@ function Day({
               <span className="badge">
                 {day.entries.some((e) => e.returnLeg && (e.slot === 'afternoon' || e.slot === 'evening'))
                   ? '반나절 근교' : '근교 당일치기'}
+              </span>
+            )}
+            {/*
+              하루가 한 도시라는 법이 없다. 근교를 다녀오는 날은 낮과 저녁이
+              다른 도시이고, 짐은 거점에 그대로 있다. 그것을 한 줄로 적는다.
+            */}
+            {day.dayTripMode && day.returnTo && (
+              <span className="day-ride">
+                {day.dayTripMode.icon} {day.dayTripMode.label} 편도 {fmtDur(day.dayTripMode.minutes)} · 왕복
+              </span>
+            )}
+            {day.sleepAt && (
+              <span className="day-sleep">
+                🛏 {cityName(day.sleepAt)}
+                {day.sleepAt !== day.city && ' (짐은 그대로)'}
               </span>
             )}
           </div>
@@ -212,9 +229,29 @@ function Day({
                         {e.item.practical.booking ? `예약 · ${e.item.practical.booking}` : `주의 · ${e.item.caution}`}
                       </div>
                     )}
-                    {!e.returnLeg && e.travelMin > 0 && (
-                      <div className="travel">↑ 앞 일정에서 약 {e.travelMin}분 이동</div>
-                    )}
+                    {!e.returnLeg && e.travelMin > 0 && (() => {
+                      /*
+                        무엇을 타고 가는지 없이 "약 18분 이동" 만 있으면 그 자리에서
+                        할 수 있는 판단이 없다. 걷는 18분과 지하철 18분은 다른 일이다.
+                      */
+                      const prev = day.entries[i - 1]?.item;
+                      if (!prev) return null;
+                      const mv = cityMove(prev, e.item, e.travelMin, cities.find((c) => c.slug === e.item.city));
+                      const tip = transitTip(cities.find((c) => c.slug === e.item.city), mv.mode);
+                      return (
+                        <div className="travel">
+                          {mv.icon} {mv.label} 약 {mv.minutes}분
+                          {mv.km !== null && ` · ${mv.km}km`}
+                          {mv.url && (
+                            <>
+                              {' · '}
+                              <a href={mv.url} target="_blank" rel="noreferrer">길찾기</a>
+                            </>
+                          )}
+                          {tip && <span className="travel-tip">{tip}</span>}
+                        </div>
+                      );
+                    })()}
                     <div className="entry-move" role="group" aria-label="순서 바꾸기">
                       <button
                         type="button" disabled={i === 0}
@@ -616,6 +653,9 @@ function ItineraryBar({
    * 자리에 띄우면 같은 화면에서 '빌바오 1박' 과 '빌바오 3박' 이 함께
    * 보인다 - 실제로 그렇게 나왔다. 사람이 실제로 자는 날을 쓴다.
    */
+  /** 근교 왕복 합계. 짐은 안 옮기지만 실제로 타는 시간이다. */
+  const dayTripMin = itinerary.stops.reduce((a, s) => a + (s.sleep ? 0 : s.dayTripMin), 0);
+
   const nightsOf = useMemo(() => {
     const m = new Map<string, number>();
     for (const d of plan.days) {
@@ -629,12 +669,31 @@ function ItineraryBar({
       <summary>
         <b>동선 · 숙박 바꾸기</b>{' '}
         {itinerary.stops.map((s) => s.city.name).join(' → ')}
-        {' · '}이동 합계 {fmtDur(itinerary.transitMin)}
+        {/*
+          예전에는 거점 사이 이동만 더해 '이동 합계 0분' 이라고 적었다.
+          마드리드에 계속 묵으며 톨레도와 세고비아를 다녀오는 계획인데,
+          실제로는 왕복 다섯 시간을 탄다. 짐을 옮기는 이동과 근교 왕복은
+          성격이 다르니 나눠서 적되, 없는 셈 치지는 않는다.
+        */}
+        {itinerary.transitMin > 0 && ` · 짐 옮기는 이동 ${fmtDur(itinerary.transitMin)}`}
+        {dayTripMin > 0 && ` · 근교 왕복 ${fmtDur(dayTripMin)}`}
+        {itinerary.transitMin === 0 && dayTripMin === 0 && ' · 도시 간 이동 없음'}
       </summary>
       <div className="itin-body">
+        {/*
+          '여기서 자기' 와 '당일치기' 가 무슨 뜻인지 물어보는 일이 반복됐다.
+          이것은 '이 도시가 좋은가' 가 아니라 '짐을 옮길 것인가' 의 선택이다.
+          그 한 문장이 없으면 무엇을 고르는지 알 수가 없다.
+        */}
+        <div className="itin-legend">
+          <p><b>여기서 자기</b> — 짐을 이 도시로 옮기고 밤을 보냅니다. 옮기는 데 반나절이 듭니다.</p>
+          <p><b>당일치기</b> — 짐은 거점에 둔 채 아침에 나갔다 <b>저녁 전에 돌아옵니다</b>. 저녁·밤은 거점에서 보냅니다.</p>
+        </div>
         <p className="help" style={{ margin: '0 0 10px' }}>
-          도시 간 이동 시간이 가장 짧은 순서로 짰습니다. 숙박은 하루치를 채우는 도시에서만 하고,
-          짧게 볼 곳은 가까운 숙박지에서 다녀옵니다. <b>화살표로 순서를 바꾸면 교통편을 다시 찾습니다.</b>
+          거점을 먼저 고르고 편도 2시간 안의 도시를 당일치기로 붙였습니다.
+          거점은 <b>근교를 여럿 품는가 · 저녁에 할 것이 있는가 · 며칠 묵을 만한가 ·
+          다음 목적지로 나가기 쉬운가 · 볼 것이 얼마나 있는가</b>를 가중해 고릅니다.
+          <b>화살표로 순서를 바꾸면 교통편을 다시 찾습니다.</b>
         </p>
         {itinerary.stops.map((s, i) => (
           <div className="itin-row" key={s.city.slug}>
@@ -653,16 +712,20 @@ function ItineraryBar({
             <span className="itin-city">{s.city.name}</span>
             <span className="itin-state">
               {s.sleep
-                ? `${nightsOf.get(s.city.slug) ?? s.nights}박`
-                : `당일치기 ← ${name(s.base ?? '')} · 왕복 ${fmtDur(s.dayTripMin)}`}
+                ? `🛏 ${nightsOf.get(s.city.slug) ?? s.nights}박`
+                : `${name(s.base ?? '')}에서 당일치기 · 왕복 ${fmtDur(s.dayTripMin)}`}
             </span>
             <button
               type="button" className="itin-swap"
               disabled={s.sleep && itinerary.stops.filter((x) => x.sleep).length <= 1}
+              title={s.sleep
+                ? `짐을 옮기지 않고 가까운 거점에서 다녀옵니다`
+                : `짐을 ${s.city.name}으로 옮기고 여기서 잡니다`}
               onClick={() => onLodging(s.city.slug, s.sleep ? 'daytrip' : 'sleep')}
             >
-              {s.sleep ? '당일치기로' : '여기서 자기'}
+              {s.sleep ? '짐 안 옮기기' : '짐 옮기기'}
             </button>
+            {s.why && <div className="itin-why">{s.why}</div>}
             {!s.sleep && s.dayTripMin > 300 && (
               <div className="itin-warn">
                 왕복 {fmtDur(s.dayTripMin)}입니다. 하루의 절반 이상이 이동에 들어갑니다.

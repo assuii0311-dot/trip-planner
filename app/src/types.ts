@@ -223,6 +223,12 @@ export interface PlanDay {
   dayIndex: number;
   city: string;
   isDayTrip: boolean;
+  /**
+   * 근교를 다녀오는 날 무엇을 타고 가는가.
+   * 지도와 하루 머리줄에 그대로 쓴다 — 예전에는 근교 왕복이 어디에도
+   * 그려지지 않아, 실제로 타는 구간이 계획에서 통째로 빠져 있었다.
+   */
+  dayTripMode?: { icon: string; label: string; minutes: number };
   /** 반나절 근교인 경우 오후에 돌아올 거점. 몬세라트는 오전만으로 충분하다. */
   returnTo: string | null;
   /** 이 날 아침에 도시를 옮긴다면 그 구간. 일정은 도착 시각부터 시작한다. */
