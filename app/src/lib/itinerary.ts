@@ -241,12 +241,23 @@ export function assignLodging(
     // 하루를 다 쓸 만큼 볼 것이 있으면 거기서 잔다.
     if (forced !== 'daytrip' && s.itemDays >= 0.75) continue;
 
-    // 앞뒤의 숙박 도시 중 가까운 쪽에서 다녀온다.
+    /*
+     * 앞뒤의 숙박 도시 중 가까운 쪽에서 다녀온다.
+     *
+     * 110분 한계는 '앱이 알아서 정할 때' 의 기준이지, 사용자가 직접 고른
+     * 것을 물릴 근거가 아니다. 예전에는 이 한계를 사용자 지시에도 적용해서,
+     * 마드리드를 당일치기로 바꿔 달라고 눌러도(편도 3시간 17분) 아무 일도
+     * 일어나지 않았다. 눌러도 아무 반응이 없는 것이 가장 나쁘다.
+     *
+     * 직접 고른 경우에는 거리를 따지지 않고 가장 가까운 숙박지에 붙이고,
+     * 왕복 몇 시간이 드는지 화면에서 보여 준다. 판단은 사람이 한다.
+     */
     let best: { idx: number; min: number } | null = null;
     for (const j of [i - 1, i + 1]) {
       if (j < 0 || j >= stops.length || !stops[j].sleep) continue;
       const leg = fastest(s.city, stops[j].city, measured.get(mkey(s.city.slug, stops[j].city.slug)));
-      if (leg.totalMin <= DAY_TRIP_ONE_WAY_MAX && (!best || leg.totalMin < best.min)) {
+      const within = forced === 'daytrip' || leg.totalMin <= DAY_TRIP_ONE_WAY_MAX;
+      if (within && (!best || leg.totalMin < best.min)) {
         best = { idx: j, min: leg.totalMin };
       }
     }
@@ -255,6 +266,17 @@ export function assignLodging(
       s.base = stops[best.idx].city.slug;
       s.dayTripMin = best.min * 2;
     }
+  }
+
+  /*
+   * 아무도 자지 않는 여정은 성립하지 않는다.
+   * 도시를 전부 당일치기로 바꾸면 그런 상태가 되므로, 첫 도시는 되돌린다.
+   */
+  if (stops.length && !stops.some((s) => s.sleep)) {
+    stops[0].sleep = true;
+    stops[0].base = null;
+    stops[0].dayTripMin = 0;
+    for (const s of stops.slice(1)) if (!s.sleep) s.base = stops[0].city.slug;
   }
 
   // 숙박 도시의 밤 수 — 자기 아이템 일수 + 자기에게 붙은 당일치기 일수.

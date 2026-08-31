@@ -425,14 +425,22 @@ function ItineraryBar({
             </div>
             <span className="itin-city">{s.city.name}</span>
             <span className="itin-state">
-              {s.sleep ? `${s.nights}박` : `당일치기 ← ${name(s.base ?? '')}`}
+              {s.sleep
+                ? `${s.nights}박`
+                : `당일치기 ← ${name(s.base ?? '')} · 왕복 ${fmtDur(s.dayTripMin)}`}
             </span>
             <button
               type="button" className="itin-swap"
+              disabled={s.sleep && itinerary.stops.filter((x) => x.sleep).length <= 1}
               onClick={() => onLodging(s.city.slug, s.sleep ? 'daytrip' : 'sleep')}
             >
               {s.sleep ? '당일치기로' : '여기서 자기'}
             </button>
+            {!s.sleep && s.dayTripMin > 300 && (
+              <div className="itin-warn">
+                왕복 {fmtDur(s.dayTripMin)}입니다. 하루의 절반 이상이 이동에 들어갑니다.
+              </div>
+            )}
           </div>
         ))}
       </div>
