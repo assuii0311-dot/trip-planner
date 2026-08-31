@@ -33,12 +33,18 @@ export function inferThemes(selected: City[]): Record<ThemeId, number> {
   const hi = Math.max(...values);
   const span = hi - lo;
 
+  // 0은 "이 도시엔 그런 게 없다"는 뜻이라 코스에서 통째로 빠진다. 그래서
+  // 0은 도시 프로필이 실제로 0일 때만 쓰고, 그 밖에는 1~3으로 편다.
+  // 최저 테마를 기계적으로 0으로 만들면 바르셀로나(history:2)에서 고딕 지구가
+  // 사라지는 식의 왜곡이 생긴다.
   const out = { ...empty };
   for (const t of THEMES) {
+    if (avg[t.id] < 0.25) { out[t.id] = 0; continue; }
     // 편차가 거의 없으면(모두 비슷한 도시) 원래 값을 반올림해 쓴다.
-    out[t.id] = span < 0.6
+    const v = span < 0.6
       ? Math.round(avg[t.id])
-      : Math.round(((avg[t.id] - lo) / span) * 3);
+      : 1 + Math.round(((avg[t.id] - lo) / span) * 2);
+    out[t.id] = Math.min(3, Math.max(1, v));
   }
   return out;
 }
