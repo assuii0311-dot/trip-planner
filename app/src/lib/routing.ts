@@ -172,6 +172,28 @@ function crossesSea(a: City, b: City): boolean {
  */
 const ROAD_FACTOR = 1.25;
 
+/**
+ * 렌터카를 자동으로 고르기 전에 요구하는 시간 이득(분).
+ *
+ * 렌터카는 한 구간의 선택이 아니라 여행 전체의 선택이다 - 빌린 곳에
+ * 돌려주어야 하고, 그 사이 구간을 기차로 갈 수는 없다. 그런데 렌터카에는
+ * 배차도 막차도 없어서 door-to-door 시간만 재면 시간표가 있는 수단을
+ * 자주 이긴다. 30분 빠르다는 이유로 여행 전체가 자동차에 묶이면 안 된다.
+ *
+ * 그래서 자동 선택은 이만큼 확실히 빠를 때만 한다. 사용자가 직접 고르면
+ * 그 뜻대로 따른다.
+ */
+export const CAR_AUTOPICK_MARGIN_MIN = 90;
+
+/**
+ * 편도 반납료 추정(유로).
+ *
+ * 스페인 대형 업체 기준으로 도시 간 편도 반납은 대개 50~150 유로다.
+ * 정확한 값은 업체·차급·시기마다 다르므로 대표값만 쓰고, 화면에는
+ * 추정치임을 밝힌다. 섬과 본토 사이는 반납 자체가 안 되는 경우가 많다.
+ */
+export const CAR_ONE_WAY_FEE_EUR = 60;
+
 function carService(km: number): Service {
   const road = km * ROAD_FACTOR;
   // 고속도로 실효 105km/h, 시내 진출입 20분, 250km 마다 15분 휴식.
@@ -188,7 +210,7 @@ function carService(km: number): Service {
     firstDep: hm(0), lastDep: hm(23, 59),
     headwayMin: 0, // 아무 때나 출발
     estimated: true,
-    note: '아무 때나 출발할 수 있지만 도심 주차가 비싸고 어렵습니다.',
+    note: '아무 때나 출발할 수 있습니다. 대신 빌린 곳에 돌려주어야 하고, 도심 주차와 저공해구역(ZBE) 제한을 함께 따져야 합니다.',
   };
 }
 

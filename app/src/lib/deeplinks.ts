@@ -101,3 +101,34 @@ export function blogSearchUrl(item: Item, city?: City): string {
   const term = `${city?.name ?? ''} ${name}`.trim();
   return `https://search.naver.com/search.naver?ssc=tab.blog.all&query=${q(term)}`;
 }
+
+
+/**
+ * 숙소 예약 경로.
+ *
+ * 앱은 '어느 도시에서 자는가' 까지만 정한다. 실제 매물은 값과 빈 방이
+ * 시시각각 바뀌므로 저장하지 않고, 지도·장소와 같은 방식으로 검색에
+ * 넘긴다. 동네를 함께 넘기면 그 동네로 좁혀진 결과가 열린다.
+ */
+export function lodgingLinks(city: City, area?: string): BookingLink[] {
+  // 괄호 안의 원어 표기는 검색어로 쓰면 결과를 좁힌다. 앞부분만 쓴다.
+  const spot = area ? area.replace(/\s*[(（].*$/, '').trim() : '';
+  const where = `${spot ? `${spot}, ` : ''}${city.nameEn}, Spain`;
+  return [
+    {
+      label: 'Booking.com에서 찾기',
+      url: `https://www.booking.com/searchresults.html?ss=${q(where)}`,
+      note: spot ? `${spot} 일대로 좁혀 열립니다.` : '스페인에서 매물이 가장 많습니다. 무료 취소 조건을 확인하세요.',
+    },
+    {
+      label: 'Airbnb에서 찾기',
+      url: `https://www.airbnb.co.kr/s/${q(where)}/homes`,
+      note: '2인 이상이거나 주방이 필요하면 대개 이쪽이 낫습니다.',
+    },
+    {
+      label: '지도에서 이 동네 보기',
+      url: `https://www.google.com/maps/search/?api=1&query=${q(`hotels ${where}`)}`,
+      note: '역·정류장과 얼마나 떨어져 있는지는 지도로 봐야 합니다.',
+    },
+  ];
+}

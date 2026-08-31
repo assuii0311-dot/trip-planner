@@ -1,6 +1,6 @@
 import type { City, Item, Preferences } from '../types';
 import type { Service } from './routing';
-import { fastest, servicesBetween } from './routing';
+import { CAR_AUTOPICK_MARGIN_MIN, CAR_ONE_WAY_FEE_EUR, fastest, servicesBetween } from './routing';
 import { estimateDays } from './capacity';
 
 /**
@@ -45,6 +45,26 @@ export interface Hop {
   chosen: Service;
 }
 
+/**
+ * 렌터카를 쓰는 구간 묶음.
+ *
+ * 렌터카는 구간마다 갈아탈 수 있는 수단이 아니다. 2구간을 렌터카로 가면
+ * 그 사이에 차를 세워 둘 수 없으므로 두 구간이 한 계약으로 묶인다.
+ * 빌리는 곳과 돌려주는 곳이 다르면 편도 반납료가 붙는다.
+ */
+export interface CarLeg {
+  /** 차를 빌리는 도시. */
+  from: City;
+  /** 차를 돌려주는 도시. */
+  to: City;
+  /** 이 계약으로 가는 구간들. */
+  hops: Hop[];
+  /** 빌린 곳과 돌려주는 곳이 다른가. */
+  oneWay: boolean;
+  /** 편도 반납료 추정(유로). 왕복 반납이면 0. */
+  dropFeeEur: number;
+}
+
 export interface Itinerary {
   stops: Stop[];
   hops: Hop[];
@@ -52,6 +72,8 @@ export interface Itinerary {
   daysNeeded: number;
   /** 도시 간 총 이동 시간(분). */
   transitMin: number;
+  /** 렌터카로 묶인 구간들. 없으면 빈 배열. */
+  carLegs: CarLeg[];
 }
 
 /** 당일치기로 다녀올 만한 편도 한계(분). 왕복이면 하루의 3분의 1이다. */
@@ -279,13 +301,66 @@ export function assignLodging(
     for (const s of stops.slice(1)) if (!s.sleep) s.base = stops[0].city.slug;
   }
 
-  // 숙박 도시의 밤 수 — 자기 아이템 일수 + 자기에게 붙은 당일치기 일수.
+  /*
+   * 숙박 도시의 밤 수 — 자기 아이템 일수 + 자기에게 붙은 당일치기 일수.
+   *
+   * 올림이 아니라 반올림이다. 올림으로 잡으면 1.1일치를 담은 도시가 2박이
+   * 되어 0.1일 때문에 하루가 통째로 비고, 그만큼 뒤 도시가 밀려난다.
+   * 3단계 코스가 '하루치'로 만든 목록은 아이템 소요의 반올림 오차 때문에
+   * 늘 1.0 을 살짝 넘으므로, 올림을 쓰면 사실상 모든 도시가 2박부터
+   * 시작했다 - 화면에는 '1.1일'과 '2일'이 나란히 떴다.
+   *
+   * 당일치기는 하루를 통째로 쓰므로 반올림하지 않고 그대로 더한다.
+   */
   for (const s of stops) {
     if (!s.sleep) continue;
     const attached = stops.filter((x) => !x.sleep && x.base === s.city.slug);
-    s.nights = Math.max(1, Math.ceil(s.itemDays + attached.length));
+    s.nights = Math.max(1, Math.round(s.itemDays)) + attached.length;
   }
   return stops;
+}
+
+/**
+ * 사용자가 고르지 않았을 때 기본으로 쓸 수단.
+ *
+ * 시간 효율이 원칙이므로 대개 options[0] 이지만, 렌터카만은 예외다.
+ * 렌터카는 여행 전체를 묶는 결정이라(빌린 곳에 돌려주어야 한다) 30분
+ * 빠르다는 이유로 조용히 기본값이 되면 안 된다. 확실히 빠를 때만 고르고,
+ * 그렇지 않으면 시간표가 있는 수단을 기본으로 둔 뒤 렌터카를 대안으로
+ * 나란히 보여 준다 - 고르는 것은 사람이 한다.
+ */
+export function autoPick(options: Service[]): Service {
+  const top = options[0];
+  if (!top || top.mode !== 'car') return top;
+  const alt = options.find((o) => o.mode !== 'car');
+  if (!alt) return top;
+  return alt.totalMin - top.totalMin >= CAR_AUTOPICK_MARGIN_MIN ? top : alt;
+}
+
+/**
+ * 렌터카로 가는 구간을 계약 단위로 묶는다.
+ *
+ * 이어지는 구간을 렌터카로 고르면 한 번 빌려 계속 타는 것이고, 중간에
+ * 다른 수단이 끼면 거기서 차를 반납한 것이다. 묶어야 편도 반납인지
+ * 아닌지를 말할 수 있다.
+ */
+export function carLegsOf(hops: Hop[]): CarLeg[] {
+  const legs: CarLeg[] = [];
+  let run: Hop[] = [];
+  const flush = () => {
+    if (!run.length) return;
+    const from = run[0].from;
+    const to = run[run.length - 1].to;
+    const oneWay = from.slug !== to.slug;
+    legs.push({ from, to, hops: run, oneWay, dropFeeEur: oneWay ? CAR_ONE_WAY_FEE_EUR : 0 });
+    run = [];
+  };
+  for (const h of hops) {
+    if (h.chosen.mode === 'car') run.push(h);
+    else flush();
+  }
+  flush();
+  return legs;
 }
 
 /** 순서대로 이동 구간을 만든다. 당일치기는 숙박지 사이 이동에 끼지 않는다. */
@@ -307,7 +382,7 @@ export function buildHops(
     const to = sleeping[i];
     const options = servicesBetween(from, to, measured.get(mkey(from.slug, to.slug)), weekday);
     const wanted = picks[`${from.slug}>${to.slug}`];
-    const chosen = options.find((o) => o.mode === wanted) ?? options[0];
+    const chosen = options.find((o) => o.mode === wanted) ?? autoPick(options);
     hops.push({ from, to, options, chosen });
   }
   return hops;
@@ -385,5 +460,6 @@ export function buildItinerary(
     hops,
     daysNeeded: Math.max(1, Math.round((stayDays + travelDays) * 10) / 10),
     transitMin,
+    carLegs: carLegsOf(hops),
   };
 }

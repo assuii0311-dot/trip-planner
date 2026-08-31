@@ -57,7 +57,7 @@ async function run(days, picks, label) {
   }
   // 3단계 — 도시마다 첫 코스를 담는다.
   await p.waitForSelector('.course', { timeout: 20000 });
-  for (const head of await p.locator('main > .theme-group > .theme-head').all()) {
+  for (const head of await p.locator('main > .theme-group .city-head-row > .theme-head').all()) {
     if ((await head.getAttribute('aria-expanded')) !== 'true') {
       await head.click();
       await p.waitForTimeout(400);

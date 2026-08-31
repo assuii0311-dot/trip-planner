@@ -36,9 +36,31 @@ export function estimateDays(items: Item[], prefs: Preferences): number {
   return Math.max(1, Math.round((total / dailyMinutes(prefs)) * 10) / 10);
 }
 
-/** 하루에 몇 곳이 들어가는지 — 코스 크기를 정할 때 쓴다. */
+/** 하루에 몇 곳이 들어가는지 — 코스 크기의 출발점을 잡을 때 쓴다. */
 export function itemsPerDay(items: Item[], prefs: Preferences): number {
   if (!items.length) return 4;
   const avg = items.reduce((a, i) => a + itemMinutes(i), 0) / items.length;
   return Math.max(2, Math.round(dailyMinutes(prefs) / avg));
+}
+
+/**
+ * 목표 일수를 넘지 않을 때까지 뒤에서 덜어낸다.
+ *
+ * itemsPerDay 는 도시 전체 아이템의 '평균' 소요로 개수를 잡는데, 코스는
+ * 점수가 높은 것부터 담고 그것들이 대개 평균보다 길다. 그래서 '하루치'로
+ * 만든 목록이 실제로 재 보면 1.1일이 됐고, 그 0.1 이 숙박을 2박으로
+ * 밀어 올렸다. 개수로 맞추지 말고 시간으로 맞춘다.
+ *
+ * 목록은 점수 내림차순이므로 뒤에서 덜어내면 낮은 것부터 빠진다.
+ * 한 곳은 남긴다 - 빈 코스는 코스가 아니다.
+ */
+export function fitToDays(items: Item[], prefs: Preferences, days: number): Item[] {
+  const budget = dailyMinutes(prefs) * Math.max(1, days);
+  const out = [...items];
+  let total = out.reduce((a, i) => a + itemMinutes(i), 0);
+  while (out.length > 1 && total > budget) {
+    total -= itemMinutes(out[out.length - 1]);
+    out.pop();
+  }
+  return out;
 }

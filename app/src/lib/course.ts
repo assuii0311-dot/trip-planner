@@ -1,7 +1,7 @@
 import type { City, CourseId, Item, Preferences, ThemeId } from '../types';
 import { THEMES, THEME_LABEL } from './themes';
 import { scoreItem } from './scoring';
-import { estimateDays, itemsPerDay } from './capacity';
+import { estimateDays, fitToDays, itemsPerDay } from './capacity';
 
 /**
  * 도시별 추천 코스.
@@ -30,11 +30,17 @@ export interface Course {
   mix: { theme: ThemeId; label: string; count: number }[];
 }
 
-/** 이 도시에 배정된 밤 수로 코스 크기를 정한다. 최소 하루치는 담는다. */
+/**
+ * 코스 후보를 몇 개나 뽑아 놓을지.
+ *
+ * 여기서 나온 개수는 상한일 뿐이고, 실제 분량은 fitToDays 가 시간으로
+ * 다시 자른다. 평균보다 긴 아이템이 뽑혀도 목표 일수를 넘지 않도록
+ * 넉넉히 뽑아 두고 잘라내는 순서다.
+ */
 function targetCount(items: Item[], prefs: Preferences, nights: number): number {
   const perDay = itemsPerDay(items, prefs);
   const days = Math.max(1, nights);
-  return Math.min(items.length, Math.max(perDay, Math.round(perDay * days)));
+  return Math.min(items.length, Math.max(perDay, Math.round(perDay * days)) + 2);
 }
 
 /**
@@ -120,6 +126,7 @@ export function coursesFor(
   city: City, cityItems: Item[], prefs: Preferences, nights: number,
 ): Course[] {
   if (cityItems.length < 3) return [];
+  const days = Math.max(1, nights);
   const count = targetCount(cityItems, prefs, nights);
 
   // 관심도가 높은 순으로 강조 후보를 고른다. 이 도시에 실제로 아이템이
@@ -134,7 +141,9 @@ export function coursesFor(
     .sort((a, b) => (prefs.themes[b.id] ?? 0) - (prefs.themes[a.id] ?? 0));
 
   const build = (id: CourseId, title: string, basis: string, boost: ThemeId | null): Course => {
-    const items = pick(cityItems, prefs, count, boost);
+    // 개수로 뽑고 시간으로 자른다. 카드에 적히는 일수가 실제 분량과 같아야
+    // '2일짜리 코스'를 골랐을 때 2박이 잡힌다.
+    const items = fitToDays(pick(cityItems, prefs, count, boost), prefs, days);
     return { id, title, basis, items, days: estimateDays(items, prefs), mix: mixOf(items) };
   };
 

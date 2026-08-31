@@ -91,6 +91,24 @@ export interface DayTrip {
 
 export interface Season { best: string; note: string }
 
+/** 숙박 구역 하나. */
+export interface StayArea { name: string; note: string }
+
+/**
+ * 이 도시에서 어느 동네에 묵어야 하는가.
+ *
+ * 값과 평점은 담지 않는다 — 수시로 바뀌고 저장할 수도 없다. 동네의 성격만
+ * 적고 실제 매물은 예약 링크로 넘긴다. 자게 되는 도시에만 있다.
+ */
+export interface StayGuide {
+  /** 권하는 순서대로. */
+  areas: StayArea[];
+  /** 알고 피해야 하는 것. 없으면 null. */
+  avoid: string | null;
+  /** 이 도시에서만 통하는 한 가지. */
+  tip: string | null;
+}
+
 export interface City {
   slug: string;
   name: string;
@@ -118,6 +136,8 @@ export interface City {
   /** [최소, 권장] 박수. 0 이면 당일치기로 충분하다는 뜻. */
   nights: [number, number];
   firstTimer: boolean;
+  /** 숙박 구역 안내. 자게 되는 도시에만 있다. */
+  stay: StayGuide | null;
   tags: string[];
   photo: string | null;
   photoCredit: { author: string | null; license: string | null; source: string } | null;
@@ -201,6 +221,16 @@ export interface TravelOption {
   transfers: number;
   estimated: boolean;
   note?: string;
+  /**
+   * 이 수단으로 바꿨을 때 목적지 도심에 닿는 시각(분).
+   *
+   * 대안을 고르기 전에 일정이 어떻게 달라지는지 보려면, 시간이 얼마나
+   * 걸리는지가 아니라 몇 시에 닿는지를 알아야 한다. 30분 더 걸리는
+   * 수단이라도 다음 편이 두 시간 뒤면 그날 오후가 통째로 사라진다.
+   */
+  arriveAt?: number;
+  /** 역·공항에서 기다리는 시간(분). */
+  waitMin?: number;
 }
 
 export interface PlanTravel {

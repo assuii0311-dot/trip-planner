@@ -217,6 +217,7 @@ export default function App() {
         ...s,
         basics: { ...s.basics, cities: s.basics.cities.filter((c) => c !== city) },
         priorities: next, courses, lodging,
+        cityOrder: s.cityOrder.filter((c) => c !== city),
       };
     });
 
@@ -412,7 +413,7 @@ export default function App() {
                 courses={state.courses} days={days}
                 ui={state.ui ?? {}}
                 onSet={setPriority} onBulk={setPriorities} onCourse={chooseCourse}
-                onDays={setCityDays}
+                onDays={setCityDays} onDropCity={dropCity}
                 onUi={(next) => setState((s) => ({ ...s, ui: { ...s.ui, ...next } }))}
               />
             )
@@ -427,9 +428,9 @@ export default function App() {
             onMoveCity={moveCity} onMoveEntry={moveEntry} manualOrder={state.dayOrder}
           />
         )}
-        {state.step === 5 && (
+        {state.step === 5 && itinerary && (
           <Step6Guide
-            plan={chosenPlan} cities={index.cities} allItems={items}
+            plan={chosenPlan} cities={index.cities} itinerary={itinerary} allItems={items}
             attribution={index.attribution}
             tripName={`${index.name} ${state.basics.startDate}`}
             fileBase={`${state.basics.country}-${state.basics.startDate}`}

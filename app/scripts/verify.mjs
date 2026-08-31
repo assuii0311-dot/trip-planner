@@ -61,7 +61,7 @@ async function build(page, { cities, from, to, airports, courses = true }) {
   await next(); await next();                       // → 3단계
   if (courses) {
     await page.waitForSelector('.course', { timeout: 25000 });
-    for (const head of await page.locator('main > .theme-group > .theme-head').all()) {
+    for (const head of await page.locator('main > .theme-group .city-head-row > .theme-head').all()) {
       if ((await head.getAttribute('aria-expanded')) !== 'true') {
         await head.click(); await page.waitForTimeout(400);
       }

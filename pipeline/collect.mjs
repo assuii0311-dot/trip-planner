@@ -28,7 +28,7 @@ const registry = await import(`./registry/${countrySlug}.mjs`);
 const { COUNTRY, CITIES, ATTRIBUTION } = registry;
 
 /** 도시 성격 프로필과 사진. 1단계 카드와 취향 역산에 쓴다. */
-const { CHARACTER, MACRO_REGIONS } = await import(`./registry/${countrySlug}-character.mjs`);
+const { CHARACTER, MACRO_REGIONS, STAY } = await import(`./registry/${countrySlug}-character.mjs`);
 const media = JSON.parse(await readFile(new URL(`./out/${countrySlug}-media.json`, import.meta.url), 'utf8').catch(() => '{}'));
 /**
  * 아이템 대표 사진 — fetch-item-media.mjs 가 모아 둔 것.
@@ -463,6 +463,8 @@ for (const [i, city] of selected.entries()) {
     profile: ch.profile ?? null,
     nights: ch.nights ?? [1, 2],
     firstTimer: !!ch.firstTimer,
+    // 숙박 구역 안내. 자게 되는 도시에만 있고, 없으면 앱이 일반 안내를 쓴다.
+    stay: (STAY ?? {})[city.slug] ?? null,
     tags: ch.tags ?? [],
     // 앱에 함께 넣은 사진을 쓴다. 원격 링크로 두면 오프라인에서 비고,
     // 위키미디어에 닿지 못하는 망에서는 아예 안 보인다.

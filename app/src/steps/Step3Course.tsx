@@ -9,6 +9,7 @@ import { recommend } from '../lib/recommend';
 import { mapsPlaceUrl } from '../lib/deeplinks';
 import { ItemRow } from '../components/ItemRow';
 import { ItemPhoto } from '../components/ItemPhoto';
+import { withJosa } from '../lib/korean';
 
 /**
  * 3단계 — 도시별 추천 코스를 고르고 손본다.
@@ -20,7 +21,7 @@ import { ItemPhoto } from '../components/ItemPhoto';
  */
 export default function Step3Course({
   items, cities, itinerary, prefs, priorities, courses, days, ui,
-  onSet, onBulk, onCourse, onDays, onUi,
+  onSet, onBulk, onCourse, onDays, onDropCity, onUi,
 }: {
   items: Item[];
   cities: City[];
@@ -36,6 +37,8 @@ export default function Step3Course({
   onCourse: (city: string, course: CourseId, items: Item[]) => void;
   /** 이 도시에 며칠을 쓸지 정하면 그 일수에 맞는 아이템으로 갈아 끼운다. */
   onDays: (city: string, items: Item[]) => void;
+  /** 도시를 여행에서 뺀다. 일수가 넘칠 때 가장 크게 듣는 손잡이다. */
+  onDropCity: (city: string) => void;
   onUi: (next: { openCity?: string | null; openTheme?: ThemeId | null; onlyPicked?: boolean }) => void;
 }) {
   /** 방문 순서대로. 여기에 배정된 밤 수가 코스 분량을 정한다. */
@@ -89,20 +92,40 @@ export default function Step3Course({
         const picked = cityItems.filter((i) => (priorities[i.id] ?? 0) > 0);
         return (
           <div className="theme-group" key={city.slug}>
-            <button
-              type="button" className="theme-head"
-              aria-expanded={isOpen}
-              onClick={() => onUi({ openCity: isOpen ? null : city.slug })}
-            >
-              <span style={{ fontWeight: 700 }}>{city.name}</span>
-              <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-                {isDayTrip ? '당일치기' : `${nights}일`}
-              </span>
-              <span className="count">
-                {picked.length > 0 && <span className="picked">{picked.length}곳 </span>}
-                {isOpen ? '▴' : '▾'}
-              </span>
-            </button>
+            {/*
+              헤더의 '2박'은 숙박 배정이고 패널 안의 '1.1일'은 담은 일정의 분량이다.
+              예전에는 둘 다 '일'로 적혀 나란히 다른 숫자를 보여 줬다.
+            */}
+            <div className="city-head-row">
+              <button
+                type="button" className="theme-head"
+                aria-expanded={isOpen}
+                onClick={() => onUi({ openCity: isOpen ? null : city.slug })}
+              >
+                <span style={{ fontWeight: 700 }}>{city.name}</span>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+                  {isDayTrip ? '당일치기' : `${nights}박`}
+                </span>
+                <span className="count">
+                  {picked.length > 0 && <span className="picked">{picked.length}곳 </span>}
+                  {isOpen ? '▴' : '▾'}
+                </span>
+              </button>
+              {/*
+                도시를 빼는 것은 일수를 조율하는 가장 큰 손잡이인데, 예전에는
+                4단계에서 날이 모자랄 때만 할 수 있었다. 일수를 실제로 맞추는
+                자리는 여기다.
+              */}
+              <button
+                type="button" className="city-drop"
+                aria-label={`${city.name} 여행에서 빼기`}
+                onClick={() => {
+                  if (confirm(`${withJosa(city.name, '을를')} 여행에서 뺄까요? 이 도시에서 담은 것도 함께 사라집니다.`)) {
+                    onDropCity(city.slug);
+                  }
+                }}
+              >빼기</button>
+            </div>
             {isOpen && (
               <CityPanel
                 city={city} cityItems={cityItems} nights={nights} prefs={prefs}
@@ -170,6 +193,17 @@ function CityPanel({
   );
   const pickedIds = new Set(cityItems.filter((i) => (priorities[i.id] ?? 0) > 0).map((i) => i.id));
   const pickedDays = estimateDays(cityItems.filter((i) => pickedIds.has(i.id)), prefs);
+  /*
+   * 스테퍼는 정수 일수를 다룬다.
+   *
+   * 예전에는 pickedDays(1.1 같은 소수)에 Math.round 를 걸어 ±1 을 했는데,
+   * 1.1 에서 '−' 를 누르면 round(1.1)-1 = 0 → 하한 1 → 같은 1일치가 다시
+   * 담겨 화면이 그대로였다. 눌러도 아무 일이 없는 버튼이었다.
+   */
+  // 담은 것이 없으면 0 이다. 그래야 '＋' 가 2일이 아니라 1일부터 시작한다.
+  const targetDays = pickedIds.size === 0 ? 0 : Math.max(1, Math.round(pickedDays));
+  /** 이 도시에 있는 것을 다 담아도 이만큼이다. 그 이상은 늘릴 수 없다. */
+  const maxDays = Math.max(1, Math.ceil(estimateDays(cityItems, prefs)));
 
   const byTheme = useMemo(() => {
     const map = new Map<ThemeId, Item[]>();
@@ -228,17 +262,17 @@ function CityPanel({
         <span className="days-label">{city.name}에 며칠</span>
         <div className="days-step" role="group" aria-label={`${city.name} 일수`}>
           <button
-            type="button" aria-label="하루 줄이기" disabled={pickedDays <= 0.5}
-            onClick={() => onDays(city.slug, itemsForDays(city, cityItems, prefs, Math.max(1, Math.round(pickedDays) - 1), course))}
+            type="button" aria-label="하루 줄이기" disabled={targetDays <= 1}
+            onClick={() => onDays(city.slug, itemsForDays(city, cityItems, prefs, targetDays - 1, course))}
           >−</button>
-          <span className="days-value">{pickedDays === 0 ? '—' : `${pickedDays}일`}</span>
+          <span className="days-value">{pickedIds.size === 0 ? '—' : `${targetDays}일`}</span>
           <button
-            type="button" aria-label="하루 늘리기"
-            onClick={() => onDays(city.slug, itemsForDays(city, cityItems, prefs, Math.round(pickedDays) + 1, course))}
+            type="button" aria-label="하루 늘리기" disabled={targetDays >= maxDays}
+            onClick={() => onDays(city.slug, itemsForDays(city, cityItems, prefs, targetDays + 1, course))}
           >＋</button>
         </div>
         <span className="days-hint">
-          {pickedIds.size}곳 담김
+          {pickedIds.size}곳 담김{pickedIds.size > 0 && ` · 실제 ${pickedDays}일치`}
         </span>
       </div>
 

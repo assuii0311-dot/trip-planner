@@ -227,7 +227,7 @@ export interface DayPlanSlot {
 /** 이만큼도 안 되는 도시에 하루를 통째로 주면 오후가 빈다. 실측으로 정한 값이다. */
 const HALF_DAY_ITEM_FLOOR = 20;
 
-const toOption = (s: Service): TravelOption => ({
+const toOption = (s: Service, dep?: { arriveAt: number; waitMin: number } | null): TravelOption => ({
   mode: s.mode,
   label: s.label,
   icon: MODE_ICON[s.mode],
@@ -237,6 +237,7 @@ const toOption = (s: Service): TravelOption => ({
   transfers: s.transfers,
   estimated: s.estimated,
   note: s.note,
+  ...(dep ? { arriveAt: dep.arriveAt, waitMin: dep.waitMin } : {}),
 });
 
 export function scheduleFromItinerary(
@@ -258,17 +259,25 @@ export function scheduleFromItinerary(
     let travel: PlanTravel | null = null;
     if (hop) {
       const dep = nextDeparture(hop.chosen, dayStartMin);
-      const alive = hop.options.filter((o) => nextDeparture(o, dayStartMin) !== null);
+      /*
+       * 대안마다 '몇 시에 닿는가'를 함께 담는다.
+       *
+       * 예전에는 소요 시간만 넘겨서, 대안을 눌러 보기 전에는 그날 일정이
+       * 어떻게 달라지는지 알 수 없었다. 막차가 끊긴 수단을 걸러내려고
+       * 어차피 한 번씩 계산하므로 그 값을 버리지 않고 쓴다.
+       */
+      const departures = hop.options.map((o) => ({ o, d: nextDeparture(o, dayStartMin) }));
+      const alive = departures.filter((x) => x.d !== null);
       travel = {
         from: hop.from.slug,
         to: hop.to.slug,
-        chosen: toOption(hop.chosen),
+        chosen: toOption(hop.chosen, dep),
         leaveAt: dep?.leaveAt ?? dayStartMin,
         departAt: dep?.departAt ?? dayStartMin,
         arriveAt: dep?.arriveAt ?? dayStartMin + hop.chosen.totalMin,
         waitMin: dep?.waitMin ?? 0,
-        options: alive.map(toOption),
-        unavailable: hop.options.filter((o) => !alive.includes(o)).map((o) => o.label),
+        options: alive.map((x) => toOption(x.o, x.d)),
+        unavailable: departures.filter((x) => x.d === null).map((x) => x.o.label),
       };
     }
 

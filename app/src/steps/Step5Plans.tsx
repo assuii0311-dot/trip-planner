@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { City, Item, Plan, PlanDay, PlanStyle, PlanTravel, Preferences } from '../types';
-import type { Itinerary } from '../lib/itinerary';
+import type { CarLeg, Itinerary } from '../lib/itinerary';
 import { fmtDur, fmtHm } from '../lib/routing';
 import { mapsPlaceUrl } from '../lib/deeplinks';
 import { ItemDetail } from '../components/ItemDetail';
@@ -9,6 +9,7 @@ import { formatTime, SLOT_LABEL } from '../lib/planner';
 import { alternativesForDay } from '../lib/alternatives';
 import type { Alternative } from '../lib/alternatives';
 import { THEME_ICON, THEME_LABEL } from '../lib/themes';
+import { StayPanel } from '../components/StayPanel';
 
 /** 4단계 — 담은 곳을 바탕으로 밀도가 다른 3가지 안을 만든다. */
 export default function Step5Plans({
@@ -137,7 +138,7 @@ export default function Step5Plans({
       {active.days.map((day) => (
         <Day
           key={day.dayIndex} day={day} pool={pool} prefs={prefs}
-          cityName={cityName} onSwap={onSwap} onMode={onMode}
+          cityName={cityName} carLegs={itinerary.carLegs} onSwap={onSwap} onMode={onMode}
           onMoveEntry={onMoveEntry} touched={Boolean(manualOrder[day.date])}
         />
       ))}
@@ -147,12 +148,13 @@ export default function Step5Plans({
 
 /** 하루치. 대안은 여기서 한 번에 뽑아 자리마다 나눠 준다. */
 function Day({
-  day, pool, prefs, cityName, onSwap, onMode, onMoveEntry, touched,
+  day, pool, prefs, cityName, carLegs, onSwap, onMode, onMoveEntry, touched,
 }: {
   day: PlanDay;
   pool: Item[];
   prefs: Preferences;
   cityName: (slug: string) => string;
+  carLegs: CarLeg[];
   onSwap: (out: Item, inItems: Item[]) => void;
   onMode: (from: string, to: string, mode: string) => void;
   onMoveEntry: (date: string, itemId: string, dir: -1 | 1) => void;
@@ -180,7 +182,9 @@ function Day({
             )}
           </div>
           {day.travel && (
-            <TravelBlock travel={day.travel} cityName={cityName} onMode={onMode} />
+            <TravelBlock
+              travel={day.travel} cityName={cityName} carLegs={carLegs} onMode={onMode}
+            />
           )}
           <div className="card">
             {day.entries.length === 0 ? (
@@ -312,13 +316,18 @@ function Alternatives({
  * 눈에 보여야 한다.
  */
 function TravelBlock({
-  travel, cityName, onMode,
+  travel, cityName, carLegs, onMode,
 }: {
   travel: PlanTravel;
   cityName: (slug: string) => string;
+  /** 렌터카로 묶인 구간들. 이 구간이 어느 계약에 속하는지 찾는 데 쓴다. */
+  carLegs: CarLeg[];
   onMode: (from: string, to: string, mode: string) => void;
 }) {
   const c = travel.chosen;
+  const isCar = c.mode === 'car';
+  const carLeg = carLegs.find((l) =>
+    l.hops.some((h) => h.from.slug === travel.from && h.to.slug === travel.to));
   return (
     <div className="travel-block">
       <div className="travel-head">
@@ -342,8 +351,15 @@ function TravelBlock({
       </div>
       {c.note && <div className="travel-note">{c.note}</div>}
 
+      {/*
+        렌터카는 구간 하나의 선택이 아니라 여행 전체의 선택이다.
+        접어 두면 '조금 빠른 수단' 으로만 보이므로, 렌터카가 걸린 구간에서는
+        대안을 펼친 채로 두고 무엇을 더 따져야 하는지 함께 적는다.
+      */}
+      {isCar && <CarCaveat leg={carLeg} to={cityName(travel.to)} />}
+
       {travel.options.length > 1 && (
-        <details className="travel-alts">
+        <details className="travel-alts" open={isCar}>
           <summary>다른 수단 {travel.options.length - 1}가지</summary>
           <div className="mode-list">
             {travel.options.map((o) => (
@@ -361,6 +377,17 @@ function TravelBlock({
                     {o.costEur > 0 && ` · €${o.costEur}`}
                     {!o.estimated && ' · 실제 시간표'}
                   </span>
+                  {/*
+                    바꾸면 일정이 어떻게 달라지는가.
+                    소요 시간이 아니라 '몇 시에 닿는가' 가 그날 일정을 정한다.
+                  */}
+                  {o.arriveAt !== undefined && (
+                    <span className="mode-delta">
+                      {cityName(travel.to)} 도착 {fmtHm(o.arriveAt)}
+                      {o.mode !== c.mode && ` · ${arrivalDelta(o.arriveAt, travel.arriveAt)}`}
+                      {o.mode !== c.mode && lostSlots(o.arriveAt, travel.arriveAt)}
+                    </span>
+                  )}
                 </span>
                 {o.mode === c.mode && <span className="mode-on">선택됨</span>}
               </button>
@@ -373,6 +400,73 @@ function TravelBlock({
           )}
         </details>
       )}
+    </div>
+  );
+}
+
+/** 바꿨을 때 도착이 얼마나 당겨지거나 늦어지는가. */
+function arrivalDelta(alt: number, current: number): string {
+  const d = alt - current;
+  if (d === 0) return '도착 시각 같음';
+  return d > 0 ? `${fmtDur(d)} 늦음` : `${fmtDur(-d)} 이름`;
+}
+
+/**
+ * 도착이 늦어지면 그날 무엇이 사라지는지.
+ *
+ * 정확히 몇 곳이 빠지는지는 바꿔 봐야 알지만, 어느 시간대가 통째로
+ * 없어지는지는 도착 시각만으로 말할 수 있다. 그것만이라도 먼저 알려 준다.
+ */
+function lostSlots(alt: number, current: number): string {
+  if (alt <= current) return '';
+  const crossed: string[] = [];
+  // 짐을 풀고 나오는 30분을 더한 뒤의 시각으로 본다. planner 와 같은 규칙이다.
+  const was = current + 30;
+  const now = alt + 30;
+  if (was < 12 * 60 && now >= 12 * 60) crossed.push('오전');
+  if (was < 18 * 60 && now >= 18 * 60) crossed.push('오후');
+  if (was < 21 * 60 && now >= 21 * 60) crossed.push('저녁');
+  return crossed.length ? ` · 그날 ${crossed.join('·')} 일정이 사라집니다` : '';
+}
+
+/**
+ * 렌터카를 고른 구간에 붙는 안내.
+ *
+ * 렌터카는 다른 수단과 성질이 다르다 - 빌린 곳에 돌려주어야 하고, 그
+ * 사이 구간을 다른 수단으로 갈 수 없으며, 편도 반납에는 별도 요금이 붙는다.
+ * 도심 진입 제한(ZBE)과 주차는 스페인에서 특히 자주 문제가 된다.
+ * 이 중 어느 것도 door-to-door 시간에는 나타나지 않는다.
+ */
+function CarCaveat({ leg, to }: { leg: CarLeg | undefined; to: string }) {
+  return (
+    <div className="car-caveat">
+      <div className="car-caveat-head">🚗 렌터카로 잡힌 구간입니다</div>
+      {leg && (
+        <p>
+          <b>{leg.from.name}에서 빌려 {leg.to.name}에서 반납</b>
+          {leg.hops.length > 1 && ` · ${leg.hops.length}개 구간을 한 번 빌려 이어서 탑니다`}
+          {leg.oneWay
+            ? ` — 편도 반납이라 반납료가 붙습니다(업체·차급에 따라 대개 €50~150, 여기서는 €${leg.dropFeeEur}로 잡았습니다).`
+            : ' — 빌린 곳에 돌려주므로 편도 반납료는 없습니다.'}
+        </p>
+      )}
+      <ul>
+        <li>
+          이 구간을 렌터카로 두면 <b>중간 도시에서 차를 두고 갈 수 없습니다.</b>{' '}
+          다음 구간도 함께 정해집니다.
+        </li>
+        <li>
+          스페인은 인구 5만 이상 도시에 <b>저공해구역(ZBE)</b>을 두도록 하고 있습니다.
+          등록되지 않은 차로 도심에 들어가면 과태료가 나오므로, {to} 숙소는 주차장이
+          있는 곳으로 잡고 렌터카 업체에 등록 여부를 확인하세요.
+        </li>
+        <li>도심 주차는 하루 €20~30이 흔합니다. 위 요금에는 들어 있지 않습니다.</li>
+        <li>한국 면허로 빌리려면 <b>국제운전면허증과 여권, 본인 명의 신용카드</b>가 함께 필요합니다.</li>
+        <li>섬과 본토 사이는 반납이 안 되는 경우가 많습니다. 섬에서는 따로 빌리세요.</li>
+      </ul>
+      <p className="help" style={{ margin: 0 }}>
+        아래에서 다른 수단으로 바꾸면 도착 시각과 그날 일정이 함께 다시 계산됩니다.
+      </p>
     </div>
   );
 }
@@ -409,6 +503,21 @@ function ItineraryBar({
           도시 간 이동 시간이 가장 짧은 순서로 짰습니다. 숙박은 하루치를 채우는 도시에서만 하고,
           짧게 볼 곳은 가까운 숙박지에서 다녀옵니다. <b>화살표로 순서를 바꾸면 교통편을 다시 찾습니다.</b>
         </p>
+
+        {/*
+          렌터카는 구간이 아니라 여행 단위로 봐야 한다.
+          어느 구간이 렌터카인지는 아래 일정에서도 보이지만, 어디서 빌려
+          어디에 반납하는지는 여정 전체를 봐야 알 수 있어 여기에 둔다.
+        */}
+        {itinerary.carLegs.map((leg) => (
+          <div className="car-summary" key={`${leg.from.slug}>${leg.to.slug}`}>
+            🚗 <b>렌터카 {leg.from.name} → {leg.to.name}</b>
+            {' '}({leg.hops.length}개 구간)
+            {leg.oneWay
+              ? ` · 편도 반납이라 반납료가 붙습니다 (추정 €${leg.dropFeeEur}, 업체에 따라 €50~150)`
+              : ' · 빌린 곳에 반납하므로 추가 반납료는 없습니다'}
+          </div>
+        ))}
         {itinerary.stops.map((s, i) => (
           <div className="itin-row" key={s.city.slug}>
             <div className="itin-move" role="group" aria-label={`${s.city.name} 순서 바꾸기`}>
@@ -440,6 +549,17 @@ function ItineraryBar({
               <div className="itin-warn">
                 왕복 {fmtDur(s.dayTripMin)}입니다. 하루의 절반 이상이 이동에 들어갑니다.
               </div>
+            )}
+            {/*
+              여기서 잔다고 정했으면 '어느 동네에' 까지가 한 벌이다.
+              도시만 정해 주고 동네를 안 알려 주면 사용자는 앱을 닫고
+              블로그를 찾아야 한다.
+            */}
+            {s.sleep && (
+              <details className="itin-stay">
+                <summary>{s.city.name} 어디에 묵을까</summary>
+                <StayPanel city={s.city} nights={s.nights} />
+              </details>
             )}
           </div>
         ))}

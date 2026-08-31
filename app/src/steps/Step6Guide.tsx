@@ -4,6 +4,8 @@ import { bookingLinks, directionsUrl, intercityLinks, mapsPlaceUrl } from '../li
 import { formatTime, SLOT_LABEL } from '../lib/planner';
 import { MapExport } from '../components/MapExport';
 import { TripMap, TripMapLegend, mapDataOf } from '../components/TripMap';
+import { StayPanel } from '../components/StayPanel';
+import type { Itinerary } from '../lib/itinerary';
 
 function LinkRow({ label, note, url }: { label: string; note: string; url: string }) {
   return (
@@ -19,10 +21,12 @@ function LinkRow({ label, note, url }: { label: string; note: string; url: strin
 
 /** 5단계 — 선택한 계획의 이동과 예약 방법을 안내한다. */
 export default function Step6Guide({
-  plan, cities, allItems, attribution, tripName, fileBase,
+  plan, cities, itinerary, allItems, attribution, tripName, fileBase,
 }: {
   plan: Plan | null;
   cities: City[];
+  /** 동선 엔진의 여정. 어디서 몇 밤을 자는지가 여기에 있다. */
+  itinerary: Itinerary;
   /** 고른 도시의 전체 아이템 — 지도 내보내기 ①번에 쓴다. */
   allItems: Item[];
   attribution: string[];
@@ -36,6 +40,16 @@ export default function Step6Guide({
   const usedCities = [...new Set(plan.days.map((d) => d.city))].map(cityOf).filter(Boolean) as City[];
   const mapData = mapDataOf(plan, cities);
   const home = usedCities[0];
+  /*
+   * 실제로 자는 도시와 밤 수.
+   *
+   * 방문 도시(usedCities)와는 다르다 — 근교는 다녀오기만 하고 자지 않는다.
+   * 계획의 sleepAt 을 세면 마지막 날(체크아웃하는 날)까지 한 밤으로 세므로,
+   * 밤 수는 동선 엔진이 배정한 값을 그대로 쓴다.
+   */
+  const sleepCities = itinerary.stops
+    .filter((s) => s.sleep)
+    .map((s) => ({ city: s.city, nights: s.nights }));
 
   return (
     <>
@@ -131,6 +145,20 @@ export default function Step6Guide({
             );
           })}
         </div>
+      ))}
+
+      <h3 style={{ marginTop: 28 }}>숙소 잡기</h3>
+      <p className="help" style={{ margin: '0 0 10px' }}>
+        아래는 이 일정에서 실제로 자게 되는 도시입니다. 동네를 먼저 정하고 매물을 고르세요 —
+        같은 도시라도 어느 동네냐로 하루 이동 시간이 한 시간씩 달라집니다.
+      </p>
+      {sleepCities.map(({ city, nights }) => (
+        <details className="guide" key={`stay-${city.slug}`}>
+          <summary>🛏 {city.name} {nights}박</summary>
+          <div className="inner" style={{ padding: '12px 14px' }}>
+            <StayPanel city={city} nights={nights} />
+          </div>
+        </details>
       ))}
 
       <h3 style={{ marginTop: 28 }}>도시별 교통 가이드</h3>

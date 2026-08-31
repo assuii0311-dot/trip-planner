@@ -81,7 +81,7 @@ if (!summary) throw new Error('선택 요약(N곳 · 예상 M일)이 보이지 �
 console.log(`  코스 선택 후: ${summary[0]}`);
 if (Number(summary[1]) === 0) throw new Error('코스를 골랐는데 담긴 곳이 없습니다');
 // 나머지 도시도 첫 코스로 채워 계획을 만들 수 있게 한다.
-for (const head of await page.locator('main > .theme-group > .theme-head').all()) {
+for (const head of await page.locator('main > .theme-group .city-head-row > .theme-head').all()) {
   if ((await head.getAttribute('aria-expanded')) === 'true') continue;
   await head.click();
   await page.waitForTimeout(400);

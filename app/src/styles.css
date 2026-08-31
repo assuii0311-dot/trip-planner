@@ -172,6 +172,18 @@ input[type='range'] { width: 100%; accent-color: var(--accent); height: 34px; }
 .theme-head .count { margin-left: auto; font-size: 13px; color: var(--muted); }
 .theme-head .picked { color: var(--accent); font-weight: 600; }
 
+/*
+  도시 헤더 한 줄 — 펼치기 버튼과 빼기 버튼이 나란히 선다.
+  헤더 자체가 button 이라 그 안에 버튼을 넣을 수 없어 형제로 둔다.
+*/
+.city-head-row { display: flex; align-items: stretch; gap: 6px; }
+.city-head-row .theme-head { flex: 1; min-width: 0; }
+.city-drop {
+  flex: none; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); color: var(--muted); font: inherit; font-size: 13px; cursor: pointer;
+}
+.city-drop:hover { color: var(--accent); border-color: var(--accent); }
+
 .item {
   display: grid; grid-template-columns: 24px 1fr; gap: 10px;
   padding: 12px 14px; border-bottom: 1px solid var(--line);
@@ -922,3 +934,63 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
 }
 .itin-row { flex-wrap: wrap; }
 .itin-swap:disabled { opacity: 0.35; cursor: default; }
+
+
+/*
+  렌터카 안내.
+  다른 수단과 달리 여행 전체를 묶는 결정이라, 접어 두지 않고 무엇을 더
+  따져야 하는지 그 자리에 편다.
+*/
+.car-summary {
+  margin: 0 0 10px; padding: 10px 12px; font-size: 13px; line-height: 1.6;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  color: var(--muted);
+}
+.car-summary b { color: var(--text); }
+.car-caveat {
+  margin: 10px 0 0; padding: 12px 14px; font-size: 13px; line-height: 1.65;
+  border: 1px solid var(--accent); border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+  color: var(--muted);
+}
+.car-caveat-head { font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.car-caveat p { margin: 0 0 8px; }
+.car-caveat b { color: var(--text); }
+.car-caveat ul { margin: 0 0 8px; padding-left: 18px; }
+.car-caveat li { margin-bottom: 4px; }
+
+/* 대안을 고르기 전에 그날 일정이 어떻게 달라지는지. */
+.mode-delta { display: block; margin-top: 3px; font-size: 12px; color: var(--accent); }
+
+
+/*
+  숙박 구역 안내.
+  .itin-row 는 flex-wrap 이라 grid-column 이 듣지 않는다. 너비를 100%로
+  주어 도시 줄 아래로 내린다 - 접혀 있을 때 버튼 옆에 끼면 줄이 좁아진다.
+*/
+.itin-stay { flex-basis: 100%; width: 100%; margin-top: 6px; }
+.itin-stay > summary {
+  cursor: pointer; font-size: 13px; font-weight: 600; color: var(--accent);
+  padding: 6px 0;
+}
+.stay { font-size: 13px; line-height: 1.6; color: var(--muted); }
+.stay-lede { margin: 0 0 10px; }
+.stay-areas { margin: 0 0 10px; padding: 0; list-style: none; }
+.stay-areas > li {
+  padding: 10px 12px; margin-bottom: 8px;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+}
+.stay-area-head { display: flex; align-items: center; gap: 8px; }
+.stay-rank {
+  flex: none; width: 20px; height: 20px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 11px; font-weight: 700;
+  background: var(--accent); color: #fff;
+}
+.stay-area-name { font-weight: 700; color: var(--text); }
+.stay-area-note { margin: 6px 0 8px; }
+.stay-avoid { margin: 0 0 8px; color: var(--text); }
+.stay-tip { margin: 0 0 10px; }
+.stay-generic ul { margin: 6px 0 10px; padding-left: 18px; }
+.stay-generic li { margin-bottom: 4px; }
+.stay-generic b { color: var(--text); }
+.stay-links { margin-top: 4px; }
