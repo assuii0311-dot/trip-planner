@@ -112,17 +112,30 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
   check('코스가 도시마다 2개 이상', (await page.locator('.course').count()) >= 2,
     `${await page.locator('.course').count()}개`);
 
+  /*
+   * 일수를 늘리면 아이템이 늘거나, 도시에 볼 것이 남지 않았다고 알린다.
+   * 눌러도 아무 일이 없는 것이 가장 나쁘다 — 순위 기준선을 넘는 곳이
+   * 모자라면 억지로 채우지 않는 대신, 왜 안 늘어나는지 화면에 적는다.
+   */
   const daysVal = async () => (await page.locator('.days-value').first().innerText());
+  const plus = () => page.getByRole('button', { name: '반나절 늘리기' }).first();
   const before = await daysVal();
-  await page.getByRole('button', { name: '반나절 늘리기' }).first().click();
-  await page.waitForTimeout(900);
-  const after = await daysVal();
-  const s1 = await summary();
-  check('일수 ＋ → 아이템이 늘어난다', before !== after && Number(s1[1]) > Number(s0[1]),
-    `${before} → ${after} · ${s0[1]}일→${s1[1]}일`);
-  await page.getByRole('button', { name: '반나절 줄이기' }).first().click();
-  await page.waitForTimeout(900);
-  check('일수 − → 되돌아온다', (await daysVal()) === before, `${after} → ${await daysVal()}`);
+  const capped = await plus().isDisabled();
+  if (capped) {
+    const cap = await page.locator('.days-cap').first().innerText().catch(() => '');
+    check('더 담을 것이 없으면 이유를 알린다', /일치가 전부입니다/.test(cap), cap.trim());
+    check('더 담을 것이 없으면 ＋ 가 잠긴다', true, before);
+  } else {
+    await plus().click();
+    await page.waitForTimeout(900);
+    const after = await daysVal();
+    const s1 = await summary();
+    check('일수 ＋ → 아이템이 늘어난다', before !== after && Number(s1[1]) > Number(s0[1]),
+      `${before} → ${after} · ${s0[1]}곳→${s1[1]}곳`);
+    await page.getByRole('button', { name: '반나절 줄이기' }).first().click();
+    await page.waitForTimeout(900);
+    check('일수 − → 되돌아온다', (await daysVal()) === before, `${after} → ${await daysVal()}`);
+  }
 
   /*
    * 0.5일 단위로 조절되는가.
@@ -130,16 +143,17 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
    * 하루가 한 도시라는 법이 없다. 근교를 다녀오는 날은 낮과 저녁이 다른
    * 도시라 실제로 반나절씩 쪼개진다. '0.5일' 이 아니라 '반나절' 로 읽힌다.
    */
+  const base2 = await daysVal();
   await page.getByRole('button', { name: '반나절 줄이기' }).first().click();
   await page.waitForTimeout(900);
   const half = await daysVal();
   const asDays = (t) => (t === '반나절' ? 0.5
     : Number((t.match(/(\d+)/) ?? [0])[1]) + (/반$/.test(t) ? 0.5 : 0));
   check('반나절 단위로 줄어든다',
-    Math.abs(asDays(before) - asDays(half) - 0.5) < 1e-9, `${before} → ${half}`);
+    Math.abs(asDays(base2) - asDays(half) - 0.5) < 1e-9, `${base2} → ${half}`);
   await page.getByRole('button', { name: '반나절 늘리기' }).first().click();
   await page.waitForTimeout(900);
-  check('반나절 단위로 되돌아온다', (await daysVal()) === before, `${half} → ${await daysVal()}`);
+  check('반나절 단위로 되돌아온다', (await daysVal()) === base2, `${half} → ${await daysVal()}`);
 
   const allDays = await page.locator('.days-value').allInnerTexts();
   check('3단계 일수가 사람 말로 나온다', allDays.every((t) => /^(반나절|\d+일( 반)?)$/.test(t)),
@@ -168,11 +182,13 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
   // 개별 아이템 추가/제거
   const cnt = async () => Number((await summary())[1]);
   const c0 = await cnt();
-  const box = page.locator('.item input[type=checkbox]:not(:checked)').first();
+  // 미식 후보는 접힌 상자 안에 있으므로 테마 목록 쪽에서 고른다.
+  // (도시 패널 자체가 .theme-group 이라 .foodbox 를 따로 빼야 한다)
+  const box = page.locator('.item:not(.foodbox .item) input[type=checkbox]:not(:checked)').first();
   if (await box.count()) {
     await box.check(); await page.waitForTimeout(700);
     check('아이템 개별 추가', (await cnt()) === c0 + 1, `${c0} → ${await cnt()}`);
-    await page.locator('.item input[type=checkbox]:checked').first().uncheck();
+    await page.locator('.item:not(.foodbox .item) input[type=checkbox]:checked').first().uncheck();
     await page.waitForTimeout(700);
     check('아이템 개별 제거', (await cnt()) === c0, `→ ${await cnt()}`);
   }

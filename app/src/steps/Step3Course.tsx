@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import type { City, CourseId, Item, Preferences, Priorities, ThemeId } from '../types';
 import type { Itinerary } from '../lib/itinerary';
-import { THEMES } from '../lib/themes';
+import { THEMES, THEME_ICON } from '../lib/themes';
 import { rankItems } from '../lib/scoring';
-import { coursesFor, defaultCityDays, itemsForDays } from '../lib/course';
-import { estimateDays } from '../lib/capacity';
+import { cityWorthDays, coursesFor, defaultCityDays, foodPicksFor, itemsForDays, mustSeeFor } from '../lib/course';
+import { estimateDays, isMeal } from '../lib/capacity';
 import { recommend } from '../lib/recommend';
 import { mapsPlaceUrl } from '../lib/deeplinks';
 import { ItemRow } from '../components/ItemRow';
@@ -51,11 +51,25 @@ export default function Step3Course({
    * 고를 때마다 일수가 늘고, 늘어난 일수로 코스가 다시 커지는 고리가
    * 생긴다. 실제로 그라나다가 2일 → 3일 → 4일 → 5일 로 불어났다.
    */
-  const stops = useMemo(() => (itinerary?.stops ?? []).map((s) => ({
-    city: s.city,
-    wantDays: cityDays[s.city.slug] ?? defaultCityDays(s.city),
-    isDayTrip: !s.sleep,
-  })), [itinerary, cityDays]);
+  const stops = useMemo(() => (itinerary?.stops ?? []).map((s) => {
+    const mine = items.filter((i) => i.city === s.city.slug && (priorities[i.id] ?? 0) > 0);
+    /*
+     * 조절기에 보일 일수.
+     *
+     * 담은 것에서 되짚는다. 예전에는 이렇게 하면 '코스를 고르면 일수가 늘고,
+     * 늘어난 일수로 코스가 다시 커지는' 고리가 생겨 그라나다가 2→3→4→5일로
+     * 불어났다. 지금은 코스 분량을 순위 등급이 정하고 일수는 그 결과를
+     * 읽기만 하므로 고리가 없다. 그래서 다시 담은 것 기준으로 되돌린다 —
+     * 위에 '4일치 코스' 를 담아 놓고 아래 조절기가 '2일' 이라고 하면
+     * 그것대로 두 값이 어긋난다.
+     */
+    const picked = mine.length ? Math.max(0.5, Math.round(estimateDays(mine, prefs) * 2) / 2) : null;
+    return {
+      city: s.city,
+      wantDays: cityDays[s.city.slug] ?? picked ?? defaultCityDays(s.city),
+      isDayTrip: !s.sleep,
+    };
+  }), [itinerary, cityDays, items, priorities, prefs]);
 
   const openCity = ui.openCity === undefined ? (stops[0]?.city.slug ?? null) : ui.openCity;
   const onlyPicked = ui.onlyPicked ?? false;
@@ -75,6 +89,7 @@ export default function Step3Course({
     [items, priorities],
   );
   const needDays = estimateDays(chosen, prefs);
+  const meals = chosen.filter(isMeal).length;
   const picks = useMemo(() => recommend(items, cities, prefs), [items, cities, prefs]);
 
   return (
@@ -85,13 +100,21 @@ export default function Step3Course({
       </p>
 
       <div className={needDays > days ? 'notice' : 'card'} style={{ padding: 12, marginBottom: 18 }}>
-        <b>{chosen.length}곳 선택 · 예상 {needDays}일</b>
+        <b>
+          {chosen.length - meals}곳 선택 · 예상 {needDays}일
+          {meals > 0 && <span className="sum-meal"> + 미식 {meals}곳</span>}
+        </b>
         {' '}
         {needDays === 0
           ? '— 아직 아무것도 담기지 않았습니다.'
           : needDays > days
             ? `— 여행은 ${days}일입니다. 이대로면 ${Math.round((needDays - days) * 10) / 10}일치가 일정에서 빠집니다.`
             : `— 여행 ${days}일 안에 들어갑니다.`}
+        {meals > 0 && (
+          <div className="help" style={{ marginTop: 6 }}>
+            식사는 일수에 세지 않습니다. 점심·저녁 자리에 배정될 뿐이라 일정을 늘리지 않습니다.
+          </div>
+        )}
       </div>
 
       {stops.map(({ city, wantDays, isDayTrip }) => {
@@ -204,9 +227,26 @@ function CityPanel({
   onUi: (next: { openTheme?: ThemeId | null; onlyPicked?: boolean }) => void;
 }) {
   const courses = useMemo(
-    () => coursesFor(city, cityItems, prefs, wantDays),
-    [city, cityItems, prefs, wantDays],
+    () => coursesFor(city, cityItems, prefs, cities),
+    [city, cityItems, prefs, cities],
   );
+  const mustSee = useMemo(
+    () => mustSeeFor(city, cityItems, prefs, cities),
+    [city, cityItems, prefs, cities],
+  );
+  const foodPicks = useMemo(() => foodPicksFor(cityItems, prefs), [cityItems, prefs]);
+  /** 이 도시에 볼 만한 것이 몇 일치인가. 여기가 ＋ 의 천장이다. */
+  const worth = useMemo(
+    () => cityWorthDays(city, cityItems, prefs, cities),
+    [city, cityItems, prefs, cities],
+  );
+  /*
+   * 조절기는 0.5 단위인데 값어치는 2.7일처럼 떨어진다. 그대로 비교하면
+   * 2.5 < 2.7 이라 ＋ 가 열려 있는데 눌러도 담을 것이 없다. 0.5 단위로
+   * 내림한 값을 천장으로 삼아, 열려 있는 버튼은 반드시 무언가를 바꾼다.
+   */
+  const capDays = Math.max(0.5, Math.floor(worth * 2) / 2);
+  const atCeiling = wantDays >= capDays;
   const pickedIds = new Set(cityItems.filter((i) => (priorities[i.id] ?? 0) > 0).map((i) => i.id));
   const pickedDays = estimateDays(cityItems.filter((i) => pickedIds.has(i.id)), prefs);
 
@@ -232,11 +272,30 @@ function CityPanel({
    */
   const setDays = (n: number) => {
     const next = Math.min(7, Math.max(0.5, Math.round(n * 2) / 2));
-    onDays(city.slug, next, itemsForDays(city, cityItems, prefs, next, course));
+    onDays(city.slug, next, itemsForDays(city, cityItems, prefs, next, course, cities));
   };
 
   return (
     <div className="city-panel">
+      {/*
+        도시마다 성격이 다르므로 목록도 도시에서 나와야 한다. 대표 지정
+        (사람이 도시별로 꼽아 둔 곳)과 전체 순위 상위권을 함께 본다 —
+        재료가 다른 두 기준이 겹치는 곳이 진짜 필수다.
+      */}
+      {mustSee.length > 0 && (
+        <div className="must-box">
+          <div className="must-head">{city.name}에서 꼭</div>
+          <div className="must-list">
+            {mustSee.map((i) => (
+              <span key={i.id} className={pickedIds.has(i.id) ? 'must is-in' : 'must'}>
+                {THEME_ICON[i.theme]} {i.name}
+                {pickedIds.has(i.id) ? ' ✓' : ''}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {courses.length > 0 && (
         <div className="course-grid">
           {courses.map((c) => {
@@ -253,6 +312,9 @@ function CityPanel({
                   {active && <span className="course-on">선택됨</span>}
                 </div>
                 <div className="course-meta">{c.items.length}곳 · 약 {c.days}일</div>
+                {c.mustNames.length > 0 && (
+                  <div className="course-must">필수 {c.mustNames.join(' · ')}</div>
+                )}
                 <div className="course-mix">
                   {c.mix.slice(0, 3).map((m) => (
                     <span key={m.theme} className="tag">{m.label} {m.count}</span>
@@ -285,14 +347,16 @@ function CityPanel({
           >−</button>
           <span className="days-value">{fmtDays(wantDays)}</span>
           <button
-            type="button" aria-label="반나절 늘리기" disabled={wantDays >= 7}
+            type="button" aria-label="반나절 늘리기" disabled={wantDays >= 7 || atCeiling}
+            title={atCeiling ? `${city.name}에 볼 만한 곳은 ${worth}일치입니다` : undefined}
             onClick={() => setDays(wantDays + 0.5)}
           >＋</button>
         </div>
         <span className="days-hint">
           {pickedIds.size === 0
             ? '아직 담긴 것이 없습니다'
-            : `${pickedIds.size}곳 담김 · 담은 것 기준 ${pickedDays}일`}
+            : `${pickedIds.size}곳 담김`}
+          {atCeiling && <span className="days-cap"> · {city.name}는 {worth}일치가 전부입니다</span>}
         </span>
       </div>
       {/*
@@ -327,6 +391,34 @@ function CityPanel({
           </button>
         )}
       </div>
+
+      {/*
+        미식은 코스에 넣지 않는다.
+
+        점심과 저녁은 어차피 먹으므로 식당을 담았다고 여행이 길어지지 않는다.
+        예전에는 미식이 소요 일수의 11~28%(세비야 28%)를 차지해 숙박일과
+        거점 판정까지 밀고 올라갔다. 식당 때문에 하룻밤이 더 잡히는 것은
+        계획이 아니라 계산 실수다.
+      */}
+      {foodPicks.length > 0 && (
+        <details className="foodbox">
+          <summary>
+            <b>🍽 {city.name} 미식 후보 {foodPicks.length}곳</b>
+            {' — '}일정에는 더해지지 않습니다
+          </summary>
+          <p className="help" style={{ margin: '8px 0 10px' }}>
+            담아 두시면 계획의 <b>점심·저녁 자리</b>에 순서대로 배정됩니다.
+            자리보다 많이 담으신 것은 후보로 남고, <b>그 때문에 다른 일정이
+            밀리지는 않습니다.</b> 소요 일수에도 세지 않습니다.
+          </p>
+          {foodPicks.map((item) => (
+            <ItemRow
+              key={item.id} item={item} city={cityOf(item.city)}
+              priorities={priorities} onSet={onSet} selectable
+            />
+          ))}
+        </details>
+      )}
 
       <p className="help" style={{ margin: '0 0 10px' }}>
         {course

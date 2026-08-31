@@ -3,6 +3,7 @@ import type { Itinerary } from './itinerary';
 import type { Service } from './routing';
 import { MODE_ICON, nextDeparture, servicesBetween } from './routing';
 import { rankItems } from './scoring';
+import { isMeal } from './capacity';
 import { distanceKm, hasCoords, travelMinutes, walkKmOf } from './geo';
 
 const DAY_START: Record<Preferences['dayStart'], number> = { early: 8 * 60, normal: 9.5 * 60, late: 11 * 60 };
@@ -79,10 +80,21 @@ const STYLES: StyleSpec[] = [
   },
 ];
 
+/**
+ * 이 자리에 들어갈 수 있는가.
+ *
+ * 식사는 점심·저녁 자리에만 들어간다. 그래야 식당을 많이 담아도 다른
+ * 일정이 밀리지 않는다 — 미식은 동선이 만드는 끼니 기회에 배정될 뿐,
+ * 일정을 만들어 내지 않는다.
+ *
+ * 간식은 예외다. 츄러스나 시장 군것질은 끼니가 아니라 오전·오후에 끼우는
+ * 일정이고, 데이터에도 그렇게 적혀 있다(bestSlots 에 morning/afternoon).
+ */
 function fitsSlot(item: Item, slot: Slot): boolean {
+  const meal = isMeal(item);
   if (MEAL_SLOTS.has(slot)) return item.theme === 'food';
   if (slot === 'night') return item.theme === 'nightlife';
-  if (item.theme === 'food') return false;
+  if (meal) return false;
   return item.bestSlots.length === 0 || item.bestSlots.includes(slot);
 }
 

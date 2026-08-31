@@ -77,7 +77,16 @@ function migrate(parsed: TripState): TripState {
     },
     prefs: { ...base.prefs, ...parsed.prefs, themes: { ...base.prefs.themes, ...parsed.prefs?.themes } },
     priorities: parsed.priorities ?? {},
-    courses: parsed.courses ?? {},
+    /*
+     * 코스 id 가 테마 강조(balanced/focusA/focusB)에서 분량(full/normal/
+     * taste)으로 바뀌었다. 옛 id 는 뜻이 대응되지 않으므로 버린다 —
+     * 담아 둔 아이템은 priorities 에 그대로 남으니 잃는 것은 '어느 코스를
+     * 골랐었나' 뿐이고, 그건 화면에서 다시 고르면 된다.
+     */
+    courses: Object.fromEntries(
+      Object.entries(parsed.courses ?? {})
+        .filter(([, v]) => v === 'full' || v === 'normal' || v === 'taste'),
+    ) as TripState['courses'],
     modePicks: parsed.modePicks ?? {},
     lodging: parsed.lodging ?? {},
     cityOrder: parsed.cityOrder ?? [],

@@ -332,7 +332,11 @@ export default function App() {
         if (itemCityOf.get(id) !== city) next[id] = v;
       }
       for (const it of courseItems) next[it.id] = 2;
-      return { ...s, priorities: next, courses: { ...s.courses, [city]: course } };
+      // 코스를 새로 고르면 손으로 맞춰 둔 일수는 놓아 준다.
+      // 안 놓으면 4일치 코스를 담아 놓고 조절기가 '2일' 이라고 우긴다.
+      const cityDays = { ...s.cityDays };
+      delete cityDays[city];
+      return { ...s, priorities: next, courses: { ...s.courses, [city]: course }, cityDays };
     });
 
   const onImport = async (file: File) => {

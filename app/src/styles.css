@@ -1069,3 +1069,48 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
 /* 지도 — 근교 왕복은 짐을 옮기는 구간보다 가늘게 */
 .map-route line.is-daytrip { opacity: 0.55; }
 .day-ride { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+
+/* ---------- 3단계: 꼭 가야 하는 곳 ---------- */
+.must-box {
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--accent-soft);
+}
+.must-head { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+.must-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.must {
+  padding: 4px 10px; border-radius: 999px;
+  background: var(--surface); color: var(--text);
+  font-size: 12.5px; font-weight: 600;
+}
+.must.is-in { color: var(--accent); }
+
+.course-must {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--accent);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+/* ---------- 3단계: 미식 후보 (일정에 안 더해짐) ---------- */
+.foodbox {
+  margin: 4px 0 14px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.foodbox > summary {
+  padding: 11px 13px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 13px;
+  color: var(--muted);
+}
+.foodbox > summary::-webkit-details-marker { display: none; }
+.foodbox > summary b { color: var(--text); }
+.foodbox .help, .foodbox .item { padding-left: 13px; padding-right: 13px; }
+.sum-meal { color: var(--muted); font-weight: 500; }
+.days-cap { color: var(--accent); }

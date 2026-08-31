@@ -250,7 +250,15 @@ export interface Plan {
 }
 
 /** 3단계에서 도시마다 고른 추천 코스. 값이 없으면 아직 안 고른 것. */
-export type CourseId = 'balanced' | 'focusA' | 'focusB';
+/**
+ * 코스 등급.
+ *
+ * 예전에는 테마 강조(고루 보기 / 역사 중심 / 미식 중심)로 나눴다. 그런데
+ * 세 코스가 모두 같은 점수 정렬에서 나오고 테마별 몫만 바꾼 것이라
+ * 중복률이 평균 80% 였고, 무엇보다 "이 도시를 며칠 볼 것인가" 라는 실제
+ * 질문에 답하지 않았다. 지금은 분량으로 나눈다.
+ */
+export type CourseId = 'full' | 'normal' | 'taste';
 
 export interface TripState {
   version: 2;

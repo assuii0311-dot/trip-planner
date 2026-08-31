@@ -66,6 +66,17 @@ export const DAY_TRIP_MAX_MIN = 120;
  */
 export const MOVE_WORTH_DAYS = 1.5;
 
+/**
+ * 데이터에 '이 도시는 저 도시에서 다녀오는 곳' 이라고 적혀 있고 그 거점이
+ * 이번 여행에 있으면, 짐을 옮길 문턱을 높인다.
+ *
+ * 톨레도는 꽉찬 코스를 담으면 2.2일치가 되어 1.5일 문턱을 넘는다. 그런데
+ * 사람이 적어 둔 hub 가 마드리드이고 편도 1시간 10분이다. 실제로 대부분
+ * 마드리드에 묵으며 다녀온다. 데이터에 적힌 판단을 0.7일 차이로 뒤집을
+ * 이유는 없다.
+ */
+export const MOVE_WORTH_DAYS_NEAR_HUB = 2.5;
+
 const mkey = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
 type Measured = Map<string, { minutes: number; mode: string }>;
 
@@ -190,7 +201,11 @@ export function scoreBases(
     return {
       city: c, total, parts,
       covers: near.map((x) => x.slug),
-      standalone: itemDaysOf(c.slug) >= MOVE_WORTH_DAYS,
+      standalone: itemDaysOf(c.slug) >= (
+        // 사람이 적어 둔 거점이 이번 여행에 있으면 문턱이 높다.
+        c.hub && cities.some((x) => x.slug === c.hub)
+          ? MOVE_WORTH_DAYS_NEAR_HUB : MOVE_WORTH_DAYS
+      ),
     };
   }).sort((a, b) => b.total - a.total);
 }
