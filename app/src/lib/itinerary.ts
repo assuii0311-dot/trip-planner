@@ -279,11 +279,18 @@ export function assignLodging(
     for (const s of stops.slice(1)) if (!s.sleep) s.base = stops[0].city.slug;
   }
 
-  // 숙박 도시의 밤 수 — 자기 아이템 일수 + 자기에게 붙은 당일치기 일수.
+  /*
+   * 숙박 도시가 달력에서 차지하는 날 — 자기 아이템 일수 + 붙은 당일치기 수.
+   *
+   * 예전에는 올림이었다. 그래서 3.1일치를 담으면 4일을 잡아 0.1일을 위해
+   * 하루를 통째로 비워 뒀고, 도시마다 최대 하루씩 부풀었다. 반올림하면
+   * 담은 만큼만 잡는다 - 넘치는 아이템은 플래너가 따로 알린다.
+   * 당일치기는 하루를 통째로 쓰므로 그대로 더한다.
+   */
   for (const s of stops) {
     if (!s.sleep) continue;
     const attached = stops.filter((x) => !x.sleep && x.base === s.city.slug);
-    s.nights = Math.max(1, Math.ceil(s.itemDays + attached.length));
+    s.nights = Math.max(1, Math.round(s.itemDays) + attached.length);
   }
   return stops;
 }

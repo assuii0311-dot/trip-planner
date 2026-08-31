@@ -213,10 +213,13 @@ export default function App() {
       delete courses[city];
       const lodging = { ...s.lodging };
       delete lodging[city];
+      const cityDays = { ...s.cityDays };
+      delete cityDays[city];
       return {
         ...s,
         basics: { ...s.basics, cities: s.basics.cities.filter((c) => c !== city) },
-        priorities: next, courses, lodging,
+        priorities: next, courses, lodging, cityDays,
+        cityOrder: s.cityOrder.filter((c) => c !== city),
       };
     });
 
@@ -312,14 +315,14 @@ export default function App() {
    * 일수를 정해 그 도시의 아이템을 갈아 끼운다.
    * 코스 선택과 같은 규칙이다 — 더하지 않고 그 도시 것만 바꾼다.
    */
-  const setCityDays = (city: string, nextItems: Item[]) =>
+  const setCityDays = (city: string, wantDays: number, nextItems: Item[]) =>
     setState((s) => {
       const next: Priorities = {};
       for (const [id, v] of Object.entries(s.priorities)) {
         if (itemCityOf.get(id) !== city) next[id] = v;
       }
       for (const it of nextItems) next[it.id] = 2;
-      return { ...s, priorities: next };
+      return { ...s, priorities: next, cityDays: { ...s.cityDays, [city]: wantDays } };
     });
 
   const chooseCourse = (city: string, course: CourseId, courseItems: Item[]) =>
@@ -409,10 +412,10 @@ export default function App() {
               <Step3Course
                 items={items} cities={index.cities} itinerary={itinerary}
                 prefs={state.prefs} priorities={state.priorities}
-                courses={state.courses} days={days}
+                courses={state.courses} cityDays={state.cityDays} days={days}
                 ui={state.ui ?? {}}
                 onSet={setPriority} onBulk={setPriorities} onCourse={chooseCourse}
-                onDays={setCityDays}
+                onDays={setCityDays} onDropCity={dropCity}
                 onUi={(next) => setState((s) => ({ ...s, ui: { ...s.ui, ...next } }))}
               />
             )

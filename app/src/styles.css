@@ -854,7 +854,7 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
   border-radius: 10px;
   background: var(--surface-2);
 }
-.days-label { font-size: 13px; font-weight: 600; }
+.days-label { font-size: 13px; font-weight: 600; white-space: nowrap; }
 .days-step { display: flex; align-items: center; gap: 2px; margin-left: auto; }
 .days-step button {
   width: 36px; height: 34px;
@@ -873,7 +873,37 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
   font-weight: 700;
   color: var(--accent);
 }
-.days-hint { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.days-hint { font-size: 12px; color: var(--muted); }
+
+/* 정한 일수와 담은 분량이 어긋날 때만 나온다. */
+.days-off {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.days-off.is-over { background: #fdf1e7; color: #8a4b12; }
+@media (prefers-color-scheme: dark) {
+  .days-off.is-over { background: #3a2a17; color: #f0c08a; }
+}
+
+/* 도시 머리줄 — 펼치기 버튼 옆에 '빼기' */
+.city-head { display: flex; align-items: stretch; gap: 6px; }
+.city-head .theme-head { flex: 1; min-width: 0; }
+.city-drop {
+  flex: none;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit; font-size: 12.5px;
+  cursor: pointer;
+}
+.city-drop:hover { border-color: #c2453a; color: #c2453a; }
 
 /* 4단계 대안 — 설명과 펼치기 */
 .alt {
@@ -922,3 +952,78 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
 }
 .itin-row { flex-wrap: wrap; }
 .itin-swap:disabled { opacity: 0.35; cursor: default; }
+
+/* ---------- 4단계: 숙소 추천 ---------- */
+.lodge, .carbox {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+}
+.lodge > summary, .carbox > summary {
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.lodge > summary::-webkit-details-marker,
+.carbox > summary::-webkit-details-marker { display: none; }
+.lodge-body, .carbox-body { padding: 0 14px 14px; }
+
+.lodge-row {
+  padding: 11px 0;
+  border-top: 1px solid var(--line);
+}
+.lodge-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.lodge-when { font-size: 12px; color: var(--muted); }
+.lodge-where { margin-top: 4px; font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+.lodge-warn {
+  margin-top: 6px; padding: 7px 10px; border-radius: 8px;
+  background: #fdf1e7; color: #8a4b12; font-size: 12.5px; line-height: 1.55;
+}
+.lodge-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.lodge-links a {
+  padding: 6px 11px; border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface-2); color: var(--text);
+  font-size: 12.5px; text-decoration: none;
+}
+.lodge-links a:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- 4단계: 렌터카 별도 관리 ---------- */
+.car-sums { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.car-sum {
+  flex: 1 1 110px; padding: 9px 11px; border-radius: 10px;
+  background: var(--surface-2); text-align: center;
+}
+.car-sum .v { font-size: 15px; font-weight: 700; }
+.car-sum .k { margin-top: 2px; font-size: 11.5px; color: var(--muted); }
+.car-sum.is-warn { background: #fdf1e7; }
+.car-sum.is-warn .v, .car-sum.is-warn .k { color: #8a4b12; }
+
+.car-notes { margin: 0 0 12px; padding-left: 18px; }
+.car-notes li { font-size: 12.5px; line-height: 1.65; color: var(--muted); margin-bottom: 5px; }
+
+.car-h { margin: 0 0 6px; font-size: 13px; }
+.car-leg { padding: 9px 0; border-top: 1px solid var(--line); }
+.car-leg-head { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; flex-wrap: wrap; }
+.car-leg-head span { color: var(--muted); font-size: 12.5px; }
+.car-alt { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.car-alt-label { font-size: 12.5px; font-weight: 600; }
+.car-delta { font-size: 12px; color: var(--muted); }
+.car-delta.is-slow { color: #8a4b12; }
+.car-take {
+  margin-left: auto; padding: 6px 12px;
+  border: 1px solid var(--accent); border-radius: 999px;
+  background: var(--surface); color: var(--accent);
+  font: inherit; font-size: 12.5px; cursor: pointer;
+}
+.car-impact { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+@media (prefers-color-scheme: dark) {
+  .lodge-warn { background: #3a2a17; color: #f0c08a; }
+  .car-sum.is-warn { background: #3a2a17; }
+  .car-sum.is-warn .v, .car-sum.is-warn .k { color: #f0c08a; }
+  .car-delta.is-slow { color: #f0c08a; }
+}

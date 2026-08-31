@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import type { City, Item, Plan, PlanDay, PlanStyle, PlanTravel, Preferences } from '../types';
 import type { Itinerary } from '../lib/itinerary';
+import { carNotes, carPlanOf } from '../lib/car';
+import { lodgingLinks, lodgingPlan } from '../lib/lodging';
 import { fmtDur, fmtHm } from '../lib/routing';
 import { mapsPlaceUrl } from '../lib/deeplinks';
 import { ItemDetail } from '../components/ItemDetail';
@@ -99,9 +101,13 @@ export default function Step5Plans({
       )}
 
       <ItineraryBar
-        itinerary={itinerary} cities={cities}
+        itinerary={itinerary} cities={cities} plan={active}
         onLodging={onLodging} onMoveCity={onMoveCity}
       />
+
+      <LodgingPanel plan={active} cities={cities} />
+
+      <CarPanel itinerary={itinerary} plan={active} onMode={onMode} />
 
       <div className="plan-tabs" role="group">
         {plans.map((p) => (
@@ -302,6 +308,208 @@ function Alternatives({
 }
 
 /**
+ * 어디에 숙소를 잡을 것인가.
+ *
+ * 앱은 어느 도시에서 잘지는 정해 주면서 어느 동네에 잡을지는 말하지 않았다.
+ * 이동 시간을 "숙소 09:00 출발" 로 계산하면서 정작 숙소 위치를 모르는
+ * 상태였고, 사용자는 4단계에서 이것을 찾다가 없어서 물었다.
+ *
+ * 동네 이름을 지어내지는 않는다 - 데이터에 없다. 대신 확실히 아는 것을
+ * 말한다: 이번 여행에서 실제로 가기로 한 곳들의 한가운데가 어디인지,
+ * 거기서 걸어 다닐 수 있는 일정이 몇 곳인지, 그리고 그 좌표로 바로
+ * 검색되는 예약 링크.
+ */
+function LodgingPanel({ plan, cities }: { plan: Plan; cities: City[] }) {
+  const picks = useMemo(() => lodgingPlan(plan.days, cities), [plan, cities]);
+  if (!picks.length) return null;
+
+  return (
+    <details className="lodge" open>
+      <summary>
+        <b>🛏 숙소 {picks.length}곳</b>{' '}
+        {picks.map((p) => `${p.city.name} ${p.nights}박`).join(' · ')}
+      </summary>
+      <div className="lodge-body">
+        <p className="help" style={{ margin: '0 0 10px' }}>
+          <b>고르신 일정의 한가운데</b>를 기준점으로 잡았습니다. 동네 이름을 지어내는 대신
+          좌표를 드리니, 링크의 지도 보기로 그 근처만 걸러 보세요.
+        </p>
+        {picks.map((p) => {
+          const wide = p.total > 0 && p.within / p.total < 0.5;
+          return (
+            <div className="lodge-row" key={p.city.slug + p.checkIn}>
+              <div className="lodge-head">
+                <b>{p.city.name}</b>
+                <span className="lodge-when">
+                  {p.checkIn} → {p.checkOut} · {p.nights}박
+                </span>
+              </div>
+              {p.total > 0 && (
+                <div className="lodge-where">
+                  기준점: <b>{p.anchor.name}</b> 근처
+                  {' · '}
+                  걸어서 닿는 일정 {p.within}/{p.total}곳
+                  {p.spreadKm > 0 && ` · 가장 먼 일정 ${p.spreadKm}km`}
+                </div>
+              )}
+              {wide && (
+                <div className="lodge-warn">
+                  일정이 넓게 퍼져 있습니다. 어디에 잡아도 절반은 대중교통을 타야 하니,
+                  숙소보다 <b>역·정류장이 가까운지</b>를 먼저 보세요.
+                </div>
+              )}
+              <div className="lodge-links">
+                {lodgingLinks(p).map((l) => (
+                  <a key={l.label} href={l.url} target="_blank" rel="noreferrer" title={l.note}>
+                    {l.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </details>
+  );
+}
+
+/**
+ * 렌터카를 따로 보는 자리.
+ *
+ * 교통 엔진은 문앞~문앞 시간으로 고르므로, 기다리지 않는 렌터카가 거의
+ * 항상 이긴다. 그런데 그 차이는 대개 몇십 분이고 값은 서너 배다. 게다가
+ * 편도 반납료와 세워 두는 날의 대여료는 구간별 비교에 아예 안 잡힌다.
+ *
+ * 그래서 '차를 빌리면 여행 전체가 어떻게 되는가' 를 한 번에 보여 주고,
+ * 구간마다 대안과 그 대안을 골랐을 때 일정이 어떻게 달라지는지를 붙인다.
+ * 고르는 것은 사람이 한다 — 차가 필요한 이유는 앱이 모른다.
+ */
+function CarPanel({
+  itinerary, plan, onMode,
+}: {
+  itinerary: Itinerary;
+  plan: Plan;
+  onMode: (from: string, to: string, mode: string) => void;
+}) {
+  const car = useMemo(
+    () => carPlanOf(itinerary.hops, itinerary.stops),
+    [itinerary],
+  );
+  if (!car) return null;
+
+  const notes = carNotes(car);
+  /** 이 구간이 도착하는 날 — 대안으로 바꾸면 이 날 일정이 밀린다. */
+  const dayOf = (from: string, to: string) =>
+    plan.days.find((d) => d.travel && d.travel.from === from && d.travel.to === to) ?? null;
+
+  return (
+    <details className="carbox" open>
+      <summary>
+        <b>🚗 렌터카 {car.legs.length}구간</b>
+        {car.oneWay
+          ? ` · ${car.pickUp.name}에서 빌려 ${car.dropOff.name}에서 반납`
+          : ` · ${car.pickUp.name}에서 빌려 그대로 반납`}
+        {car.heldDays > car.legs.length && ` · ${car.heldDays}일 대여`}
+      </summary>
+      <div className="carbox-body">
+        <p className="help" style={{ margin: '0 0 10px' }}>
+          이동 시간만 보면 렌터카가 가장 빠릅니다. 다만 아래 비용은 구간별 비교에
+          잡히지 않으니 함께 보고 정하세요.
+        </p>
+
+        <div className="car-sums">
+          <div className="car-sum">
+            <div className="v">€{car.legCostEur}</div>
+            <div className="k">구간 연료·통행료</div>
+          </div>
+          {car.idleDays > 0 && (
+            <div className="car-sum">
+              <div className="v">€{car.parkingEur}</div>
+              <div className="k">세워 두는 {car.idleDays}일 주차</div>
+            </div>
+          )}
+          {car.oneWay && car.fee && (
+            <div className="car-sum is-warn">
+              <div className="v">€{car.fee.lo}~{car.fee.hi}</div>
+              <div className="k">편도 반납료</div>
+            </div>
+          )}
+        </div>
+
+        <ul className="car-notes">
+          {notes.map((n) => <li key={n}>{n}</li>)}
+        </ul>
+
+        <h4 className="car-h">구간마다 대안</h4>
+        {car.legs.map((leg) => {
+          const day = dayOf(leg.from.slug, leg.to.slug);
+          return (
+            <div className="car-leg" key={`${leg.from.slug}>${leg.to.slug}`}>
+              <div className="car-leg-head">
+                <b>{leg.from.name} → {leg.to.name}</b>
+                <span>🚗 {fmtDur(leg.car.totalMin)} · €{leg.car.costEur}</span>
+              </div>
+              {leg.alt ? (
+                <>
+                  <div className="car-alt">
+                    <span className="car-alt-label">
+                      {leg.alt.label} {fmtDur(leg.alt.totalMin)} · €{leg.alt.costEur}
+                    </span>
+                    <span className={leg.slowerMin > 0 ? 'car-delta is-slow' : 'car-delta'}>
+                      {leg.slowerMin > 0
+                        ? `${fmtDur(leg.slowerMin)} 더 걸리고`
+                        : `${fmtDur(-leg.slowerMin)} 빠르고`}
+                      {' '}
+                      {leg.savesEur > 0 ? `€${leg.savesEur} 아낍니다` : `€${-leg.savesEur} 더 듭니다`}
+                    </span>
+                    <button
+                      type="button" className="car-take"
+                      onClick={() => onMode(leg.from.slug, leg.to.slug, leg.alt!.mode)}
+                    >
+                      이걸로 바꾸기
+                    </button>
+                  </div>
+                  <ScheduleImpact day={day} slowerMin={leg.slowerMin} />
+                </>
+              ) : (
+                <p className="help" style={{ margin: '6px 0 0' }}>
+                  이 구간은 렌터카 말고 쓸 수 있는 수단이 없습니다.
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </details>
+  );
+}
+
+/**
+ * 대안으로 바꾸면 그날 일정이 어떻게 되는가.
+ *
+ * "40분 더 걸립니다" 만으로는 감이 안 온다. 실제로 알고 싶은 것은
+ * '그래서 그날 뭘 못 보게 되느냐' 다. 도착이 늦어지면 그 시각 이전에
+ * 잡혀 있던 일정부터 밀리므로, 그것을 이름으로 짚어 준다.
+ */
+function ScheduleImpact({ day, slowerMin }: { day: PlanDay | null; slowerMin: number }) {
+  if (!day || !day.travel) return null;
+  if (slowerMin <= 0) {
+    return <p className="car-impact">그날 도착이 더 빨라지므로 일정은 그대로거나 늘어납니다.</p>;
+  }
+  const newArrive = day.travel.arriveAt + slowerMin;
+  // 늦어진 도착 시각(+짐 푸는 30분) 이전에 시작하기로 돼 있던 일정이 밀린다.
+  const pushed = day.entries.filter((e) => e.startMin < newArrive + 30);
+  return (
+    <p className="car-impact">
+      {day.date} 도착이 {fmtHm(day.travel.arriveAt)} → <b>{fmtHm(newArrive)}</b>.
+      {pushed.length === 0
+        ? ' 그날 일정은 그대로 들어갑니다.'
+        : ` 그날 앞쪽 ${pushed.length}곳(${pushed.map((e) => e.item.name).join(', ')})이 밀립니다.`}
+    </p>
+  );
+}
+
+/**
  * 도시를 옮기는 구간.
  *
  * 무엇을 타고, 몇 시에 나서서, 몇 시에 닿는지를 적는다. 예전에는 이 구간이
@@ -389,14 +597,33 @@ function TravelBlock({
  * 계획 전체를 좌우하는데, 찾을 수 없으면 없는 기능이나 마찬가지다.
  */
 function ItineraryBar({
-  itinerary, cities, onLodging, onMoveCity,
+  itinerary, cities, plan, onLodging, onMoveCity,
 }: {
   itinerary: Itinerary;
   cities: City[];
+  /** 실제로 짜인 계획. 박수는 여기서 센다. */
+  plan: Plan;
   onLodging: (city: string, how: 'sleep' | 'daytrip') => void;
   onMoveCity: (city: string, dir: -1 | 1) => void;
 }) {
   const name = (slug: string) => cities.find((c) => c.slug === slug)?.name ?? slug;
+
+  /*
+   * 박수는 완성된 계획에서 센다.
+   *
+   * 여정 엔진의 stop.nights 는 '담은 아이템으로 잡아 둔 날' 이고, 플래너가
+   * 남는 날을 도시마다 나눠 주면서 그 값이 달라진다. 두 값을 서로 다른
+   * 자리에 띄우면 같은 화면에서 '빌바오 1박' 과 '빌바오 3박' 이 함께
+   * 보인다 - 실제로 그렇게 나왔다. 사람이 실제로 자는 날을 쓴다.
+   */
+  const nightsOf = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const d of plan.days) {
+      if (!d.sleepAt) continue;
+      m.set(d.sleepAt, (m.get(d.sleepAt) ?? 0) + 1);
+    }
+    return m;
+  }, [plan]);
   return (
     <details className="itin" open>
       <summary>
@@ -426,7 +653,7 @@ function ItineraryBar({
             <span className="itin-city">{s.city.name}</span>
             <span className="itin-state">
               {s.sleep
-                ? `${s.nights}박`
+                ? `${nightsOf.get(s.city.slug) ?? s.nights}박`
                 : `당일치기 ← ${name(s.base ?? '')} · 왕복 ${fmtDur(s.dayTripMin)}`}
             </span>
             <button

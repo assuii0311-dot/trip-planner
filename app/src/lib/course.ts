@@ -30,10 +30,10 @@ export interface Course {
   mix: { theme: ThemeId; label: string; count: number }[];
 }
 
-/** 이 도시에 배정된 밤 수로 코스 크기를 정한다. 최소 하루치는 담는다. */
-function targetCount(items: Item[], prefs: Preferences, nights: number): number {
+/** 이 도시에 쓸 일수로 코스 크기를 정한다. 최소 하루치는 담는다. */
+function targetCount(items: Item[], prefs: Preferences, wantDays: number): number {
   const perDay = itemsPerDay(items, prefs);
-  const days = Math.max(1, nights);
+  const days = Math.max(1, wantDays);
   return Math.min(items.length, Math.max(perDay, Math.round(perDay * days)));
 }
 
@@ -113,14 +113,28 @@ function mixOf(items: Item[]): Course['mix'] {
 }
 
 /**
+ * 이 도시에 기본으로 며칠을 쓸 것인가.
+ *
+ * 도시 데이터에 적힌 권장 숙박일에서 뽑는다. 담은 아이템에서 되짚지
+ * 않는 것이 중요하다 - 되짚으면 '코스를 고르면 일수가 늘고, 늘어난
+ * 일수로 코스가 다시 커지는' 고리가 생긴다. 실제로 그랬다: 그라나다가
+ * 코스를 고를 때마다 2일 → 3일 → 4일 → 5일 로 불어났다.
+ *
+ * nights 는 밤 수라 당일치기 도시는 0 이다. 쓰는 날로 세면 하루다.
+ */
+export function defaultCityDays(city: City): number {
+  return Math.max(1, city.nights?.[0] ?? 1);
+}
+
+/**
  * 한 도시의 추천 코스 세 가지.
- * nights 는 이 도시에 배정된 밤 수 — 코스 분량을 여기에 맞춘다.
+ * days 는 이 도시에 쓸 일수 — 코스 분량을 여기에 맞춘다.
  */
 export function coursesFor(
-  city: City, cityItems: Item[], prefs: Preferences, nights: number,
+  city: City, cityItems: Item[], prefs: Preferences, days: number,
 ): Course[] {
   if (cityItems.length < 3) return [];
-  const count = targetCount(cityItems, prefs, nights);
+  const count = targetCount(cityItems, prefs, days);
 
   // 관심도가 높은 순으로 강조 후보를 고른다. 이 도시에 실제로 아이템이
   // 있는 테마만 후보다 — 없는 테마를 강조하면 균형 코스와 똑같아진다.

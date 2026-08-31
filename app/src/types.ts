@@ -268,6 +268,11 @@ export interface TripState {
    */
   cityOrder: string[];
   /**
+   * 도시 slug → 이 도시에 쓸 일수. 사용자가 3단계에서 정한 값만 들어간다.
+   * 비어 있으면 도시 데이터의 권장 일수를 쓴다.
+   */
+  cityDays: Record<string, number>;
+  /**
    * 하루 안의 일정 순서를 직접 정한 경우. 날짜 → 아이템 id 순서.
    * 특수한 사정(예약 시각, 누구와 만나기로 한 시각)은 앱이 알 수 없다.
    */

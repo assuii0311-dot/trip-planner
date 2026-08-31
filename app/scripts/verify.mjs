@@ -61,7 +61,7 @@ async function build(page, { cities, from, to, airports, courses = true }) {
   await next(); await next();                       // → 3단계
   if (courses) {
     await page.waitForSelector('.course', { timeout: 25000 });
-    for (const head of await page.locator('main > .theme-group > .theme-head').all()) {
+    for (const head of await page.locator('main > .theme-group > .city-head > .theme-head').all()) {
       if ((await head.getAttribute('aria-expanded')) !== 'true') {
         await head.click(); await page.waitForTimeout(400);
       }
@@ -124,6 +124,36 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
   await page.waitForTimeout(900);
   check('일수 − → 되돌아온다', (await daysVal()) === before, `${after} → ${await daysVal()}`);
 
+  /*
+   * 일수가 정수로만 나오는가.
+   *
+   * 예전에는 머리줄이 '2일'(달력에서 잡은 날), 아래 조절기가 '1.1일'(담은
+   * 분량)을 아무 설명 없이 같이 띄웠다. 둘은 다른 값인데 이름이 같아 보였다.
+   */
+  const allDays = await page.locator('.days-value').allInnerTexts();
+  check('3단계 일수가 정수로만 나온다', allDays.every((t) => /^\d+일$/.test(t)),
+    allDays.join(' | '));
+
+  /*
+   * 코스를 다시 골라도 일수가 불어나지 않는가.
+   *
+   * 예전에는 코스 분량을 '담은 아이템으로 되짚은 일수' 로 정해서, 코스를
+   * 고를 때마다 일수가 늘고 늘어난 일수로 코스가 다시 커졌다. 그라나다가
+   * 2일 → 3일 → 4일 → 5일 로 불어났다.
+   */
+  const headDays = async () => (await page.locator('.city-head .theme-head').allInnerTexts())
+    .map((t) => (t.match(/(\d+일|당일치기)/) ?? ['?'])[0]).join(' | ');
+  const h0 = await headDays();
+  for (let r = 0; r < 3; r++) {
+    for (const head of await page.locator('main > .theme-group > .city-head > .theme-head').all()) {
+      if ((await head.getAttribute('aria-expanded')) !== 'true') { await head.click(); await page.waitForTimeout(350); }
+      const c = page.locator('.course').first();
+      if (await c.count()) { await c.click(); await page.waitForTimeout(300); }
+    }
+  }
+  const h1 = await headDays();
+  check('코스를 다시 골라도 일수가 불어나지 않는다', h0 === h1, `${h0} → ${h1}`);
+
   // 개별 아이템 추가/제거
   const cnt = async () => Number((await summary())[1]);
   const c0 = await cnt();
@@ -136,6 +166,44 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
     check('아이템 개별 제거', (await cnt()) === c0, `→ ${await cnt()}`);
   }
   await page.screenshot({ path: new URL('01-step3.png', shots).pathname });
+
+  /*
+   * 3단계에서 도시를 통째로 뺄 수 있는가.
+   *
+   * 일수를 맞추는 화면인데 도시를 뺄 수가 없어서, 날이 모자랄 때 할 수
+   * 있는 일이 '아이템 줄이기' 뿐이었다. 4단계까지 가야 뺄 수 있었다.
+   */
+  const cityCount = async () => page.locator('main > .theme-group > .city-head').count();
+  const cityN0 = await cityCount();
+  page.once('dialog', (d) => d.accept());
+  await page.locator('.city-drop').last().click();
+  await page.waitForTimeout(1400);
+  const cityN1 = await cityCount();
+  check('3단계에서 도시를 뺄 수 있다', cityN1 === cityN0 - 1, `${cityN0}곳 → ${cityN1}곳`);
+
+  // 뺀 도시를 되돌린다 — 이후 시나리오는 3개 도시를 전제로 한다.
+  await page.getByRole('button', { name: '이전' }).click();
+  await page.waitForTimeout(600);
+  await page.getByRole('button', { name: '이전' }).click();
+  await page.waitForTimeout(900);
+  {
+    const card = page.locator('.city-main', { hasText: '그라나다' }).first();
+    if (!(await card.isVisible().catch(() => false))) {
+      await page.getByRole('button', { name: /안달루시아/ }).click();
+      await page.waitForTimeout(400);
+    }
+    await card.click();
+    await page.waitForTimeout(400);
+  }
+  await page.getByRole('button', { name: /^다음$/ }).click(); await page.waitForTimeout(900);
+  await page.getByRole('button', { name: /^다음$/ }).click(); await page.waitForTimeout(1400);
+  await page.waitForSelector('.course', { timeout: 25000 });
+  for (const head of await page.locator('main > .theme-group > .city-head > .theme-head').all()) {
+    if ((await head.getAttribute('aria-expanded')) !== 'true') { await head.click(); await page.waitForTimeout(350); }
+    const c = page.locator('.course').first();
+    if (await c.count()) { await c.click(); await page.waitForTimeout(300); }
+  }
+  check('뺀 도시를 다시 넣을 수 있다', (await cityCount()) === cityN0, `${cityN1}곳 → ${await cityCount()}곳`);
 
   await next();                                     // → 4단계
   await page.waitForSelector('.itin', { timeout: 30000 });
@@ -164,6 +232,57 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
     }
   }
   check('이동한 날은 도착 시각 뒤에 일정이 시작한다', travelDayOk, travelDetail);
+
+  /*
+   * 숙소 추천.
+   *
+   * 앱이 어느 도시에서 잘지는 정해 주면서 어느 자리에 잡을지는 말하지
+   * 않았다 — 4단계에서 찾아도 없었다.
+   */
+  const lodgeRows = await page.locator('.lodge-row').count();
+  check('4단계에 숙소 추천이 나온다', lodgeRows > 0, `${lodgeRows}곳`);
+
+  /*
+   * 같은 화면에서 박수가 두 개로 갈리지 않는가.
+   *
+   * 여정 바는 엔진이 잡아 둔 날을, 숙소 칸은 계획이 실제로 잔 날을 쓰고
+   * 있어서 '빌바오 1박' 과 '빌바오 3박' 이 한 화면에 함께 떴다.
+   */
+  const itinN = Object.fromEntries((await page.locator('.itin-row').allInnerTexts())
+    .map((t) => t.replace(/\n/g, ' '))
+    .map((t) => [(t.match(/↑ ↓ (\S+)/) ?? [])[1], (t.match(/(\d+)박/) ?? [])[1]])
+    .filter(([c, n]) => c && n));
+  const lodgeN = Object.fromEntries((await page.locator('.lodge-head').allInnerTexts())
+    .map((t) => t.replace(/\n/g, ' '))
+    .map((t) => [(t.match(/^(\S+)/) ?? [])[1], (t.match(/(\d+)박/) ?? [])[1]])
+    .filter(([c, n]) => c && n));
+  const mismatch = Object.keys(lodgeN).filter((c) => itinN[c] && itinN[c] !== lodgeN[c]);
+  check('여정 박수와 숙소 박수가 같다', mismatch.length === 0,
+    mismatch.length
+      ? mismatch.map((c) => `${c} 여정 ${itinN[c]}박 vs 숙소 ${lodgeN[c]}박`).join(', ')
+      : Object.entries(lodgeN).map(([c, n]) => `${c} ${n}박`).join(' · '));
+
+  /* 기준점이 실제 장소이므로 '가장 먼 일정' 이 도보 반경 안이면 전부 도보다. */
+  const wheres = await page.locator('.lodge-where').allInnerTexts();
+  const contradictory = wheres.filter((t) => {
+    const w = t.match(/걸어서 닿는 일정 (\d+)\/(\d+)곳/);
+    const f = t.match(/가장 먼 일정 ([\d.]+)km/);
+    return w && f && Number(f[1]) <= 1.2 && Number(w[1]) !== Number(w[2]);
+  });
+  check('도보 범위와 최대 거리가 서로 안 어긋난다', contradictory.length === 0,
+    contradictory.join(' / ').replace(/\n/g, ' ').slice(0, 90) || `${wheres.length}곳 확인`);
+  if (lodgeRows > 0) {
+    const w = await page.locator('.lodge-where').first().innerText().catch(() => '');
+    check('숙소에 기준점과 도보 범위가 있다', /기준점/.test(w) && /걸어서 닿는 일정 \d+\/\d+/.test(w),
+      w.replace(/\n/g, ' ').slice(0, 70));
+    const when = await page.locator('.lodge-when').first().innerText();
+    check('숙소에 체크인·체크아웃 날짜가 있다', /\d{4}-\d\d-\d\d → \d{4}-\d\d-\d\d · \d+박/.test(when), when);
+    const links = await page.locator('.lodge-row').first().locator('.lodge-links a').count();
+    const href = await page.locator('.lodge-row').first().locator('.lodge-links a').first().getAttribute('href');
+    check('숙소 예약 링크가 좌표·날짜를 담고 있다',
+      links >= 2 && /latitude=/.test(href) && /checkin=\d{4}-\d\d-\d\d/.test(href),
+      `${links}개 · ${(href ?? '').slice(0, 62)}…`);
+  }
 
   // 수단 바꾸기
   await page.locator('.travel-alts > summary').first().click();
@@ -380,6 +499,61 @@ console.log('\n■ 5. 데이터 무결성');
   check('철도 시간표가 실려 있다', probe.railPairs > 100, `${probe.railPairs}쌍`);
   check('철도 시간표가 만료되지 않았다', !probe.railExpired, `유효 ~${probe.railValidTo}`);
   console.log(`     (좌표 없는 아이템 ${probe.noCoord}/${probe.items} — 지도에서 제외됨, 정상)`);
+  await ctx.close();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+console.log('\n■ 6. 렌터카 — 편도 반납 · 대안 · 일정 영향');
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });
+  const page = await ctx.newPage();
+  watch(page, allErrors, '[렌터카]');
+  /*
+   * 북부 해안은 고속철이 없어 교통 엔진이 렌터카를 1순위로 고른다.
+   * 실제로 도시 쌍 1,770 개 중 1,072 개(60.6%)가 그렇다. 빌바오로 들어와
+   * 오비에도로 나가면 빌린 곳과 반납한 곳이 달라져 편도 반납료까지 걸린다.
+   */
+  const next = await build(page, {
+    cities: [['북부', '빌바오'], ['북부', '산탄데르'], ['북서부', '오비에도']],
+    from: '2026-09-14', to: '2026-09-20',
+    airports: ['BIO', 'OVD'],
+  });
+  await next();
+  await page.waitForSelector('.itin', { timeout: 30000 });
+
+  const hasCar = (await page.locator('.carbox').count()) > 0;
+  check('렌터카가 추천되면 별도 패널이 나온다', hasCar);
+  if (hasCar) {
+    const head = await page.locator('.carbox > summary').innerText();
+    check('빌리는 곳과 반납하는 곳을 밝힌다', /빌려.*반납/.test(head), head.replace(/\n/g, ' '));
+
+    const sums = (await page.locator('.car-sum').allInnerTexts()).join(' | ').replace(/\n/g, ' ');
+    check('편도 반납료를 범위로 알린다', /편도 반납료/.test(sums) && /€\d+~\d+/.test(sums), sums);
+    check('세워 두는 날의 값도 센다', /세워 두는 \d+일 주차/.test(sums), sums);
+
+    const notes = (await page.locator('.car-notes li').allInnerTexts()).join(' ');
+    check('편도 반납이 업체·방향에 따라 다름을 밝힌다', /€0 인 곳도/.test(notes));
+
+    const legs = await page.locator('.car-leg').count();
+    check('구간마다 대안을 제시한다', legs > 0, `${legs}구간`);
+    const delta = await page.locator('.car-delta').first().innerText();
+    check('대안의 시간·비용 차이를 적는다',
+      /(더 걸리고|빠르고)/.test(delta) && /€\d+ (아낍니다|더 듭니다)/.test(delta), delta);
+
+    const impact = await page.locator('.car-impact').first().innerText().catch(() => '');
+    check('대안을 고르면 일정이 어떻게 되는지 알린다',
+      /도착이 \d\d:\d\d → \d\d:\d\d/.test(impact) || /그대로/.test(impact),
+      impact.replace(/\n/g, ' ').slice(0, 80));
+
+    // 실제로 바꿔 본다
+    const before = await page.locator('.travel-meta').first().innerText();
+    await page.locator('.car-take').first().click();
+    await page.waitForTimeout(1500);
+    const after = await page.locator('.travel-meta').first().innerText();
+    check('대안으로 바꾸면 계획에 반영된다', before !== after,
+      `${before.split('·')[0].trim()} → ${after.split('·')[0].trim()}`);
+  }
+  await page.screenshot({ path: new URL('06-car.png', shots).pathname, fullPage: true });
   await ctx.close();
 }
 
