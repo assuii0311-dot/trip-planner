@@ -21,6 +21,8 @@ export function defaultState(): TripState {
     partySize: 2,
     startAirport: null,
     endAirport: null,
+    arrivalTime: null,
+    departureTime: null,
   };
   const prefs: Preferences = {
     themes: { ...DEFAULT_THEMES },
@@ -74,6 +76,8 @@ function migrate(parsed: TripState): TripState {
       ...parsed.basics,
       startAirport: parsed.basics?.startAirport ?? airportForCity(old.startCity),
       endAirport: parsed.basics?.endAirport ?? airportForCity(old.endCity),
+      arrivalTime: parsed.basics?.arrivalTime ?? null,
+      departureTime: parsed.basics?.departureTime ?? null,
     },
     prefs: { ...base.prefs, ...parsed.prefs, themes: { ...base.prefs.themes, ...parsed.prefs?.themes } },
     priorities: parsed.priorities ?? {},

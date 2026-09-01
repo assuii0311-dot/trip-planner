@@ -1145,3 +1145,27 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
   background: var(--surface); color: var(--accent);
   font: inherit; font-size: 12.5px; cursor: pointer;
 }
+
+/* ---------- 공항 — 여행의 앞뒤를 먹는 시간 ---------- */
+.airport-block {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.airport-line { font-size: 13px; line-height: 1.55; }
+.airport-why { margin-top: 3px; font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+
+/* 1단계 — 실제로 쓸 수 있는 날 */
+.tripwin {
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.tripwin > summary { padding: 10px 12px; cursor: pointer; list-style: none; font-size: 13px; line-height: 1.5; }
+.tripwin > summary::-webkit-details-marker { display: none; }
+.tripwin-body { padding: 0 12px 12px; }
+.tripwin-body p { margin: 0 0 8px; font-size: 12.5px; line-height: 1.6; }
+.tripwin-why { display: block; margin-top: 2px; font-size: 11.5px; color: var(--muted); }

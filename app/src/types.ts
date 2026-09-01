@@ -163,6 +163,16 @@ export interface Basics {
    */
   startAirport: string | null;
   endAirport: string | null;
+  /**
+   * 스페인에 착륙하는 시각 / 스페인에서 이륙하는 시각 ('HH:MM').
+   *
+   * 달력 날짜만 세면 11일 여행에 11일치를 담게 된다. 그런데 첫날 오후
+   * 4시에 내리면 그날은 저녁 한 끼가 전부이고, 마지막 날 낮 12시 비행기면
+   * 아침에 짐을 끌고 공항으로 간다. 대략만 알아도 계산이 크게 달라진다.
+   * 모르면 null — 그때는 예전처럼 달력 일수로 짠다.
+   */
+  arrivalTime: string | null;
+  departureTime: string | null;
 }
 
 export type Budget = 'low' | 'mid' | 'high';

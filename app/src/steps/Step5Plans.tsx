@@ -4,6 +4,7 @@ import type { Itinerary } from '../lib/itinerary';
 import { carNotes, carPlanOf } from '../lib/car';
 import { lodgingLinks, lodgingPlan } from '../lib/lodging';
 import { cityMove, transitTip } from '../lib/citymove';
+import type { AirportInfo } from '../lib/airporttime';
 import { fmtDur, fmtHm } from '../lib/routing';
 import { mapsPlaceUrl } from '../lib/deeplinks';
 import { ItemDetail } from '../components/ItemDetail';
@@ -16,7 +17,7 @@ import { THEME_ICON, THEME_LABEL } from '../lib/themes';
 /** 4단계 — 담은 곳을 바탕으로 밀도가 다른 3가지 안을 만든다. */
 export default function Step5Plans({
   items, cities, itinerary, days, prefs, plans, overflow, spare, chosen,
-  onChoose, onSwap, onMode, onLodging, onDropCity, onMoveCity, onMoveEntry, manualOrder,
+  onChoose, onSwap, onMode, onLodging, onDropCity, onMoveCity, onMoveEntry, manualOrder, airport,
 }: {
   items: Item[];
   cities: City[];
@@ -43,6 +44,8 @@ export default function Step5Plans({
   onMoveEntry: (date: string, itemId: string, dir: -1 | 1) => void;
   /** 사용자가 순서를 손댄 날짜들. 되돌리기 버튼을 띄우는 데 쓴다. */
   manualOrder: Record<string, string[]>;
+  /** 공항이 정하는 여행의 앞뒤. 시각을 안 넣었으면 null. */
+  airport?: AirportInfo | null;
 }) {
   const active = plans.find((p) => p.style === chosen) ?? plans[0];
   const cityName = (slug: string) => cities.find((c) => c.slug === slug)?.name ?? slug;
@@ -141,9 +144,11 @@ export default function Step5Plans({
           ))}
       </div>
 
-      {active.days.map((day) => (
+      {active.days.map((day, i) => (
         <Day
           key={day.dayIndex} day={day} pool={pool} prefs={prefs} cities={cities}
+          airport={airport}
+          isFirst={i === 0} isLast={i === active.days.length - 1}
           cityName={cityName} onSwap={onSwap} onMode={onMode}
           onMoveEntry={onMoveEntry} touched={Boolean(manualOrder[day.date])}
         />
@@ -154,12 +159,15 @@ export default function Step5Plans({
 
 /** 하루치. 대안은 여기서 한 번에 뽑아 자리마다 나눠 준다. */
 function Day({
-  day, pool, prefs, cities, cityName, onSwap, onMode, onMoveEntry, touched,
+  day, pool, prefs, cities, airport, isFirst, isLast, cityName, onSwap, onMode, onMoveEntry, touched,
 }: {
   day: PlanDay;
   pool: Item[];
   prefs: Preferences;
   cities: City[];
+  airport?: AirportInfo | null;
+  isFirst: boolean;
+  isLast: boolean;
   cityName: (slug: string) => string;
   onSwap: (out: Item, inItems: Item[]) => void;
   onMode: (from: string, to: string, mode: string) => void;
@@ -202,12 +210,32 @@ function Day({
               </span>
             )}
           </div>
+          {/*
+            공항은 착륙과 이륙 사이에만 있는 것이 아니다. 입국심사와 수하물,
+            시내로 들어가는 이동, 돌아갈 때의 체크인과 보안이 여행의 앞뒤를
+            반나절씩 먹는다. 그것을 그날 자리에 적어 둔다.
+          */}
+          {isFirst && airport?.arrival && airport.firstDayStart !== null && (
+            <div className="airport-block">
+              <div className="airport-line">
+                🛬 <b>{airport.arrivalTime}</b> 착륙 · {airport.arrivalAirport} →
+                {' '}<b>{fmtHm(airport.firstDayStart)}</b>부터 일정
+              </div>
+              <div className="airport-why">{airport.arrival.note}</div>
+            </div>
+          )}
           {day.travel && (
             <TravelBlock travel={day.travel} cityName={cityName} onMode={onMode} />
           )}
           <div className="card">
             {day.entries.length === 0 ? (
-              <div className="empty">이 날에 넣을 항목이 부족합니다. 3단계에서 더 담아주세요.</div>
+              <div className="empty">
+                {/* 빈 날의 이유가 두 가지다. 담은 것이 모자란 경우와, 비행기
+                    시각 때문에 아침에 바로 공항으로 가는 경우는 다른 일이다. */}
+                {isLast && airport?.lastDayEnd !== null && airport?.lastDayEnd !== undefined
+                  ? `공항으로 가는 날입니다. ${fmtHm(airport.lastDayEnd)}에는 나서야 해서 일정을 넣지 않았습니다.`
+                  : '이 날에 넣을 항목이 부족합니다. 3단계에서 더 담아주세요.'}
+              </div>
             ) : (
               day.entries.map((e, i) => (
                 <div className="entry" key={`${e.item.id}-${i}`}>
@@ -270,6 +298,15 @@ function Day({
               ))
             )}
           </div>
+          {isLast && airport?.departure && airport.lastDayEnd !== null && (
+            <div className="airport-block">
+              <div className="airport-line">
+                🛫 <b>{fmtHm(airport.lastDayEnd)}</b>에 나섬 · {airport.departureAirport} →
+                {' '}<b>{airport.departureTime}</b> 이륙
+              </div>
+              <div className="airport-why">{airport.departure.note}</div>
+            </div>
+          )}
         </div>
   );
 }

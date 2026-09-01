@@ -33,7 +33,7 @@ const setValue = (el, v) => {
 };
 
 /** 한 여행을 1단계부터 끝까지 만든다. */
-async function build(page, { cities, from, to, airports, courses = true }) {
+async function build(page, { cities, from, to, airports, times, courses = true }) {
   await page.goto(base, { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('.city-card', { timeout: 25000 });
   for (const [region, city] of cities) {
@@ -53,6 +53,12 @@ async function build(page, { cities, from, to, airports, courses = true }) {
     const sel = page.locator('select');
     await sel.nth(0).selectOption(airports[0]); await page.waitForTimeout(300);
     await sel.nth(1).selectOption(airports[1]); await page.waitForTimeout(500);
+  }
+  if (times) {
+    // 공항 시각은 공항을 고른 뒤에야 나온다.
+    const t = page.locator('input[type=time]');
+    await t.nth(0).evaluate(setValue, times[0]); await page.waitForTimeout(300);
+    await t.nth(1).evaluate(setValue, times[1]); await page.waitForTimeout(600);
   }
   const next = async () => {
     await page.getByRole('button', { name: /^(다음|계획 세우기|이 계획으로 진행)$/ }).click();
@@ -103,12 +109,27 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
     cities: [['마드리드·중부', '마드리드'], ['안달루시아', '세비야'], ['안달루시아', '그라나다']],
     from: '2026-09-14', to: '2026-09-24',
     airports: ['MAD', 'AGP'],
+    // 늦게 내리고 일찍 뜨는, 실제로 가장 흔한 표.
+    times: ['16:00', '12:00'],
   });
 
   // 3단계 — 코스와 일수
   const summary = async () => (await page.locator('main').innerText()).match(/(\d+)곳 선택 · 예상 ([\d.]+)일/);
   const s0 = await summary();
   check('3단계 코스 선택으로 아이템이 담긴다', Number(s0?.[1]) > 0, s0?.[0]);
+
+  /*
+   * 공항에 먹히는 시간이 계획의 기준이 되는가.
+   *
+   * 달력 날짜만 세면 11일 여행에 11일치를 담는다. 그런데 16시에 내리면
+   * 첫날은 저녁 한 끼가 전부이고, 12시 비행기면 마지막 날 아침에 짐을
+   * 끌고 공항으로 간다.
+   */
+  const panelText = await page.locator('main').innerText();
+  check('3단계가 달력이 아니라 쓸 수 있는 날과 견준다', /쓸 수 있는 (날은 )?[\d.]+일/.test(panelText),
+    (panelText.match(/(실제로 )?쓸 수 있는[^.\n]*/) ?? [''])[0].slice(0, 50));
+  check('공항에 얼마가 들어가는지 알린다', /첫날 입국과 마지막 날 출국에 [\d.]+일/.test(panelText),
+    (panelText.match(/달력은 \d+일이지만[^.\n]*/) ?? [''])[0].slice(0, 60));
   check('코스가 도시마다 2개 이상', (await page.locator('.course').count()) >= 2,
     `${await page.locator('.course').count()}개`);
 
@@ -265,6 +286,40 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
   await next();                                     // → 4단계
   await page.waitForSelector('.itin', { timeout: 30000 });
   check('4단계 여정 패널이 기본으로 펼쳐진다', (await page.locator('.itin[open]').count()) === 1);
+
+  // 첫날·마지막 날에 공항 구간이 적히는가
+  const apBlocks = await page.locator('.airport-block').allInnerTexts();
+  check('첫날에 착륙~일정 시작이 적힌다',
+    apBlocks.some((t) => /🛬.*착륙/.test(t) && /부터 일정/.test(t)),
+    (apBlocks[0] ?? '').replace(/\n/g, ' ').slice(0, 70));
+  check('마지막 날에 공항 출발~이륙이 적힌다',
+    apBlocks.some((t) => /🛫/.test(t) && /이륙/.test(t)),
+    (apBlocks[apBlocks.length - 1] ?? '').replace(/\n/g, ' ').slice(0, 70));
+  check('공항 시간의 내역을 밝힌다',
+    apBlocks.some((t) => /입국심사|체크인/.test(t) && /시내 이동|공항 이동/.test(t)));
+
+  // 첫날 첫 일정이 착륙 뒤인가
+  {
+    const first = page.locator('.day').first();
+    const line = await first.locator('.airport-line').innerText().catch(() => '');
+    const from = line.match(/(\d\d:\d\d)부터 일정/);
+    const firstEntry = await first.locator('.entry .time').first().innerText().catch(() => null);
+    const m = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+    check('첫날 일정이 공항에서 나온 뒤에 시작한다',
+      !from || !firstEntry || m(firstEntry) >= m(from[1]),
+      firstEntry ? `${from?.[1]} 이후 · 첫 일정 ${firstEntry}` : '첫날 일정 없음');
+  }
+  // 마지막 날 마지막 일정이 공항 출발 전인가
+  {
+    const last = page.locator('.day').last();
+    const line = await last.locator('.airport-line').innerText().catch(() => '');
+    const by = line.match(/(\d\d:\d\d)에 나섬/);
+    const times = await last.locator('.entry .time').allInnerTexts();
+    const m = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+    check('마지막 날 일정이 공항 출발 전에 끝난다',
+      !by || times.every((t) => m(t) <= m(by[1])),
+      times.length ? `${by?.[1]} 까지 · 마지막 일정 ${times[times.length - 1]}` : '마지막 날 일정 없음');
+  }
   const order0 = (await page.locator('.itin-city').allInnerTexts()).join('→');
   const hops0 = (await page.locator('.travel-route').allInnerTexts()).join(' | ');
   check('도시 간 이동 구간이 그려진다', (await page.locator('.travel-block').count()) > 0,
@@ -383,8 +438,22 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
     check('순서를 바꾸면 교통편을 다시 찾는다', hops0 !== hops1, hops1.slice(0, 70));
   }
 
-  // 일정 순서 바꾸기 → 시각 재계산
-  const day1 = page.locator('.day').first();
+  /*
+   * 일정 순서 바꾸기 → 시각 재계산.
+   *
+   * 항목이 가장 많은 날에서 본다. 첫날은 공항 때문에 늦게 시작해 두 곳뿐일
+   * 수 있고, 두 곳의 소요 시간이 같으면 순서를 바꿔도 시각이 같아 검사가
+   * 헛돈다 — 그건 버그가 아니라 그냥 같은 값이다.
+   */
+  let day1 = page.locator('.day').first();
+  {
+    let best = -1;
+    const all = await page.locator('.day').all();
+    for (let i = 0; i < all.length; i++) {
+      const n = await all[i].locator('.entry').count();
+      if (n > best) { best = n; day1 = all[i]; }
+    }
+  }
   const t0 = await day1.locator('.entry .time').allInnerTexts();
   const n0 = await day1.locator('.entry .title').allInnerTexts();
   if (n0.length >= 2) {
@@ -393,7 +462,12 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
     const n1 = await day1.locator('.entry .title').allInnerTexts();
     const t1 = await day1.locator('.entry .time').allInnerTexts();
     check('하루 안 일정 순서가 바뀐다', n0[0] !== n1[0], `${n0[0]} ↔ ${n1[0]}`);
-    check('순서를 바꾸면 시각이 다시 계산된다', t0[0] === t1[0] && t0[1] !== t1[1],
+    // 시각은 새 순서에 맞춰 다시 계산되어야 한다 — 시작은 그대로, 나머지는
+    // 오름차순, 그리고 소요 시간이 다르면 뒷시각이 실제로 달라진다.
+    const asc = t1.every((t, i) => i === 0 || t >= t1[i - 1]);
+    const changed = t0.join() !== t1.join();
+    const sameLen = t0.length === t1.length;
+    check('순서를 바꾸면 시각이 다시 계산된다', t0[0] === t1[0] && asc && sameLen && (changed || t0.length === 2),
       `${t0.slice(0, 2).join('/')} → ${t1.slice(0, 2).join('/')}`);
     check('순서를 바꾼 날에 표시가 붙는다',
       (await day1.locator('.badge', { hasText: '순서 바꿈' }).count()) === 1);

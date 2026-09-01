@@ -59,9 +59,14 @@ export const AIRPORTS: Airport[] = [
   { iata: 'IBZ', name: '이비사', city: 'palma', lat: 38.8729, lon: 1.3731, note: '이비사는 이 앱에 없어 마요르카 기준으로 계산합니다' },
 
   // 카나리아 제도
-  { iata: 'TFS', name: '테네리페 남부', city: 'santa-cruz-tenerife', lat: 28.0445, lon: -16.5725 },
-  { iata: 'TFN', name: '테네리페 북부', city: 'la-laguna', lat: 28.4827, lon: -16.3415 },
-  { iata: 'LPA', name: '그란카나리아', city: 'las-palmas', lat: 27.9319, lon: -15.3866 },
+  // 테네리페에는 공항이 둘이고 섬의 반대쪽 끝에 있다. 국제선은 대부분
+  // 남부(TFS)로 들어오는데, 산타크루스까지는 버스로 한 시간 반이 넘는다.
+  { iata: 'TFS', name: '테네리페 남부', city: 'santa-cruz-tenerife', lat: 28.0445, lon: -16.5725,
+    note: '섬 남쪽 끝이라 산타크루스까지 1시간 40분쯤 걸립니다. 남부 해안에 묵으면 가깝습니다.' },
+  { iata: 'TFN', name: '테네리페 북부', city: 'la-laguna', lat: 28.4827, lon: -16.3415,
+    note: '라라구나·산타크루스에 가깝습니다. 국내선과 제도 안 노선이 주로 뜹니다.' },
+  { iata: 'LPA', name: '그란카나리아', city: 'las-palmas', lat: 27.9319, lon: -15.3866,
+    note: '라스팔마스까지 약 30분, 마스팔로마스까지도 비슷합니다.' },
 ];
 
 export const airportOf = (iata: string | null): Airport | undefined =>

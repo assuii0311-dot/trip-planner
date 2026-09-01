@@ -7,10 +7,12 @@ import type { SaveResult } from './lib/store';
 import { SaveStatus } from './components/SaveStatus';
 import { ResumeBanner, StorageWarning } from './components/ResumeBanner';
 import { airportOf, cityForAirport } from './lib/airports';
-import { buildItinerary } from './lib/itinerary';
+import { buildItinerary, measuredTable } from './lib/itinerary';
+import { fastest } from './lib/routing';
 import { expandIslandScope, rehomeIslandItems } from './lib/island';
 import { buildPlans } from './lib/planner';
 import { inferHints, inferThemes } from './lib/taste';
+import { arrivalLeg, departureLeg, parseHm, tripWindow } from './lib/airporttime';
 import Step1Basics, { tripDays } from './steps/Step1Basics';
 import Step2Preferences from './steps/Step2Preferences';
 import Step3Course from './steps/Step3Course';
@@ -282,6 +284,50 @@ export default function App() {
    *
    * 이제 여기서 만든다. 어느 단계를 보고 있든 계획은 존재한다.
    */
+  /**
+   * 공항이 정하는 여행의 앞뒤.
+   *
+   * 첫날은 착륙하고 입국심사·시내 이동·짐 풀기가 끝나야 시작할 수 있고,
+   * 마지막 날은 공항으로 나서기 전에 끝내야 한다. 달력 날짜만 세면 오후
+   * 4시에 내리는 날에 오전 일정이 들어간다.
+   */
+  const airportWindow = useMemo(() => {
+    const inAt = parseHm(state.basics.arrivalTime);
+    const outAt = parseHm(state.basics.departureTime);
+    if (inAt === null && outAt === null) return null;
+    const inAp = airportOf(state.basics.startAirport);
+    const outAp = airportOf(state.basics.endAirport);
+    const inCity = index?.cities.find((c) => c.slug === (arrival?.slug ?? inAp?.city));
+    /*
+     * 마지막 날 실제로 있는 도시.
+     *
+     * 왕복 항공권으로 마드리드에서 나가는 일정이라도 마지막 밤을 세비야에서
+     * 보내면, 공항까지는 40분이 아니라 세비야→마드리드까지 얹은 시간이다.
+     * 예전에는 공항이 속한 도시로만 계산해 비행기를 놓칠 안내를 했다.
+     */
+    const lastStop = itinerary?.stops.filter((x) => x.sleep).slice(-1)[0]?.city;
+    const apCity = index?.cities.find((c) => c.slug === (departure?.slug ?? outAp?.city));
+    const key = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+    const interMin = lastStop && apCity && lastStop.slug !== apCity.slug && index
+      ? Math.round(fastest(lastStop, apCity,
+        measuredTable(index.cities).get(key(lastStop.slug, apCity.slug))).totalMin)
+      : 0;
+    const w = tripWindow(
+      days, inAt, outAt,
+      inAp ? arrivalLeg(inAp, inCity) : null,
+      outAp ? departureLeg(outAp, apCity, interMin) : null,
+      9.5 * 60, 22 * 60,
+    );
+    return {
+      ...w,
+      arrivalTime: state.basics.arrivalTime,
+      departureTime: state.basics.departureTime,
+      arrivalAirport: inAp ? `${inAp.name} (${inAp.iata})` : null,
+      departureAirport: outAp ? `${outAp.name} (${outAp.iata})` : null,
+    };
+  }, [state.basics.arrivalTime, state.basics.departureTime, state.basics.startAirport,
+    state.basics.endAirport, arrival?.slug, index, days, itinerary]);
+
   const built = useMemo(() => {
     if (!itinerary || items.length === 0) return null;
     return buildPlans({
@@ -292,9 +338,11 @@ export default function App() {
       prefs: state.prefs,
       priorities: state.priorities,
       dayOrder: state.dayOrder,
+      firstDayStart: airportWindow?.firstDayStart ?? null,
+      lastDayEnd: airportWindow?.lastDayEnd ?? null,
     });
   }, [itinerary, items, state.basics.startDate, days, state.basics.lastDayPlan,
-    state.prefs, state.priorities, state.dayOrder]);
+    state.prefs, state.priorities, state.dayOrder, airportWindow]);
 
   const plans = built?.plans ?? [];
 
@@ -434,6 +482,7 @@ export default function App() {
                 items={items} cities={index.cities} itinerary={itinerary}
                 prefs={state.prefs} priorities={state.priorities}
                 courses={state.courses} cityDays={state.cityDays} days={days}
+                usableDays={airportWindow?.usableDays}
                 ui={state.ui ?? {}}
                 onSet={setPriority} onBulk={setPriorities} onCourse={chooseCourse}
                 onDays={setCityDays} onDropCity={dropCity}
@@ -449,6 +498,7 @@ export default function App() {
             chosen={chosenPlan.style} onChoose={choosePlan}
             onSwap={swapEntry} onMode={setMode} onLodging={setLodging} onDropCity={dropCity}
             onMoveCity={moveCity} onMoveEntry={moveEntry} manualOrder={state.dayOrder}
+            airport={airportWindow}
           />
         )}
         {state.step === 5 && (

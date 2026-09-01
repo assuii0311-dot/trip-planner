@@ -7,6 +7,7 @@ import type { Itinerary } from '../lib/itinerary';
 import type { Island } from '../lib/data';
 import { AIRPORT_GROUPS, airportOf } from '../lib/airports';
 import { withJosa } from '../lib/korean';
+import { arrivalLeg, departureLeg, fmtHm, parseHm, tripWindow } from '../lib/airporttime';
 
 export function tripDays(basics: Basics): number {
   const a = new Date(`${basics.startDate}T00:00:00`);
@@ -54,6 +55,25 @@ export default function Step1Basics({
       : [...basics.cities, slug];
     onChange({ cities: next });
   };
+
+  /**
+   * 공항에 먹히는 시간까지 넣어 실제로 쓸 수 있는 날을 센다.
+   * 시각을 안 넣었으면 null 이고, 그때는 예전처럼 달력 일수로 짠다.
+   */
+  const window = useMemo(() => {
+    const inAt = parseHm(basics.arrivalTime);
+    const outAt = parseHm(basics.departureTime);
+    if (inAt === null && outAt === null) return null;
+    const inCity = inAirport ? cities.find((c) => c.slug === (arrival?.slug ?? inAirport.city)) : undefined;
+    const outCity = outAirport ? cities.find((c) => c.slug === (departure?.slug ?? outAirport.city)) : undefined;
+    return tripWindow(
+      days,
+      inAt, outAt,
+      inAirport ? arrivalLeg(inAirport, inCity) : null,
+      outAirport ? departureLeg(outAirport, outCity) : null,
+      9.5 * 60, 22 * 60,
+    );
+  }, [basics.arrivalTime, basics.departureTime, inAirport, outAirport, arrival, departure, cities, days]);
 
   const byRegion = (id: string) => {
     const list = cities.filter((c) => c.macroRegion === id);
@@ -170,6 +190,56 @@ export default function Step1Basics({
             </select>
           </Field>
         </div>
+
+        {/*
+          시각을 대략만 알아도 계산이 크게 달라진다.
+
+          달력 날짜만 세면 11일 여행에 11일치를 담게 된다. 그런데 첫날 오후
+          4시에 내리면 그날은 저녁 한 끼가 전부이고, 마지막 날 낮 12시
+          비행기면 아침에 짐을 끌고 공항으로 간다.
+        */}
+        {(inAirport || outAirport) && (
+          <div className="date-pair" style={{ marginTop: 12 }}>
+            <Field label="도착 시각" hint="스페인에 내리는 시각 (대략)">
+              <input
+                type="time" value={basics.arrivalTime ?? ''}
+                onChange={(e) => onChange({ arrivalTime: e.target.value || null })}
+              />
+            </Field>
+            <Field label="출발 시각" hint="돌아가는 비행기 시각 (대략)">
+              <input
+                type="time" value={basics.departureTime ?? ''}
+                onChange={(e) => onChange({ departureTime: e.target.value || null })}
+              />
+            </Field>
+          </div>
+        )}
+
+        {window && (window.firstDayStart !== null || window.lastDayEnd !== null) && (
+          <details className="tripwin">
+            <summary>
+              실제로 쓸 수 있는 날 <b>{window.usableDays}일</b>
+              {window.lostDays > 0 && ` — 달력 ${days}일 중 ${window.lostDays}일이 공항에 들어갑니다`}
+            </summary>
+            <div className="tripwin-body">
+              {window.firstDayStart !== null && window.arrival && (
+                <p>
+                  <b>첫날</b> {basics.arrivalTime} 착륙 → <b>{fmtHm(window.firstDayStart)}</b>부터 일정
+                  <span className="tripwin-why">{window.arrival.note}</span>
+                </p>
+              )}
+              {window.lastDayEnd !== null && window.departure && (
+                <p>
+                  <b>마지막 날</b> <b>{fmtHm(window.lastDayEnd)}</b>까지 → {basics.departureTime} 이륙
+                  <span className="tripwin-why">{window.departure.note}</span>
+                </p>
+              )}
+              <p className="tripwin-why">
+                전부 추정치입니다. 항공권과 다르면 시각을 조정하세요.
+              </p>
+            </div>
+          </details>
+        )}
 
         {(inAirport || outAirport) && (
           <div className="airport-note">

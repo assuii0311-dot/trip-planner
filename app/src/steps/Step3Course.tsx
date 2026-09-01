@@ -21,7 +21,7 @@ import { bundlesFor } from '../lib/bundles';
  * "이 도시는 보통 이렇게 돕니다" 를 먼저 주고, 거기서 빼고 더한다.
  */
 export default function Step3Course({
-  items, cities, itinerary, prefs, priorities, courses, cityDays, days, ui,
+  items, cities, itinerary, prefs, priorities, courses, cityDays, days, usableDays, ui,
   onSet, onBulk, onCourse, onDays, onDropCity, onUi,
 }: {
   items: Item[];
@@ -31,6 +31,8 @@ export default function Step3Course({
   prefs: Preferences;
   priorities: Priorities;
   courses: Record<string, CourseId>;
+  /** 공항에 먹히는 시간을 뺀, 실제로 쓸 수 있는 날. 모르면 days 와 같다. */
+  usableDays?: number;
   /** 도시 slug → 사용자가 정한 일수. 없으면 도시 권장 일수를 쓴다. */
   cityDays: Record<string, number>;
   days: number;
@@ -91,6 +93,10 @@ export default function Step3Course({
   );
   const needDays = estimateDays(chosen, prefs);
   const meals = chosen.filter(isMeal).length;
+  /* 달력 일수가 아니라 실제로 쓸 수 있는 날과 견준다 — 첫날은 착륙하고
+     시내에 들어와야 시작하고, 마지막 날은 공항으로 나서기 전에 끝난다. */
+  const budget = usableDays ?? days;
+  const lostDays = Math.round((days - budget) * 10) / 10;
   const picks = useMemo(() => recommend(items, cities, prefs), [items, cities, prefs]);
 
   return (
@@ -100,7 +106,7 @@ export default function Step3Course({
         코스를 하나 고른 뒤 빼고 더하시면 됩니다.
       </p>
 
-      <div className={needDays > days ? 'notice' : 'card'} style={{ padding: 12, marginBottom: 18 }}>
+      <div className={needDays > budget ? 'notice' : 'card'} style={{ padding: 12, marginBottom: 18 }}>
         <b>
           {chosen.length - meals}곳 선택 · 예상 {needDays}일
           {meals > 0 && <span className="sum-meal"> + 미식 {meals}곳</span>}
@@ -108,9 +114,14 @@ export default function Step3Course({
         {' '}
         {needDays === 0
           ? '— 아직 아무것도 담기지 않았습니다.'
-          : needDays > days
-            ? `— 여행은 ${days}일입니다. 이대로면 ${Math.round((needDays - days) * 10) / 10}일치가 일정에서 빠집니다.`
-            : `— 여행 ${days}일 안에 들어갑니다.`}
+          : needDays > budget
+            ? `— 실제로 쓸 수 있는 날은 ${budget}일입니다. 이대로면 ${Math.round((needDays - budget) * 10) / 10}일치가 일정에서 빠집니다.`
+            : `— 쓸 수 있는 ${budget}일 안에 들어갑니다.`}
+        {lostDays > 0 && (
+          <div className="help" style={{ marginTop: 6 }}>
+            달력은 {days}일이지만 첫날 입국과 마지막 날 출국에 {lostDays}일이 들어갑니다.
+          </div>
+        )}
         {meals > 0 && (
           <div className="help" style={{ marginTop: 6 }}>
             식사는 일수에 세지 않습니다. 점심·저녁 자리에 배정될 뿐이라 일정을 늘리지 않습니다.

@@ -126,6 +126,15 @@ function buildDay(
   travel: PlanTravel | null = null,
   sleepAt: string | null = null,
   dayTripMode: PlanDay['dayTripMode'] = undefined,
+  /**
+   * 공항 때문에 정해지는 그날의 앞뒤 한계(분).
+   *
+   * 첫날은 착륙하고 입국심사·시내 이동·짐 풀기가 끝난 뒤에야 시작할 수
+   * 있고, 마지막 날은 공항으로 출발하기 전에 끝내야 한다. 달력 날짜만
+   * 세면 오후 4시에 내리는 날에 오전 일정이 들어간다.
+   */
+  startAtMin: number | null = null,
+  endByMin: number | null = null,
 ): PlanDay {
   const inCity = pool.filter((p) => !used.has(p.item.id) && p.item.city === city);
   const anchor = inCity.find((p) => p.item.theme !== 'food' && p.item.theme !== 'nightlife');
@@ -147,11 +156,12 @@ function buildDay(
    */
   const arrival = travel ? travel.arriveAt + 30 : null;
   const base = DAY_START[prefs.dayStart] + (isDayTrip ? 75 : 0);
-  const start = arrival !== null ? Math.max(base, arrival) : base;
+  const start = Math.max(base, arrival ?? 0, startAtMin ?? 0);
   // 도착일 오전만 쓰는 경우 점심 전에 끝낸다.
   const specs = spec.slots(start).filter((s) => (morningOnly ? s.slot === 'morning' : true));
   // 거점으로 돌아와 저녁을 먹으므로 근교라고 해서 하루를 일찍 끊지 않는다.
-  const lastCall = morningOnly ? 13 * 60 : isDayTrip && !returnTo ? 20 * 60 : 24 * 60 + 30;
+  const natural = morningOnly ? 13 * 60 : isDayTrip && !returnTo ? 20 * 60 : 24 * 60 + 30;
+  const lastCall = endByMin !== null ? Math.min(natural, endByMin) : natural;
 
   // 근교에서 하루를 보내도 저녁은 거점으로 돌아와 먹는다. 소도시는 저녁
   // 식당이 일찍 닫고, 돌아오는 막차도 있기 때문이다. 몬세라트처럼 볼거리가
@@ -211,6 +221,13 @@ export interface PlanInput {
   priorities: Priorities;
   /** 사용자가 손으로 정한 하루 안 순서. 날짜 → 아이템 id 순서. */
   dayOrder?: Record<string, string[]>;
+  /**
+   * 공항이 정하는 여행의 앞뒤(분).
+   * 첫날 일정을 시작할 수 있는 시각과, 마지막 날 끝내야 하는 시각.
+   * 시각을 안 넣었으면 undefined 이고 예전처럼 달력 일수로 짠다.
+   */
+  firstDayStart?: number | null;
+  lastDayEnd?: number | null;
 }
 
 /** 고른 근교를 다 넣지 못했을 때 알려 주기 위한 값. */
@@ -417,7 +434,19 @@ export function buildPlans(input: PlanInput): {
     const used = new Set<string>();
     const days: PlanDay[] = schedule.map((s, i) => {
       const isLast = i === schedule.length - 1;
-      const lastDay = isLast ? input.lastDayPlan : 'full';
+      const startAt = i === 0 ? input.firstDayStart ?? null : null;
+      const endBy = isLast ? input.lastDayEnd ?? null : null;
+      /*
+       * 출발 시각을 알면 그것이 마지막 날을 정한다.
+       *
+       * '마지막 날 일정' 을 없음/오전만/종일 중에 고르게 했지만, 실제로는
+       * 비행기 시각이 정하는 것이다. 시각을 넣었으면 그쪽을 따르고,
+       * 안 넣었으면 예전처럼 고른 값을 쓴다.
+       */
+      const lastDay = !isLast ? 'full'
+        : endBy !== null
+          ? (endBy <= DAY_START[input.prefs.dayStart] + 60 ? 'none' : 'full')
+          : input.lastDayPlan;
       if (lastDay === 'none') {
         return {
           date: addDays(input.startDate, i), dayIndex: i + 1, city: s.city,
@@ -428,7 +457,7 @@ export function buildPlans(input: PlanInput): {
       return buildDay(
         ranked, used, spec, input.prefs, addDays(input.startDate, i), i + 1,
         s.city, s.isDayTrip, lastDay === 'morning', s.returnTo, s.returnMinutes, s.returnAfter,
-        s.travel, s.sleepAt, s.dayTripMode,
+        s.travel, s.sleepAt, s.dayTripMode, startAt, endBy,
       );
     });
 
