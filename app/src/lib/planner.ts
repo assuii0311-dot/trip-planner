@@ -440,7 +440,17 @@ export function buildPlans(input: PlanInput): {
   overflow: { city: string; name: string; days: number }[];
   spare: number;
 } {
-  const ranked = rankItems(input.items, input.prefs, input.priorities).filter((r) => r.score > -20);
+  /*
+   * 후보는 담은 것만이 아니다 — 별을 주지 않은 것도 취향 점수만으로 남아
+   * 3안의 다양성을 만든다. 그래서 4단계에서 뺀 것을 그냥 별만 지우면
+   * 아무 일도 일어나지 않았다. 빼도 그 자리에 다시 들어오거나, 애초에
+   * 별이 없던 식당은 눌러도 사라지지 않았다.
+   *
+   * 우선순위에 0 이 **적혀 있는** 것은 '이건 빼 달라' 는 뜻이다. 키가
+   * 아예 없는 것(별을 준 적 없음)과는 다르다.
+   */
+  const ranked = rankItems(input.items, input.prefs, input.priorities)
+    .filter((r) => r.score > -20 && input.priorities[r.item.id] !== 0);
   const { schedule, overflow, spare } = scheduleFromItinerary(
     input.itinerary, input.days, DAY_START[input.prefs.dayStart],
   );

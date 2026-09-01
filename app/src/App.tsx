@@ -16,7 +16,6 @@ import { arrivalLeg, departureLeg, parseHm, tripWindow } from './lib/airporttime
 import Step1Basics, { tripDays } from './steps/Step1Basics';
 import Step2Preferences from './steps/Step2Preferences';
 import Step3Course from './steps/Step3Course';
-import { minimumPicks } from './lib/course';
 import Step5Plans from './steps/Step5Plans';
 import Step6Guide from './steps/Step6Guide';
 
@@ -184,7 +183,8 @@ export default function App() {
   const swapEntry = (out: Item, inItems: Item[]) =>
     setState((s) => {
       const next = { ...s.priorities };
-      delete next[out.id];
+      // 별만 지우면 점수가 높은 곳은 그대로 다시 뽑힌다. 0 을 적어 뺀다.
+      next[out.id] = 0;
       for (const i of inItems) next[i.id] = 3;
       return { ...s, priorities: next };
     });
@@ -192,15 +192,13 @@ export default function App() {
   /**
    * 4단계에서 아이템 하나를 일정에서 뺀다.
    *
-   * 계획은 우선순위에서 다시 만들어지므로 별을 지우면 그 아이템은 다음
-   * 계산에 들어오지 않는다. 3단계로 돌아가면 다시 담을 수 있다.
+   * 우선순위에 0 을 적는다. 별을 지우기만 하면 아무 일도 일어나지 않는다 —
+   * 별이 없는 아이템도 취향 점수만으로 후보에 남기 때문에, 뺀 자리에 그대로
+   * 다시 들어오거나 애초에 별이 없던 식당은 눌러도 사라지지 않는다.
+   * 3단계로 돌아가 다시 체크하면 되돌릴 수 있다.
    */
   const dropItem = (item: Item) =>
-    setState((s) => {
-      const next = { ...s.priorities };
-      delete next[item.id];
-      return { ...s, priorities: next };
-    });
+    setState((s) => ({ ...s, priorities: { ...s.priorities, [item.id]: 0 } }));
 
   /**
    * 여정 — 도시 순서·숙박·이동 수단.
@@ -370,13 +368,62 @@ export default function App() {
   const choosePlan = (style: PlanStyle) => setState((s) => ({ ...s, chosenPlan: style }));
 
   const picked = Object.values(state.priorities).filter((v) => v > 0).length;
+
+  /**
+   * 3단계에서 아무것도 담기지 않은 도시.
+   *
+   * 예전 조건은 '여행 일수 × 2 개 이상' 이었다. 그런데 등급이 분량을
+   * 정하게 된 뒤로 이 조건이 등급과 정면으로 부딪혔다 — 여덟 날 여행을
+   * 세 도시에서 전부 찍먹으로 잡으면 9곳이라, 사용자가 고를 수 있게 만들어
+   * 둔 선택을 고르면 다음 버튼이 잠겼다. 게다가 왜 잠겼는지 아무 데도
+   * 적혀 있지 않아, 화면이 그냥 죽은 것처럼 보였다.
+   *
+   * 분량은 사용자가 정한다. 계획을 세울 수 없는 경우는 하나뿐이다 —
+   * 들를 도시인데 그 도시에 담은 것이 하나도 없는 경우.
+   */
+  const emptyCities = useMemo(() => {
+    if (!itinerary) return [];
+    const has = new Set(pickedItems.map((i) => i.city));
+    // 애초에 후보가 없는 도시는 사람이 담을 방법이 없다. 그런 도시를 조건에
+    // 넣으면 영영 풀 수 없는 잠금이 된다.
+    const avail = new Set(items.map((i) => i.city));
+    return itinerary.stops
+      .filter((s) => avail.has(s.city.slug) && !has.has(s.city.slug))
+      .map((s) => s.city.name);
+  }, [itinerary, items, pickedItems]);
+
   const canAdvance = (() => {
     switch (state.step) {
       case 1: return state.basics.cities.length > 0 && days > 0;
       case 2: return true;
-      case 3: return picked >= minimumPicks(days);
+      case 3: return picked > 0 && emptyCities.length === 0;
       case 4: return plans.length > 0;
       default: return false;
+    }
+  })();
+
+  /**
+   * 다음으로 갈 수 없으면 왜인지 적는다.
+   *
+   * 잠긴 버튼만 두면 무엇을 해야 풀리는지 알 길이 없다. 버튼을 누를 수
+   * 없는 이유는 언제나 화면에 있어야 한다.
+   */
+  const blockedWhy = (() => {
+    if (canAdvance) return null;
+    switch (state.step) {
+      case 1:
+        return state.basics.cities.length === 0
+          ? '가고 싶은 도시를 한 곳 이상 골라 주세요.'
+          : '여행 날짜를 넣어 주세요.';
+      case 3:
+        return picked === 0
+          ? '아직 담은 곳이 없습니다. 코스를 고르거나 아래 목록에서 담아 주세요.'
+          : `${emptyCities.join(' · ')}에 담은 곳이 없습니다. `
+            + '코스를 고르시거나, 그 도시를 여행에서 빼 주세요.';
+      case 4:
+        return '계획을 세우지 못했습니다. 3단계에서 담은 곳을 확인해 주세요.';
+      default:
+        return null;
     }
   })();
 
@@ -554,6 +601,7 @@ export default function App() {
       </main>
 
       <nav className="bottombar">
+        {blockedWhy && <p className="bar-why">{blockedWhy}</p>}
         <div className="inner">
           {state.step > 1 && (
             <button type="button" className="ghost" onClick={() => goto(state.step - 1)}>이전</button>
