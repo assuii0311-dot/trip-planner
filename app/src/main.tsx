@@ -3,7 +3,11 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import { Crashguard } from './components/Crashguard';
 import { clearState, exportState, loadState } from './lib/store';
+import { startDiag } from './lib/diag';
 import './styles.css';
+
+// 무엇이든 그리기 전에 켜 둔다. 그려지기 전에 나는 오류가 가장 알기 어렵다.
+startDiag();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

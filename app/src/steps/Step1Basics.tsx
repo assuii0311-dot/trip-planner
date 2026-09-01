@@ -8,6 +8,7 @@ import type { Island } from '../lib/data';
 import { islandAsCity } from '../lib/island';
 import { AIRPORT_GROUPS, airportOf } from '../lib/airports';
 import { withJosa } from '../lib/korean';
+import { mark } from '../lib/diag';
 import { arrivalLeg, departureLeg, fmtHm, parseHm, tripWindow } from '../lib/airporttime';
 
 
@@ -83,6 +84,8 @@ export default function Step1Basics({
     const next = basics.cities.includes(slug)
       ? basics.cities.filter((s) => s !== slug)
       : [...basics.cities, slug];
+    // 눌림 기록과 맞대어 본다 — 닿지 않은 것인지, 닿았는데 안 도는 것인지.
+    mark(`도시 ${basics.cities.includes(slug) ? '해제' : '선택'} ${slug} → ${next.length}곳`);
     onChange({ cities: next });
   };
 
@@ -392,7 +395,7 @@ export default function Step1Basics({
               <button
                 type="button" className="theme-head"
                 aria-expanded={isOpen}
-                onClick={() => setOpenRegion(isOpen ? null : region.id)}
+                onClick={() => { mark(`지역 ${isOpen ? '접기' : '펴기'} ${region.id}`); setOpenRegion(isOpen ? null : region.id); }}
               >
                 <span style={{ fontWeight: 700 }}>{region.name}</span>
                 <span className="count">
