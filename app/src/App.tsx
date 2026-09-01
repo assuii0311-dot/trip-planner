@@ -4,6 +4,7 @@ import { loadCountry, loadItemsFor, loadRail, type CountryIndex } from './lib/da
 import type { RailTable } from './lib/rail';
 import { clearState, defaultState, exportState, importState, isInstalled, loadState, saveState } from './lib/store';
 import { hardRefetch } from './lib/refetch';
+import { newerBuild } from './lib/update';
 import { DiagPanel } from './components/DiagPanel';
 import { mark } from './lib/diag';
 import type { SaveResult } from './lib/store';
@@ -32,6 +33,8 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   /** 도시 아이템 받기 실패. 나라 데이터 실패(error)와 달리 화면은 살아 있다. */
   const [itemsError, setItemsError] = useState<string | null>(null);
+  /** 서버에 더 새 판이 올라와 있는가. 있으면 지금 화면은 낡은 것이다. */
+  const [stale, setStale] = useState(false);
   /** '다시 받기' 를 누른 횟수. 같은 도시라도 효과를 다시 돌리는 열쇠다. */
   const [itemsTry, setItemsTry] = useState(0);
   const [loadingItems, setLoadingItems] = useState(false);
@@ -76,6 +79,25 @@ export default function App() {
     // 실제 시간표는 없어도 앱이 돌아가므로 따로 받고 실패해도 넘어간다.
     loadRail(state.basics.country).then(setRail);
   }, [state.basics.country]);
+
+  /*
+   * 새 판이 올라왔는지 확인한다.
+   *
+   * 아이패드 사파리는 탭을 그대로 되살린다. 앱을 '다시 열어도' 새로
+   * 받아오는 항해가 일어나지 않아, 고쳐 놓은 것이 영원히 도달하지 않는다.
+   * 실제로 두 판 뒤진 것을 쓰면서 같은 문제를 계속 겪은 일이 있었다.
+   * 열 때와, 다른 앱에 갔다 돌아올 때 확인한다.
+   */
+  useEffect(() => {
+    let alive = true;
+    const look = () => {
+      if (document.visibilityState !== 'visible') return;
+      void newerBuild().then((b) => { if (alive && b) setStale(true); });
+    };
+    look();
+    document.addEventListener('visibilitychange', look);
+    return () => { alive = false; document.removeEventListener('visibilitychange', look); };
+  }, []);
 
   const days = tripDays(state.basics);
   const selectedCities = useMemo(
@@ -547,6 +569,21 @@ export default function App() {
               }
             }}
           />
+        )}
+        {stale && (
+          <div className="notice update-bar">
+            <b>새 판이 나와 있습니다.</b>
+            <p className="help" style={{ margin: '6px 0 10px' }}>
+              지금 보고 계신 화면은 예전 판입니다. 사파리가 탭을 그대로
+              되살리면 새로 받아오지 않아, 고쳐 둔 것이 반영되지 않습니다.
+            </p>
+            <div className="crash-btns">
+              <button type="button" className="primary" onClick={() => void hardRefetch()}>
+                새 판으로 받기
+              </button>
+              <button type="button" onClick={() => setStale(false)}>나중에</button>
+            </div>
+          </div>
         )}
         {itemsError && (
           <div className="notice" style={{ marginBottom: 14 }}>

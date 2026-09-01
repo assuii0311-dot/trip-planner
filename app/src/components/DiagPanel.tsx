@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { diagReport } from '../lib/diag';
+import { newerBuild } from '../lib/update';
+import { hardRefetch } from '../lib/refetch';
 
 /**
  * 진단 정보를 꺼내는 자리.
@@ -11,8 +13,13 @@ import { diagReport } from '../lib/diag';
 export function DiagPanel() {
   const [text, setText] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [stale, setStale] = useState(false);
 
-  const load = async () => setText(await diagReport());
+  const load = async () => {
+    setText(await diagReport());
+    // 진단을 열었다는 것은 무언가 이상하다는 뜻이다. 낡은 판이면 그것부터.
+    setStale(!!(await newerBuild()));
+  };
 
   const copy = async () => {
     if (!text) return;
@@ -42,6 +49,20 @@ export function DiagPanel() {
         눌렀는데 반응이 없거나 화면이 이상하면, 아래 내용을 복사해 보내 주세요.
         어디를 누르셨는지와 오류만 담기며 개인 정보는 들어가지 않습니다.
       </p>
+      {stale && (
+        <div className="notice" style={{ marginBottom: 10 }}>
+          <b>지금 화면은 예전 판입니다.</b>
+          <p className="help" style={{ margin: '6px 0 10px' }}>
+            서버에는 더 새 판이 올라와 있습니다. 먼저 새로 받아 보세요 —
+            이미 고쳐진 문제일 수 있습니다.
+          </p>
+          <div className="crash-btns">
+            <button type="button" className="primary" onClick={() => void hardRefetch()}>
+              새 판으로 받기
+            </button>
+          </div>
+        </div>
+      )}
       <div className="crash-btns" style={{ marginBottom: 10 }}>
         <button type="button" className="primary" onClick={() => void copy()}>복사하기</button>
         <button type="button" onClick={download}>파일로 받기</button>

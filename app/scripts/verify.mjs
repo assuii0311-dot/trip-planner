@@ -8,7 +8,13 @@
  *   node scripts/verify.mjs [base-url]
  */
 import { chromium, webkit } from 'playwright';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+
+/*
+  검증용으로 띄운 문서 파일. '새 판이 올라왔다' 는 상황을 만들려면 이것을
+  잠깐 고쳐야 한다. 경로를 모르면 그 검사만 건너뛴다.
+*/
+const docPath = process.env.VERIFY_DOC ?? null;
 
 /*
   엔진을 고를 수 있게 한다. 아이패드에서만 나는 문제를 크로미움으로만
@@ -1182,6 +1188,31 @@ console.log('\n■ 9. 서비스 워커 — 낡은 데이터가 남지 않는가'
     check('데이터를 다시 읽을 수 있다', fresh > 0, `도시 ${fresh}곳`);
   } else {
     check('서비스 워커가 등록된다', false, '등록되지 않음 (개발 빌드일 수 있음)');
+  }
+
+  /*
+   * 낡은 판을 쓰고 있으면 알려 주는가.
+   *
+   * 사용자 진단에 이렇게 찍혔다 — 화면판 index-DvezZlkA.js / 실행판
+   * index-Ck8APwe9.js. 두 판 뒤진 것을 쓰면서 같은 문제를 계속 겪고 있었다.
+   * 아이패드 사파리는 탭을 그대로 되살리므로 '다시 열어도' 새로 받아오는
+   * 항해가 일어나지 않는다. 본인은 알 길이 없으니 앱이 말해야 한다.
+   */
+  if (docPath) {
+    const original = await readFile(docPath, 'utf8');
+    try {
+      check('평소에는 새 판 알림이 없다', (await page.locator('.update-bar').count()) === 0);
+      // 서버에 새 판이 올라간 상황을 만든다.
+      await writeFile(docPath, original.replace(/index-[A-Za-z0-9_-]+\.js/, 'index-NEWBUILD00.js'));
+      await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+      await page.waitForTimeout(1500);
+      check('낡은 판을 쓰고 있으면 알린다', (await page.locator('.update-bar').count()) === 1,
+        (await page.locator('.update-bar b').innerText().catch(() => '')) || '알림 없음');
+      const btns = await page.locator('.update-bar button').allInnerTexts();
+      check('새로 받는 길을 함께 준다', btns.some((t) => /새 판으로 받기/.test(t)), btns.join(' / '));
+    } finally {
+      await writeFile(docPath, original);
+    }
   }
   await ctx.close();
 }
