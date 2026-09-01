@@ -31,7 +31,14 @@
 
 * { box-sizing: border-box; }
 
-html, body, #root { height: 100%; }
+/*
+  height 가 아니라 min-height 다.
+  내용이 화면보다 긴 페이지에 height: 100% 를 걸면 body 상자는 화면 높이에
+  고정되고 내용만 그 밖으로 삐져나간다. 사파리는 이 상태에서 스크롤·합성·
+  히트테스트가 어긋나는 일이 있다 — 손가락은 카드 위에 있는데 눌리지 않고,
+  스크롤하면 칠해지지 않아 검게 남는 식이다.
+*/
+html, body, #root { min-height: 100%; }
 
 body {
   margin: 0;
@@ -41,7 +48,6 @@ body {
   font-size: 16px;
   line-height: 1.55;
   -webkit-text-size-adjust: 100%;
-  overscroll-behavior-y: none;
 }
 
 .app {
@@ -58,8 +64,13 @@ body {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: saturate(180%) blur(12px);
+  /*
+    예전에는 반투명 + backdrop-filter 였다. 예쁘기는 한데, 붙박이(sticky/
+    fixed) 막대에 backdrop-filter 를 걸면 페이지 전체를 배경으로 삼는 합성
+    레이어가 생긴다. 사파리에서 이 레이어가 다시 칠해지지 않거나 히트테스트를
+    가로채는 일이 있다. 장식 하나와 '눌리지 않는 화면' 을 바꿀 수는 없다.
+  */
+  background: var(--bg);
   border-bottom: 1px solid var(--line);
   padding: calc(10px + env(safe-area-inset-top)) 16px 2px;
 }
@@ -262,8 +273,8 @@ details.guide .inner { border-top: 1px solid var(--line); }
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
   display: flex; flex-direction: column; gap: 8px;
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-  background: color-mix(in srgb, var(--bg) 92%, transparent);
-  backdrop-filter: saturate(180%) blur(12px);
+  /* 위 .topbar 와 같은 이유로 흐림을 걷는다. */
+  background: var(--bg);
   border-top: 1px solid var(--line);
 }
 .bottombar .inner { max-width: 860px; margin: 0 auto; display: flex; gap: 10px; width: 100%; }
