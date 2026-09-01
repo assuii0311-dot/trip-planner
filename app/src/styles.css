@@ -61,29 +61,41 @@ body {
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: saturate(180%) blur(12px);
   border-bottom: 1px solid var(--line);
-  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+  padding: calc(10px + env(safe-area-inset-top)) 16px 2px;
 }
 
-.topbar h1 { font-size: 17px; margin: 0 0 8px; letter-spacing: -0.01em; }
+.topbar h1 { font-size: 17px; margin: 0 0 2px; letter-spacing: -0.01em; }
 
+/*
+  단계 표시는 눌러서 앞 단계로 돌아가는 버튼이기도 하다. 그런데 높이가
+  6px 이라 손가락으로는 사실상 누를 수 없었다(안드로이드 검사에서 6px 로
+  걸렸다). 보이는 막대는 6px 그대로 두고, 버튼 자체는 위아래 여백으로
+  36px 를 확보한다. 늘어난 만큼은 머리줄 여백에서 덜어낸다.
+*/
 .steps { display: flex; gap: 6px; }
 
 .steps button {
   flex: 1;
   border: none;
-  background: var(--surface-2);
+  background: transparent;
   color: var(--muted);
-  border-radius: 999px;
-  height: 6px;
-  padding: 0;
+  padding: 15px 0;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.steps button::after {
+  content: '';
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
   transition: background 0.2s;
 }
-.steps button[data-state='done'] { background: color-mix(in srgb, var(--accent) 45%, var(--surface-2)); }
-.steps button[data-state='current'] { background: var(--accent); }
+.steps button[data-state='done']::after { background: color-mix(in srgb, var(--accent) 45%, var(--surface-2)); }
+.steps button[data-state='current']::after { background: var(--accent); }
 .steps button:disabled { cursor: default; }
 
-.step-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-top: 8px; }
+.step-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
 
 /* ---------- layout ---------- */
 main { padding: 20px 16px 8px; flex: 1; }
@@ -106,7 +118,12 @@ section.block > .help { font-size: 13px; color: var(--muted); margin: 0 0 12px; 
 label.field { display: block; margin-bottom: 16px; }
 label.field > span { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
 
-input[type='text'], input[type='date'], input[type='number'], select {
+/*
+  time 이 빠져 있었다. 그래서 착륙·이륙 시각 칸만 스타일이 안 먹어 높이
+  24px 짜리 맨몸 입력으로 나왔고, 안드로이드에서는 손가락으로 누르기
+  어려운 크기였다. 옆의 날짜 칸(46px)과 나란히 있어 눈에도 잘 안 띈다.
+*/
+input[type='text'], input[type='date'], input[type='time'], input[type='number'], select {
   width: 100%;
   min-height: 46px;
   padding: 10px 12px;
@@ -269,9 +286,26 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
 .spinner { text-align: center; padding: 40px; color: var(--muted); }
 
 /* ---------- 1단계: 날짜 ---------- */
-.date-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px;   align-items: end;
+/*
+  두 칸을 나란히 두는데, 그리드 칸은 기본이 min-width: auto 라 자식이
+  줄어들지 못한다. 날짜·시각 입력은 브라우저가 정한 고유 최소 너비가 커서,
+  320px 짜리 화면(갤럭시 S9+ 등)에서 가로로 100px 삐져나갔다.
+
+  min-width 를 풀어 주고, 그래도 좁은 화면에서는 위아래로 쌓는다 —
+  320px 에 날짜 칸 둘을 나란히 밀어 넣으면 어차피 읽기 어렵다.
+*/
+.date-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: end;
 }
-.date-pair label.field { margin-bottom: 8px; }
+.date-pair label.field { margin-bottom: 8px; min-width: 0; }
+.date-pair input { min-width: 0; }
+
+@media (max-width: 360px) {
+  .date-pair { grid-template-columns: 1fr; }
+}
 
 /* ---------- 1단계: 도시 카드 ---------- */
 .city-list { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }

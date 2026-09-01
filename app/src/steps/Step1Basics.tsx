@@ -9,6 +9,35 @@ import { AIRPORT_GROUPS, airportOf } from '../lib/airports';
 import { withJosa } from '../lib/korean';
 import { arrivalLeg, departureLeg, fmtHm, parseHm, tripWindow } from '../lib/airporttime';
 
+
+const DAY_MS = 86400000;
+const iso = (t: number) => new Date(t).toISOString().slice(0, 10);
+const at = (d: string) => new Date(`${d}T00:00:00Z`).getTime();
+
+/**
+ * 첫날을 옮긴다.
+ *
+ * 마지막 날보다 뒤로 가면 기간을 유지한 채 마지막 날도 같이 민다.
+ * 예전에는 input 의 max 로 막았는데, 안드로이드 달력이 그 뒤 날짜를 전부
+ * 회색 처리해 아예 고를 수 없었다. 막는 대신 따라오게 한다.
+ */
+export function moveStart(basics: Basics, v: string): Partial<Basics> {
+  if (!v) return {};
+  const span = Math.max(0, Math.round((at(basics.endDate) - at(basics.startDate)) / DAY_MS));
+  return at(v) > at(basics.endDate)
+    ? { startDate: v, endDate: iso(at(v) + span * DAY_MS) }
+    : { startDate: v };
+}
+
+/** 마지막 날을 옮긴다. 첫날보다 앞이면 첫날을 같이 당긴다. */
+export function moveEnd(basics: Basics, v: string): Partial<Basics> {
+  if (!v) return {};
+  const span = Math.max(0, Math.round((at(basics.endDate) - at(basics.startDate)) / DAY_MS));
+  return at(v) < at(basics.startDate)
+    ? { endDate: v, startDate: iso(at(v) - span * DAY_MS) }
+    : { endDate: v };
+}
+
 export function tripDays(basics: Basics): number {
   const a = new Date(`${basics.startDate}T00:00:00`);
   const b = new Date(`${basics.endDate}T00:00:00`);
@@ -128,19 +157,31 @@ export default function Step1Basics({
           전부 '스페인 기준' 으로 통일한다. 귀국편은 다음 날 한국에
           내리므로, 한국 도착일을 넣지 않도록 따로 적어 둔다.
         */}
+        {/*
+          두 칸에 서로를 가리키는 max/min 을 걸었더니 안드로이드에서
+          '날짜 선택 불가' 가 됐다.
+
+            첫날     max = 마지막 날
+            마지막날 min = 첫날
+
+          여행을 다음 달로 옮기려고 첫날을 먼저 누르면 그 이후 날짜가 전부
+          회색이라 탭이 안 먹는다. '마지막 날 → 첫날' 순서로만 되는데,
+          그 순서를 알 길이 없다. 데스크톱은 타이핑으로 넘어가서 안 보였다.
+
+          제약을 없애고, 순서가 뒤집히면 기간을 유지한 채 반대쪽을 같이
+          옮긴다. 항공권 사이트들이 하는 방식이고 놀랄 일이 없다.
+        */}
         <div className="date-pair">
           <Field label="스페인 첫날" hint="현지에 도착하는 날">
             <input
               type="date" value={basics.startDate}
-              max={basics.endDate}
-              onChange={(e) => onChange({ startDate: e.target.value })}
+              onChange={(e) => onChange(moveStart(basics, e.target.value))}
             />
           </Field>
           <Field label="스페인 마지막 날" hint="현지에서 떠나는 날">
             <input
               type="date" value={basics.endDate}
-              min={basics.startDate}
-              onChange={(e) => onChange({ endDate: e.target.value })}
+              onChange={(e) => onChange(moveEnd(basics, e.target.value))}
             />
           </Field>
         </div>
