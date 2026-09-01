@@ -138,12 +138,47 @@ html, body, #root { height: 100%; }   /* 잘못 */
 가로채는 일이 알려져 있다. 장식 하나와 '눌리지 않는 화면' 을 바꿀 수는 없어
 불투명 배경으로 되돌렸다.
 
-### 정직하게 남기는 한계
+### 사파리 엔진으로 확인한 것과, 못 한 것
 
-**사파리 엔진으로 재현하지는 못했다.** 이 검증 환경에 WebKit 을 올리려면
-시스템 라이브러리 설치가 필요한데 아직 하지 못했다. 위 둘은 '증상과 모양이
-겹치는, 그 자체로 잘못된 것' 을 고친 것이지 **재현으로 확인한 원인이
-아니다.** 그래서 진단 기록(→ `14-diagnostics.md`)을 함께 두었다.
+WebKit 을 이 환경에 올려(아래 '사파리로 검증하기') 실제 사파리 엔진으로
+돌렸다.
+
+**확인된 것 — `height: 100%` 결함은 진짜다.**
+
+```
+수정 전   body 1366px · html 1366px · 문서 4213px    ← body 가 화면 높이에 갇힘
+수정 후   body 4212.7px · html 4212.7px · 문서 4213px
+```
+
+사파리 엔진이 실제로 그렇게 계산한다. 검증의 `■ 10` 을 수정 전 판에 돌리면
+이 검사와 흐림 합성 검사가 **둘 다 실패**하고, 수정 후에는 통과한다.
+
+**확인하지 못한 것 — 눌리지 않는 증상과 검은 화면.**
+
+헤드리스 WebKit 에서는 아이패드 크기·다크 모드·터치 탭으로 같은 흐름을
+돌려도 도시가 여섯 개까지 정상으로 선택되고, 길게 스크롤해도 화면이
+비지 않는다. 148검사 전부 사파리 엔진에서도 통과한다.
+
+헤드리스 WebKit 은 실기기의 GPU 타일링·합성기 동작까지 흉내 내지는 못한다.
+'눌리지 않음' 과 '검은 화면' 은 바로 그 층에서 나는 종류의 증상이라, **이
+환경에서 볼 수 없는 것이 당연하다.** 위 둘은 증상과 모양이 겹치고 그 자체로
+잘못된 것을 고친 것이지, 재현으로 원인을 못 박은 것이 아니다. 그래서 진단
+기록(→ `14-diagnostics.md`)을 함께 두었다.
+
+### 사파리로 검증하기
+
+```sh
+apt-get update
+apt-get install -y --no-install-recommends \
+  libwoff1 libopus0 libwebp7 libwebpdemux2 libwebpmux3 libenchant-2-2 \
+  libgudev-1.0-0 libsecret-1-0 libhyphen0 libgles2 libmanette-0.2-0 libflite1 \
+  libgtk-4-1 libgraphene-1.0-0 libevent-2.1-7 libgstreamer-gl1.0-0 \
+  libgstreamer-plugins-bad1.0-0 libwayland-server0 libx264-164
+PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0 PLAYWRIGHT_BROWSERS_PATH=/tmp/pw \
+  npx playwright install webkit
+
+PLAYWRIGHT_BROWSERS_PATH=/tmp/pw VERIFY_ENGINE=webkit node scripts/verify.mjs
+```
 
 ### 검증
 

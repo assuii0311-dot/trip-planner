@@ -7,17 +7,26 @@
  *
  *   node scripts/verify.mjs [base-url]
  */
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 import { mkdir } from 'node:fs/promises';
+
+/*
+  엔진을 고를 수 있게 한다. 아이패드에서만 나는 문제를 크로미움으로만
+  돌려서는 영영 못 본다.  VERIFY_ENGINE=webkit node scripts/verify.mjs
+*/
+const engine = process.env.VERIFY_ENGINE === 'webkit' ? webkit : chromium;
 
 const base = process.argv[2] ?? 'http://localhost:4300/0829_kos_basic_001/';
 const shots = new URL('../../pipeline/out/shots/verify/', import.meta.url);
 await mkdir(shots, { recursive: true });
 
-const browser = await chromium.launch({
-  executablePath: process.env.PLAYWRIGHT_CHROMIUM ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-  args: ['--no-sandbox'],
-});
+const browser = engine === webkit
+  ? await webkit.launch()
+  : await chromium.launch({
+    executablePath: process.env.PLAYWRIGHT_CHROMIUM ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
+    args: ['--no-sandbox'],
+  });
+console.log(`엔진: ${engine === webkit ? 'WebKit (사파리)' : 'Chromium'}`);
 
 const results = [];
 const check = (name, ok, detail = '') => {
