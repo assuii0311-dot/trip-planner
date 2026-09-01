@@ -1030,6 +1030,99 @@ console.log('\n■ 7. 3·4단계에서 직접 손보기 — 통합 목록 · 일
   await ctx.close();
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+console.log('\n■ 8. 고장났을 때 — 하얀 화면 대신 빠져나갈 길');
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });
+  const page = await ctx.newPage();
+  // 여기서는 오류를 일부러 낸다. 콘솔 오류를 모으지 않는다.
+  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('.city-card', { timeout: 25000 });
+
+  /*
+   * 리액트는 그리는 중 오류가 나면 트리를 통째로 버린다. 받아 주는 곳이
+   * 없으면 남는 것은 빈 root 하나다 — '화면이 안 뜬다', '눌러도 반응이
+   * 없다' 가 여기서 나온다.
+   */
+  /*
+    '자세히' 를 펴면 대표 명소를 join 으로 이어 붙인다. 그 자리를 터뜨려
+    진짜 그리기 중 오류를 만든다. 받아 주는 곳이 없으면 root 가 빈다.
+  */
+  await page.evaluate(() => {
+    const real = Array.prototype.join;
+    Array.prototype.join = function join(...a) {
+      if (a[0] === ' · ') throw new Error('일부러 낸 오류 — 그리는 중 실패');
+      return real.apply(this, a);
+    };
+  });
+  await page.locator('.city-more').first().click().catch(() => {});
+  await page.waitForTimeout(1500);
+  const crashed = await page.locator('.crash').count();
+  const rootLen = await page.evaluate(() => document.getElementById('root')?.innerHTML.length ?? 0);
+  check('그리다 터져도 하얀 화면이 아니다', crashed > 0, `고장 안내 ${crashed}개 · root ${rootLen}자`);
+  const outs = (await page.locator('.crash-btns button').allInnerTexts()).join(' / ');
+  check('빠져나갈 길이 함께 나온다',
+    /다시 그려 보기/.test(outs) && /비우고 새로 받기/.test(outs) && /백업 파일/.test(outs), outs);
+  check('무엇이 잘못됐는지 볼 수 있다',
+    (await page.locator('.crash-detail').count()) > 0);
+  // 원래대로 돌려놓고 '다시 그려 보기' 가 정말 돌아오는지 본다.
+  await page.evaluate(() => {
+    const patched = Array.prototype.join;
+    Array.prototype.join = function join(...a) {
+      if (a[0] === ' · ') return Array.prototype.slice.call(this).map(String).join('|');
+      return patched.apply(this, a);
+    };
+  });
+  await page.getByRole('button', { name: '다시 그려 보기' }).click();
+  await page.waitForTimeout(1200);
+  check('다시 그려 보기로 앱이 돌아온다', (await page.locator('.city-card').count()) > 0,
+    `${await page.locator('.city-card').count()}장`);
+  await ctx.close();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+console.log('\n■ 9. 서비스 워커 — 낡은 데이터가 남지 않는가');
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });
+  const page = await ctx.newPage();
+  watch(page, allErrors, '[워커]');
+  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('.city-card', { timeout: 25000 });
+  const sw = await page.evaluate(async () => {
+    if (!('serviceWorker' in navigator)) return null;
+    const reg = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise((r) => setTimeout(() => r(null), 8000)),
+    ]);
+    if (!reg) return null;
+    const url = reg.active?.scriptURL ?? reg.installing?.scriptURL ?? '';
+    return { url, caches: await caches.keys() };
+  });
+  if (sw) {
+    /*
+      캐시 이름이 고정이면 activate 의 청소가 아무것도 지우지 않는다. 한 번
+      받아 둔 data/spain.json 이 새 배포가 나가도 영원히 남아, 새 코드가 몇
+      주 전 데이터를 읽는 상태가 된다.
+    */
+    check('워커 주소에 배포 판 번호가 붙는다', /[?&]v=\d{8,}/.test(sw.url),
+      sw.url.split('/').pop() ?? '');
+    check('캐시 이름이 배포마다 달라진다',
+      sw.caches.every((k) => !/-v1$/.test(k)) && sw.caches.some((k) => /trip-planner-\d{8,}/.test(k)),
+      sw.caches.join(', ') || '캐시 없음');
+    check('예전 캐시가 남아 있지 않다', sw.caches.length <= 1, `${sw.caches.length}개`);
+
+    // 데이터는 망 우선인가 — 서버 쪽 파일을 바꾸면 다음 번에 새것을 읽어야 한다.
+    const fresh = await page.evaluate(async (b) => {
+      const r = await fetch(`${b}data/spain.json`, { cache: 'no-store' });
+      return (await r.json()).cities.length;
+    }, base);
+    check('데이터를 다시 읽을 수 있다', fresh > 0, `도시 ${fresh}곳`);
+  } else {
+    check('서비스 워커가 등록된다', false, '등록되지 않음 (개발 빌드일 수 있음)');
+  }
+  await ctx.close();
+}
+
 await browser.close();
 
 // ─────────────────────────────────────────────────────────────────────────
