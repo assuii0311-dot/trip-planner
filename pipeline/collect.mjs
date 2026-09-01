@@ -28,7 +28,7 @@ const registry = await import(`./registry/${countrySlug}.mjs`);
 const { COUNTRY, CITIES, ATTRIBUTION } = registry;
 
 /** 도시 성격 프로필과 사진. 1단계 카드와 취향 역산에 쓴다. */
-const { CHARACTER, MACRO_REGIONS } = await import(`./registry/${countrySlug}-character.mjs`);
+const { CHARACTER, MACRO_REGIONS, ISLANDS, ISLAND_OF } = await import(`./registry/${countrySlug}-character.mjs`);
 const media = JSON.parse(await readFile(new URL(`./out/${countrySlug}-media.json`, import.meta.url), 'utf8').catch(() => '{}'));
 /**
  * 아이템 대표 사진 — fetch-item-media.mjs 가 모아 둔 것.
@@ -449,6 +449,8 @@ for (const [i, city] of selected.entries()) {
   outCities.push({
     slug: city.slug, name: city.name, nameEn: city.nameEn,
     region: city.region, macroRegion: macroOf(city.region),
+    // 섬은 자치주가 아니라 섬이 여행 단위다. 본토면 null.
+    island: ISLAND_OF?.[city.slug] ?? null,
     lat: city.lat, lon: city.lon,
     // isHub/hub 는 '보통 이렇게 묵는다'는 참고값이다.
     // 실제 거점은 사용자가 고른 도시 조합을 보고 앱이 다시 정한다.
@@ -523,6 +525,7 @@ await writeFile(
     generatedAt: new Date().toISOString().slice(0, 10),
     attribution: ATTRIBUTION,
     macroRegions: MACRO_REGIONS,
+    islands: ISLANDS ?? [],
     cities,
   }),
 );

@@ -10,6 +10,7 @@ import { mapsPlaceUrl } from '../lib/deeplinks';
 import { ItemRow } from '../components/ItemRow';
 import { ItemPhoto } from '../components/ItemPhoto';
 import { josa } from '../lib/korean';
+import { bundlesFor } from '../lib/bundles';
 
 /**
  * 3단계 — 도시별 추천 코스를 고르고 손본다.
@@ -235,6 +236,7 @@ function CityPanel({
     [city, cityItems, prefs, cities],
   );
   const foodPicks = useMemo(() => foodPicksFor(cityItems, prefs), [cityItems, prefs]);
+  const bundles = useMemo(() => bundlesFor(city.slug, cityItems), [city.slug, cityItems]);
   /** 이 도시에 볼 만한 것이 몇 일치인가. 여기가 ＋ 의 천장이다. */
   const worth = useMemo(
     () => cityWorthDays(city, cityItems, prefs, cities),
@@ -391,6 +393,60 @@ function CityPanel({
           </button>
         )}
       </div>
+
+      {/*
+        묶음 제안.
+
+        낱개로만 보여 주면, 실제로는 한 장의 표로 묶이거나 같은 건축가의
+        연작이라 함께 봐야 뜻이 통하는 것들이 흩어진다. 구엘 공원만 담고
+        구엘 저택을 빼면 가우디가 한 후원자를 위해 한 일을 반쪽만 보게 된다.
+      */}
+      {bundles.length > 0 && (
+        <div className="bundles">
+          <div className="bundles-head">함께 보면 좋은 묶음</div>
+          {bundles.map((b) => {
+            const inAll = b.items.every((i) => pickedIds.has(i.id));
+            return (
+              <div className={inAll ? 'bundle is-in' : 'bundle'} key={b.id}>
+                <div className="bundle-top">
+                  <b>{b.title}</b>
+                  <span className="bundle-n">{b.items.length}곳</span>
+                </div>
+                {(b.passEur || b.singleEur !== null) && (
+                  <div className="bundle-price">
+                    {b.passEur
+                      ? <>통합권 <b>€{b.passEur}</b>{b.singleEur !== null && ` · 낱장 합계 €${b.singleEur}`}
+                        {b.passName && <span className="bundle-pass"> ({b.passName})</span>}</>
+                      : <>낱장 합계 약 €{b.singleEur}{b.passName && <span className="bundle-pass"> · {b.passName} 확인</span>}</>}
+                  </div>
+                )}
+                <p className="bundle-why">{b.why}</p>
+                <div className="bundle-items">
+                  {b.items.map((i) => (
+                    <span key={i.id} className={pickedIds.has(i.id) ? 'bundle-item is-on' : 'bundle-item'}>
+                      {THEME_ICON[i.theme]} {i.name}
+                    </span>
+                  ))}
+                </div>
+                <button
+                  type="button" className="bundle-take"
+                  onClick={() => {
+                    const next = { ...priorities };
+                    // 이미 다 담겨 있으면 통째로 뺀다. 같은 버튼으로 되돌릴 수 있어야 한다.
+                    for (const i of b.items) {
+                      if (inAll) delete next[i.id];
+                      else next[i.id] = 2;
+                    }
+                    onBulk(next);
+                  }}
+                >
+                  {inAll ? '묶음 빼기' : '묶음 담기'}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/*
         미식은 코스에 넣지 않는다.

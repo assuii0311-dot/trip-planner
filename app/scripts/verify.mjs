@@ -192,6 +192,36 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
     await page.waitForTimeout(700);
     check('아이템 개별 제거', (await cnt()) === c0, `→ ${await cnt()}`);
   }
+  /*
+    묶음 제안 — 낱개로만 보여 주면 한 장의 표로 묶이는 것들이 흩어진다.
+  */
+  const bundleN = await page.locator('.bundle').count();
+  check('묶음이 제안된다', bundleN > 0, `${bundleN}개`);
+  if (bundleN > 0) {
+    // 통합권이 있는 묶음은 낱장 합계와 나란히 보여 준다. 없는 묶음은 합계만.
+    const prices = (await page.locator('.bundle-price').allInnerTexts()).map((t) => t.replace(/\n/g, ' '));
+    check('묶음에 요금이 적힌다', prices.length > 0 && prices.every((t) => /€\d+/.test(t)),
+      prices.join(' / '));
+    const withPass = prices.filter((t) => /통합권 €\d+/.test(t));
+    check('통합권이 있으면 낱장 합계와 나란히 보여 준다',
+      withPass.every((t) => /낱장 합계 €\d+/.test(t)),
+      withPass.join(' / ') || '이 도시엔 통합권 묶음이 없음');
+
+    // 담고 빼기 — 개수가 아니라 그 묶음의 항목이 실제로 들어갔다 나오는지 본다.
+    const names = await page.locator('.bundle').first().locator('.bundle-item').allInnerTexts();
+    const onCount = async () => page.locator('.bundle').first().locator('.bundle-item.is-on').count();
+    const before0 = await onCount();
+    await page.locator('.bundle-take').first().click();
+    await page.waitForTimeout(900);
+    check('묶음을 담으면 통째로 들어간다', (await onCount()) === names.length,
+      `${before0}/${names.length} → ${await onCount()}/${names.length}`);
+    check('담은 묶음은 빼기로 바뀐다',
+      (await page.locator('.bundle-take').first().innerText()).includes('빼기'));
+    await page.locator('.bundle-take').first().click();
+    await page.waitForTimeout(900);
+    check('묶음을 통째로 뺄 수 있다', (await onCount()) === 0, `→ ${await onCount()}/${names.length}`);
+  }
+
   await page.screenshot({ path: new URL('01-step3.png', shots).pathname });
 
   /*
@@ -502,7 +532,7 @@ console.log('\n■ 4. 경계 — 섬 포함 (항공만) · 왕복 공항');
   const page = await ctx.newPage();
   watch(page, allErrors, '[섬]');
   const next = await build(page, {
-    cities: [['카탈루냐', '바르셀로나'], ['섬', '팔마데마요르카']],
+    cities: [['카탈루냐', '바르셀로나'], ['마요르카', '팔마데마요르카']],
     from: '2026-09-14', to: '2026-09-21',
     airports: ['BCN', 'BCN'],
   });
@@ -515,6 +545,45 @@ console.log('\n■ 4. 경계 — 섬 포함 (항공만) · 왕복 공항');
   await next();
   await page.waitForSelector('.trip-map', { timeout: 25000 });
   check('섬 포함해도 지도가 그려진다', (await page.locator('.trip-map').count()) === 1);
+
+  /*
+   * 섬은 자치주가 아니라 섬 하나가 여행 단위다.
+   *
+   * 예전에는 '섬 (발레아레스·카나리아)' 한 칸에 아홉 도시가 섞여 있어,
+   * 대서양 60km 를 사이에 둔 테네리페와 그란카나리아가 나란히 있었다.
+   * 그리고 팔마만 고르면 드라크 동굴·에스 트렌크·데이아가 후보에도 오르지
+   * 않았다 — 그 섬에서 가장 많이 찾는 곳들이다.
+   */
+  for (let i = 0; i < 4; i++) {
+    const back = page.getByRole('button', { name: '이전' });
+    if (!(await back.count())) break;
+    await back.click();
+    await page.waitForTimeout(700);
+  }
+  await page.waitForSelector('.city-card', { timeout: 20000 });
+  const groupNames = await page.locator('main .theme-head').allInnerTexts();
+  const islandGroups = groupNames.filter((t) => /\(섬\)/.test(t));
+  check('섬이 섬마다 한 칸으로 나뉜다', islandGroups.length === 3,
+    islandGroups.map((t) => t.split('\n')[0].trim()).join(' · '));
+
+  await page.getByRole('button', { name: /^다음$/ }).click(); await page.waitForTimeout(900);
+  await page.getByRole('button', { name: /^다음$/ }).click(); await page.waitForTimeout(1800);
+  await page.waitForSelector('.course', { timeout: 25000 });
+  const palmaHead = page.locator('.city-head .theme-head').filter({ hasText: '팔마' }).first();
+  if (await palmaHead.count()) {
+    if ((await palmaHead.getAttribute('aria-expanded')) !== 'true') {
+      await palmaHead.click(); await page.waitForTimeout(800);
+    }
+    // 해변·자연은 테마 목록 안에 있으므로 그 칸을 열고 본다.
+    const nature = page.locator('.city-panel .theme-head').filter({ hasText: '자연' }).first();
+    if (await nature.count()) { await nature.click(); await page.waitForTimeout(700); }
+    const panel = await page.locator('main').innerText();
+    for (const n of ['드라크 동굴', '에스 트렌크']) {
+      check(`팔마 후보에 ${n} 이 있다`, panel.includes(n));
+    }
+    check('섬 안 다른 동네에 표시가 붙는다', (await page.locator('.tag.is-away').count()) > 0,
+      `${await page.locator('.tag.is-away').count()}곳`);
+  }
   await ctx.close();
 }
 

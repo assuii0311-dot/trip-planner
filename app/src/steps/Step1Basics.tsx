@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Basics, City, LastDayPlan, MacroRegion } from '../types';
 import { Block, Field, Segmented } from '../components/Controls';
 import CityCard from '../components/CityCard';
 import BasePlan from '../components/BasePlan';
 import type { Itinerary } from '../lib/itinerary';
+import type { Island } from '../lib/data';
 import { AIRPORT_GROUPS, airportOf } from '../lib/airports';
 import { withJosa } from '../lib/korean';
 
@@ -21,11 +22,13 @@ export function tripDays(basics: Basics): number {
  * 효율적인지 판단할 근거가 없기 때문이다. 도시를 고르면 앱이 묶어 준다.
  */
 export default function Step1Basics({
-  basics, cities, macroRegions, itinerary, arrival, departure, onChange,
+  basics, cities, macroRegions, islands = [], itinerary, arrival, departure, onChange,
 }: {
   basics: Basics;
   cities: City[];
   macroRegions: MacroRegion[];
+  /** 섬 목록. 섬은 자치주가 아니라 섬 하나가 여행 단위다. */
+  islands?: Island[];
   /**
    * 동선 엔진이 만든 여정. 4단계 계획과 같은 것을 쓴다 -
    * 미리보기가 실제 계획과 다르면 오해만 만든다.
@@ -56,6 +59,36 @@ export default function Step1Basics({
     const list = cities.filter((c) => c.macroRegion === id);
     return onlyFirst ? list.filter((c) => c.firstTimer) : list;
   };
+
+  /*
+   * 섬은 자치주가 아니라 섬 하나가 여행 단위다.
+   *
+   * 예전에는 '섬 (발레아레스·카나리아)' 한 칸에 아홉 도시가 섞여 있었다.
+   * 테네리페와 그란카나리아는 대서양 60km 를 사이에 둔 다른 섬인데 같은
+   * 칸에 나란히 있으니, 둘을 함께 고르면 하루가 배와 비행기로 사라진다는
+   * 것이 보이지 않았다. 섬마다 한 칸으로 나눈다.
+   */
+  const groups = useMemo(() => {
+    const out: { id: string; name: string; note?: string; list: City[] }[] = [];
+    for (const r of macroRegions) {
+      if (r.id === 'island') continue;
+      out.push({ id: r.id, name: r.name, list: byRegion(r.id) });
+    }
+    for (const i of islands) {
+      const list = cities.filter((c) => c.island === i.id);
+      out.push({
+        id: `island:${i.id}`,
+        name: `${i.name} (섬)`,
+        note: i.note,
+        list: onlyFirst ? list.filter((c) => c.firstTimer) : list,
+      });
+    }
+    // 섬 목록에 없는 섬 도시가 남으면 흘리지 않고 예전 칸에 담는다.
+    const covered = new Set(islands.flatMap((i) => i.cities));
+    const rest = byRegion('island').filter((c) => !covered.has(c.slug));
+    if (rest.length) out.push({ id: 'island', name: '그 밖의 섬', list: rest });
+    return out;
+  }, [cities, macroRegions, islands, onlyFirst]);
 
   return (
     <>
@@ -206,8 +239,8 @@ export default function Step1Basics({
           )}
         </div>
 
-        {macroRegions.map((region) => {
-          const list = byRegion(region.id);
+        {groups.map((region) => {
+          const list = region.list;
           if (list.length === 0) return null;
           const picked = list.filter((c) => basics.cities.includes(c.slug)).length;
           const isOpen = openRegion === region.id;
@@ -224,6 +257,9 @@ export default function Step1Basics({
                   {list.length}곳 {isOpen ? '▴' : '▾'}
                 </span>
               </button>
+              {isOpen && region.note && (
+                <p className="help" style={{ margin: '8px 2px 0' }}>{region.note}</p>
+              )}
               {isOpen && (
                 <div className="city-list">
                   {list.map((c) => (

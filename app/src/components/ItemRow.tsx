@@ -11,6 +11,8 @@ export function ItemMeta({ item }: { item: Item }) {
       <span className="tag">{Math.round(item.durationMin / 15) * 15}분</span>
       <span className="tag">{item.priceEur === null ? '요금 미상' : item.priceEur === 0 ? '무료' : `€${item.priceEur}`}</span>
       {item.district && <span className="tag">{item.district}</span>}
+      {/* 섬 안 다른 동네에서 옮겨 온 것. 도심 한복판과 같은 얼굴로 두면 하루를 잘못 짠다. */}
+      {item.islandFrom && <span className="tag is-away">🚗 {item.islandFrom} 방면</span>}
       {item.popularity >= 4 && <span className="tag">대표 명소</span>}
       {item.popularity <= 2 && <span className="tag">숨은 곳</span>}
       {item.energy >= 4 && <span className="tag">체력 필요</span>}

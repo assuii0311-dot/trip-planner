@@ -58,6 +58,12 @@ export interface Item {
   practical: Practical;
   /** 주의점. 있을 때만. */
   caution: string | null;
+  /**
+   * 섬 안에서 다른 동네에 있던 것을 거점 도시로 옮겨 붙였다면 그 동네 이름.
+   * 섬에서는 렌터카 30~40분이면 반대편이라 같은 하루에 묶이지만,
+   * 도심 한복판과 같은 얼굴로 보여 주면 하루를 잘못 짠다.
+   */
+  islandFrom?: string;
   lat: number | null;
   lon: number | null;
   /** 예상 소요 시간(분). 이동 시간은 포함하지 않는다. */
@@ -98,6 +104,8 @@ export interface City {
   region: string;
   /** 목록을 훑을 수 있게 15개 지역을 6개 권역으로 묶은 값. */
   macroRegion: string;
+  /** 섬 id. 본토면 null. 섬은 자치주가 아니라 섬 하나가 여행 단위다. */
+  island?: string | null;
   lat: number;
   lon: number;
   /** '보통 이렇게 묵는다'는 참고값. 실제 거점은 선택 조합을 보고 다시 정한다. */

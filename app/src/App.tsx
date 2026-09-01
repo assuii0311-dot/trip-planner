@@ -8,6 +8,7 @@ import { SaveStatus } from './components/SaveStatus';
 import { ResumeBanner, StorageWarning } from './components/ResumeBanner';
 import { airportOf, cityForAirport } from './lib/airports';
 import { buildItinerary } from './lib/itinerary';
+import { expandIslandScope, rehomeIslandItems } from './lib/island';
 import { buildPlans } from './lib/planner';
 import { inferHints, inferThemes } from './lib/taste';
 import Step1Basics, { tripDays } from './steps/Step1Basics';
@@ -95,15 +96,30 @@ export default function App() {
     [state.basics.endAirport, tripCities],
   );
 
-  /** 아이템을 받아올 도시 = 사용자가 고른 도시. */
-  const cityScope = state.basics.cities;
+  /**
+   * 아이템을 받아올 도시.
+   *
+   * 섬을 골랐으면 그 섬의 도시를 전부 불러온다. 섬에서는 렌터카로 30~40분이면
+   * 반대편이라, 팔마에 묵으면서 데이아와 트라문타나를 다녀오는 것이 보통이다.
+   * 고른 도시만 불러오면 그 섬의 절반이 후보에조차 오르지 않는다.
+   */
+  const cityScope = useMemo(
+    () => (index ? expandIslandScope(state.basics.cities, index.cities, index.islands ?? []) : state.basics.cities),
+    [index, state.basics.cities],
+  );
 
   useEffect(() => {
     if (cityScope.length === 0) { setItems([]); return; }
     let alive = true;
     setLoadingItems(true);
     loadItemsFor(cityScope)
-      .then((list) => { if (alive) setItems(list); })
+      .then((list) => {
+        if (!alive) return;
+        // 고르지 않은 섬 도시의 아이템은 가장 가까운 고른 도시로 옮겨 붙인다.
+        setItems(index
+          ? rehomeIslandItems(list, index.cities, index.islands ?? [], state.basics.cities)
+          : list);
+      })
       .catch((e: Error) => { if (alive) setError(e.message); })
       .finally(() => { if (alive) setLoadingItems(false); });
     return () => { alive = false; };
@@ -399,6 +415,7 @@ export default function App() {
         {state.step === 1 && (
           <Step1Basics
             basics={state.basics} cities={index.cities} macroRegions={index.macroRegions}
+            islands={index.islands}
             itinerary={itinerary} arrival={arrival} departure={departure}
             onChange={patchBasics}
           />

@@ -21,6 +21,47 @@ export const MACRO_REGIONS = [
   { id: 'island', name: '섬 (발레아레스·카나리아)', regions: ['발레아레스', '카나리아'] },
 ];
 
+/**
+ * 섬 정체성.
+ *
+ * `region` 은 자치주라 테네리페와 그란카나리아가 똑같이 '카나리아' 다.
+ * 그래서 엔진이 두 섬 사이를 육로로 이을 수 있다고 판단했다 — 실제로는
+ * 대서양 60km 를 건너야 하는데 렌터카 2시간 3분이라고 안내했다.
+ *
+ * 섬은 자치주가 아니라 섬 하나가 여행 단위다. 도시를 골라도 그 섬의 해변과
+ * 마을 전체가 후보가 되어야 하고(섬에서는 도시 밖을 가볍게 다닌다), 섬을
+ * 건너는 것은 배나 비행기뿐이다.
+ */
+export const ISLANDS = [
+  {
+    id: 'mallorca', name: '마요르카', nameEn: 'Mallorca',
+    region: '발레아레스',
+    cities: ['palma', 'soller', 'pollenca'],
+    /** 섬 안에 철도가 있는가. 없으면 교통 엔진이 열차를 지어내지 않는다. */
+    rail: true,   // 팔마~소예르 옛 열차, 팔마~인카 근교선
+    note: '섬 안은 렌터카나 버스로 다닙니다. 팔마~소예르는 100년 된 목재 열차가 있습니다.',
+  },
+  {
+    id: 'tenerife', name: '테네리페', nameEn: 'Tenerife',
+    region: '카나리아',
+    cities: ['santa-cruz-tenerife', 'la-laguna', 'puerto-de-la-cruz', 'la-orotava'],
+    rail: true,   // 산타크루스~라라구나 트램
+    note: '산타크루스~라라구나는 트램, 나머지는 버스(TITSA)나 렌터카입니다.',
+  },
+  {
+    id: 'gran-canaria', name: '그란카나리아', nameEn: 'Gran Canaria',
+    region: '카나리아',
+    cities: ['las-palmas', 'maspalomas'],
+    rail: false,  // 철도가 없다
+    note: '섬에 철도가 없습니다. 버스(Global)나 렌터카로 다닙니다.',
+  },
+];
+
+/** 도시 slug → 섬 id. */
+export const ISLAND_OF = Object.fromEntries(
+  ISLANDS.flatMap((i) => i.cities.map((c) => [c, i.id])),
+);
+
 const p = (history, art, landmark, nature, food, nightlife, activity, shopping) =>
   ({ history, art, landmark, nature, food, nightlife, activity, shopping });
 

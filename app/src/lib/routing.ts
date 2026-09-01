@@ -30,7 +30,7 @@ import { railBetween, railOnDay } from './rail';
  * 이동으로 버리면 여행이 아니라 이동이 된다.
  */
 
-export type Mode = 'ave' | 'train' | 'bus' | 'flight' | 'car';
+export type Mode = 'ave' | 'train' | 'bus' | 'flight' | 'car' | 'ferry';
 
 export const MODE_LABEL: Record<Mode, string> = {
   ave: '고속열차',
@@ -38,10 +38,11 @@ export const MODE_LABEL: Record<Mode, string> = {
   bus: '버스',
   flight: '국내선 항공',
   car: '렌터카',
+  ferry: '페리',
 };
 
 export const MODE_ICON: Record<Mode, string> = {
-  ave: '🚄', train: '🚆', bus: '🚌', flight: '✈️', car: '🚗',
+  ave: '🚄', train: '🚆', bus: '🚌', flight: '✈️', car: '🚗', ferry: '⛴️',
 };
 
 /**
@@ -159,11 +160,46 @@ const TRUNK_AIR = new Set([
 
 const isIsland = (c: City) => c.macroRegion === 'island';
 
-/** 바다를 건너는가 — 건너면 배나 비행기뿐이다. */
+/**
+ * 바다를 건너는가 — 건너면 배나 비행기뿐이다.
+ *
+ * 예전에는 자치주(`region`)로 판단했다. 그런데 테네리페와 그란카나리아는
+ * 둘 다 '카나리아' 라, 대서양 60km 를 사이에 두고 **렌터카 2시간 3분**
+ * 이라고 안내했다. 섬은 자치주가 아니라 섬이 단위다.
+ */
 function crossesSea(a: City, b: City): boolean {
   if (isIsland(a) !== isIsland(b)) return true;
-  // 발레아레스와 카나리아 사이도 바다다.
-  return isIsland(a) && isIsland(b) && a.region !== b.region;
+  if (!isIsland(a)) return false;
+  // 섬 id 가 있으면 그것으로, 없으면(예전 데이터) 자치주로 어림한다.
+  if (a.island && b.island) return a.island !== b.island;
+  return a.region !== b.region;
+}
+
+/**
+ * 이 구간에 철도가 있는가.
+ *
+ * 섬에는 대개 철도가 없다. 그란카나리아는 아예 없고, 마요르카는 팔마~소예르
+ * 옛 열차와 팔마~인카 근교선뿐이다. 그런데 교통 엔진은 거리만 보고 '일반열차'
+ * 를 지어내, 라스팔마스~마스팔로마스를 열차 1시간 34분이라고 안내했다.
+ *
+ * 어느 섬에 철도가 있는지는 데이터가 알려 준다(`islands[].rail`). 그 값을
+ * 앱까지 들고 오지 않았을 때를 대비해, 섬이면 기본적으로 없다고 본다.
+ */
+function hasRail(a: City, b: City, islandRail: Map<string, boolean>): boolean {
+  if (!isIsland(a) && !isIsland(b)) return true;
+  if (!a.island || a.island !== b.island) return false;
+  return islandRail.get(a.island) ?? false;
+}
+
+/**
+ * 섬별 철도 유무. 데이터를 읽을 때 채운다.
+ * 비어 있으면 섬에는 철도가 없다고 본다 — 없는 열차를 만들어 내는 것보다
+ * 있는 열차를 놓치는 편이 낫다(버스나 렌터카로 안내된다).
+ */
+const ISLAND_RAIL = new Map<string, boolean>();
+export function setIslandRail(islands: { id: string; rail?: boolean }[]): void {
+  ISLAND_RAIL.clear();
+  for (const i of islands) ISLAND_RAIL.set(i.id, !!i.rail);
 }
 
 /**
@@ -189,6 +225,33 @@ function carService(km: number): Service {
     headwayMin: 0, // 아무 때나 출발
     estimated: true,
     note: '아무 때나 출발할 수 있지만 도심 주차가 비싸고 어렵습니다.',
+  };
+}
+
+/**
+ * 섬 사이 고속선.
+ *
+ * 가까운 섬끼리만 만든다. 본토에서 발레아레스(200km 이상)는 야간 배가 있지만
+ * 여행 일정에 쓰이지 않아 넣지 않는다.
+ */
+function ferryService(km: number): Service | null {
+  if (km > 150) return null;
+  // 카나리아 제도 고속선 실효 55km/h, 항구 수속 40분, 내려서 시내 20분.
+  const ride = Math.round((km / 55) * 60);
+  return {
+    mode: 'ferry',
+    label: '고속 페리',
+    accessMin: 40,
+    rideMin: ride,
+    egressMin: 20,
+    totalMin: ride + 60,
+    transfers: 0,
+    costEur: Math.round(km * 0.55 + 20),
+    firstDep: hm(6, 30),
+    lastDep: hm(20, 30),
+    headwayMin: 150,
+    estimated: true,
+    note: '날씨가 나쁘면 결항합니다. 차를 실을 수 있어 렌터카를 그대로 가져갈 수 있습니다.',
   };
 }
 
@@ -360,17 +423,27 @@ export function servicesBetween(
   if (crossesSea(a, b)) {
     const f = flightService(a, b, km);
     if (f) out.push(f);
-    // 배편은 있지만 반나절이 걸려 여행 일정에는 거의 쓰이지 않는다.
-    return out;
+    /*
+     * 가까운 섬끼리는 배가 정상이다.
+     *
+     * 예전에는 '배편은 반나절이 걸린다' 며 비행기만 내놓았다. 본토~발레아레스
+     * 처럼 먼 구간에는 맞지만, 테네리페~그란카나리아는 60km 라 고속선이
+     * 1시간대이고 실제로 대부분 배로 건넌다. 비행기만 남기면 4시간짜리
+     * 공항 왕복을 하라는 안내가 된다.
+     */
+    const ferry = ferryService(km);
+    if (ferry) out.push(ferry);
+    return out.sort((x, y) => x.totalMin - y.totalMin);
   }
 
+  const railExists = hasRail(a, b, ISLAND_RAIL);
   if (real) out.push(real);
   else if (measured) out.push(measuredService(measured.minutes, measured.mode, measured.note));
-  if (!real) {
+  if (!real && railExists) {
     const ave = aveService(a, b, km);
     if (ave) out.push(ave);
   }
-  out.push(trainService(a, b, km));
+  if (railExists) out.push(trainService(a, b, km));
   out.push(busService(km));
   const f = flightService(a, b, km);
   if (f) out.push(f);
