@@ -1081,6 +1081,60 @@ console.log('\n■ 8. 고장났을 때 — 하얀 화면 대신 빠져나갈 길
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+console.log('\n■ 8-b. 진단 정보 — 사용자가 무슨 일이 났는지 보낼 수 있는가');
+{
+  const ctx = await browser.newContext({ viewport: { width: 810, height: 1080 }, hasTouch: true });
+  const page = await ctx.newPage();
+  watch(page, allErrors, '[진단]');
+  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('.city-card', { timeout: 25000 });
+  await page.getByRole('button', { name: /마드리드·중부/ }).first().click();
+  await page.waitForTimeout(500);
+  await page.locator('.city-main', { hasText: '마드리드' }).first().click();
+  await page.waitForTimeout(600);
+  await page.locator('.diag > summary').click();
+  await page.waitForTimeout(1200);
+  const text = await page.locator('.diag-text').inputValue();
+  check('진단에 브라우저와 화면 크기가 담긴다',
+    /브라우저 /.test(text) && /화면 {5}\d+x\d+/.test(text),
+    (text.match(/화면 {5}[^\n]*/) ?? [''])[0]);
+  check('어느 판을 실행 중인지 담긴다', /실행판 {3}[^\n]*index-/.test(text),
+    (text.match(/실행판 {3}[^\n]*/) ?? [''])[0]);
+  check('워커와 캐시 상태가 담긴다', /워커 {5}/.test(text) && /캐시 {5}/.test(text),
+    (text.match(/캐시 {5}[^\n]*/) ?? [''])[0]);
+
+  /*
+   * '버튼이 안 눌린다' 는 두 가지가 전혀 다른 일이다 — 손가락이 닿지도
+   * 않는 것과, 닿는데 아무 일도 안 일어나는 것. 기록이 그 둘을 갈라
+   * 주어야 쓸모가 있다. 누른 자리와 앱이 실제로 한 일이 짝을 이루는지 본다.
+   */
+  const taps = text.split('\n').filter((l) => /눌림/.test(l));
+  const acts = text.split('\n').filter((l) => /동작/.test(l));
+  check('누른 자리가 기록된다', taps.length >= 2, `${taps.length}줄`);
+  check('앱이 실제로 한 일이 함께 기록된다',
+    acts.some((l) => /도시 선택 madrid/.test(l)), acts.slice(0, 2).join(' / '));
+
+  // 덮개가 가로막는 상황이면 '눌림' 만 남고 '동작' 이 따라오지 않아야 한다.
+  await page.evaluate(() => {
+    const d = document.createElement('div');
+    d.style.cssText = 'position:fixed;inset:0;z-index:9999;background:transparent';
+    d.id = 'ghost';
+    document.body.appendChild(d);
+  });
+  const box = await page.locator('.city-main').first().boundingBox();
+  await page.mouse.click(box.x + 40, box.y + 20);
+  await page.waitForTimeout(400);
+  await page.evaluate(() => document.getElementById('ghost')?.remove());
+  await page.locator('.diag > summary').click(); await page.waitForTimeout(200);
+  await page.locator('.diag > summary').click(); await page.waitForTimeout(1000);
+  const after = await page.locator('.diag-text').inputValue();
+  const tail = after.split('\n').filter((l) => /눌림|동작/.test(l)).slice(-2).join(' | ');
+  check('막혔을 때는 눌림만 남고 동작이 따라오지 않는다', !/동작/.test(tail.split('|').pop() ?? ''),
+    tail.slice(0, 90));
+  await ctx.close();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 console.log('\n■ 9. 서비스 워커 — 낡은 데이터가 남지 않는가');
 {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });

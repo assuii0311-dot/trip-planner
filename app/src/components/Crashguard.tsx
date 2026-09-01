@@ -1,6 +1,7 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
 import { hardRefetch } from '../lib/refetch';
+import { DiagPanel } from './DiagPanel';
 
 /**
  * 화면이 하얗게 비지 않게 한다.
@@ -74,6 +75,8 @@ export class Crashguard extends Component<
               <summary>오류 내용</summary>
               <pre>{err.message}{'\n\n'}{err.stack ?? ''}</pre>
             </details>
+            {/* 여기까지 왔다면 보낼 것이 있다. 꺼내는 길을 이 화면에도 둔다. */}
+            <DiagPanel />
           </div>
         </main>
       </div>

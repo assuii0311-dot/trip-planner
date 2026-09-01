@@ -1286,3 +1286,21 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
   background: var(--surface-2); border-radius: 8px;
   font-size: 11.5px; line-height: 1.6; white-space: pre-wrap; word-break: break-all;
 }
+
+/* ---------- 진단 정보 ---------- */
+.diag { margin: 18px 0 8px; }
+.diag > summary {
+  font-size: 12.5px; color: var(--muted); cursor: pointer;
+  padding: 10px 0; list-style: none;
+}
+.diag > summary::-webkit-details-marker { display: none; }
+.diag > summary::before { content: '🛠 '; }
+.diag-text {
+  width: 100%; box-sizing: border-box;
+  padding: 10px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--surface-2); color: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px; line-height: 1.55;
+  /* 사파리에서 확대되지 않게. 16px 미만이면 입력칸에서 확대가 일어난다. */
+  -webkit-text-size-adjust: 100%;
+}

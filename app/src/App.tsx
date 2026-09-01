@@ -4,6 +4,8 @@ import { loadCountry, loadItemsFor, loadRail, type CountryIndex } from './lib/da
 import type { RailTable } from './lib/rail';
 import { clearState, defaultState, exportState, importState, isInstalled, loadState, saveState } from './lib/store';
 import { hardRefetch } from './lib/refetch';
+import { DiagPanel } from './components/DiagPanel';
+import { mark } from './lib/diag';
 import type { SaveResult } from './lib/store';
 import { SaveStatus } from './components/SaveStatus';
 import { ResumeBanner, StorageWarning } from './components/ResumeBanner';
@@ -43,7 +45,12 @@ export default function App() {
     return () => clearInterval(t);
   }, []);
 
-  useEffect(() => { setSaved(saveState(state)); setNow(Date.now()); }, [state]);
+  useEffect(() => {
+    const r = saveState(state);
+    if (!r.ok) mark(`저장 실패: ${r.reason}`);
+    setSaved(r);
+    setNow(Date.now());
+  }, [state]);
 
   /**
    * 지난번 것이 복원됐는지는 첫 렌더 때 한 번만 판단한다.
@@ -174,6 +181,7 @@ export default function App() {
   const setPriorities = (next: Priorities) => setState((s) => ({ ...s, priorities: next }));
 
   const goto = (step: number) => {
+    mark(`단계 이동 → ${step}`);
     setState((s) => {
       // 2단계에 처음 들어갈 때 역산한 값을 채운다. 이후에는 사용자의 수정을 지킨다.
       if (step === 2 && !s.tasteConfirmed) {
@@ -632,6 +640,12 @@ export default function App() {
             onChange={(e) => { const f = e.target.files?.[0]; if (f) void onImport(f); e.target.value = ''; }}
           />
         </div>
+
+        {/*
+          아이패드 사파리에는 콘솔이 없다. 무엇이 잘못됐는지 알아내려면
+          사용자가 화면에서 바로 꺼내 보낼 수 있어야 한다.
+        */}
+        <DiagPanel />
 
         <p className="footnote">
           장소 정보 출처: {index.attribution.join(' · ')}.
