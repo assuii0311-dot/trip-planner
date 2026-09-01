@@ -5,9 +5,12 @@ import { ItemPhoto } from './ItemPhoto';
 
 const STAR_LABEL = ['', '관심', '가고 싶다', '꼭 간다'];
 
-export function ItemMeta({ item }: { item: Item }) {
+export function ItemMeta({ item, badge }: { item: Item; badge?: string }) {
   return (
     <div className="meta">
+      {/* 테마별 접힌 칸을 없애고 한 목록으로 합쳤으므로, 무엇에 속한
+          항목인지는 줄마다 구분자로 붙인다. */}
+      {badge && <span className="tag is-cat">{badge}</span>}
       <span className="tag">{Math.round(item.durationMin / 15) * 15}분</span>
       <span className="tag">{item.priceEur === null ? '요금 미상' : item.priceEur === 0 ? '무료' : `€${item.priceEur}`}</span>
       {item.district && <span className="tag">{item.district}</span>}
@@ -25,13 +28,15 @@ export function ItemMeta({ item }: { item: Item }) {
  * 체크를 풀면 0(제외)이 되어 계획에서 빠진다.
  */
 export function ItemRow({
-  item, city, priorities, onSet, selectable,
+  item, city, priorities, onSet, selectable, badge,
 }: {
   item: Item;
   city?: City;
   priorities: Priorities;
   onSet: (id: string, v: 0 | 1 | 2 | 3) => void;
   selectable: boolean;
+  /** 줄마다 붙이는 구분자. 테마별 접힌 칸을 없앤 대신 여기에 표기한다. */
+  badge?: string;
 }) {
   const star = priorities[item.id] ?? 0;
   return (
@@ -61,7 +66,7 @@ export function ItemRow({
             {item.summary && <div className="desc">{item.summary}</div>}
           </div>
         </div>
-        <ItemMeta item={item} />
+        <ItemMeta item={item} badge={badge} />
         <details className="more">
           <summary>자세히</summary>
           <ItemDetail item={item} />

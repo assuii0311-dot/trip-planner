@@ -1,4 +1,4 @@
-import type { Item, LastDayPlan, Plan, PlanDay, PlanEntry, PlanStyle, PlanTravel, Preferences, Priorities, Slot, ThemeId, TravelOption } from '../types';
+import type { Item, Plan, PlanDay, PlanEntry, PlanStyle, PlanTravel, Preferences, Priorities, Slot, ThemeId, TravelOption } from '../types';
 import type { Itinerary } from './itinerary';
 import type { Service } from './routing';
 import { MODE_ICON, nextDeparture, servicesBetween } from './routing';
@@ -232,7 +232,6 @@ export interface PlanInput {
   itinerary: Itinerary;
   startDate: string;
   days: number;
-  lastDayPlan: LastDayPlan;
   prefs: Preferences;
   priorities: Priorities;
   /** 사용자가 손으로 정한 하루 안 순서. 날짜 → 아이템 id 순서. */
@@ -453,16 +452,15 @@ export function buildPlans(input: PlanInput): {
       const startAt = i === 0 ? input.firstDayStart ?? null : null;
       const endBy = isLast ? input.lastDayEnd ?? null : null;
       /*
-       * 출발 시각을 알면 그것이 마지막 날을 정한다.
+       * 마지막 날은 출국 시각이 정한다.
        *
-       * '마지막 날 일정' 을 없음/오전만/종일 중에 고르게 했지만, 실제로는
-       * 비행기 시각이 정하는 것이다. 시각을 넣었으면 그쪽을 따르고,
-       * 안 넣었으면 예전처럼 고른 값을 쓴다.
+       * 예전에는 '없음/오전만/종일' 을 사람에게 고르게 하고 기본을 '오전만'
+       * 으로 두었다. 그건 "오후 비행기가 흔하니까" 라는 추측이었고, 실제로
+       * 정하는 것은 비행기 시각이다. 시각을 넣었으면 그것을 쓰고, 안 넣었으면
+       * 하루를 다 쓴다 — 모르면서 반나절을 잘라내지 않는다.
        */
       const lastDay = !isLast ? 'full'
-        : endBy !== null
-          ? (endBy <= DAY_START[input.prefs.dayStart] + 60 ? 'none' : 'full')
-          : input.lastDayPlan;
+        : endBy !== null && endBy <= DAY_START[input.prefs.dayStart] + 60 ? 'none' : 'full';
       if (lastDay === 'none') {
         return {
           date: addDays(input.startDate, i), dayIndex: i + 1, city: s.city,
@@ -472,7 +470,8 @@ export function buildPlans(input: PlanInput): {
       }
       return buildDay(
         ranked, used, spec, input.prefs, addDays(input.startDate, i), i + 1,
-        s.city, s.isDayTrip, lastDay === 'morning', s.returnTo, s.returnMinutes, s.returnAfter,
+        // '오전만' 은 더 이상 쓰지 않는다. 마지막 날은 출국 시각으로 잘린다.
+        s.city, s.isDayTrip, false, s.returnTo, s.returnMinutes, s.returnAfter,
         s.travel, s.sleepAt, s.dayTripMode, startAt, endBy,
         // 첫날에 착륙 시각이 들어왔다면 장거리 비행으로 내린 날이다.
         i === 0 && startAt !== null,

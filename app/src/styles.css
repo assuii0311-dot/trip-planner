@@ -719,6 +719,21 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
   border-bottom: 1px solid var(--line);
 }
 .itin-row:last-child { border-bottom: none; }
+/* 4단계에서 바로 빼기 — 도시 줄의 '빼기', 일정 줄의 ✕ */
+.itin-drop {
+  margin-left: auto;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.itin-drop:disabled { opacity: 0.35; cursor: default; }
+.itin-drop + .itin-swap { margin-left: 0; }
 .itin-city { font-size: 14px; font-weight: 600; }
 .itin-state { font-size: 12.5px; color: var(--muted); }
 .itin-swap {
@@ -875,6 +890,20 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
   cursor: pointer;
 }
 .entry-move button:disabled, .itin-move button:disabled { opacity: 0.3; cursor: default; }
+.entry-actions { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.entry-actions .entry-move { margin-top: 0; margin-left: auto; }
+.entry-drop {
+  width: 32px; height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+}
+.entry-drop:hover { border-color: #c0392b; color: #c0392b; }
 .itin-move { flex: 0 0 auto; }
 
 /* 3단계: 일수 ↔ 아이템 양방향 */
@@ -1203,3 +1232,21 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
 .tripwin-body { padding: 0 12px 12px; }
 .tripwin-body p { margin: 0 0 8px; font-size: 12.5px; line-height: 1.6; }
 .tripwin-why { display: block; margin-top: 2px; font-size: 11.5px; color: var(--muted); }
+/* 한 목록으로 합친 아이템의 테마 구분자 */
+.tag.is-cat { background: var(--surface-2); color: var(--text); font-weight: 600; }
+
+/* 3단계: 등급 일괄 적용 */
+.bulk {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 12px; margin-bottom: 14px;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+}
+.bulk-label { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.bulk-btns { display: flex; gap: 6px; margin-left: auto; }
+.bulk-btn {
+  min-height: 36px; padding: 0 14px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface); color: var(--text);
+  font: inherit; font-size: 13px; cursor: pointer;
+}
+.bulk-btn.is-on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 700; }

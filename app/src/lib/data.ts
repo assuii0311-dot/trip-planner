@@ -2,6 +2,7 @@ import type { City, Item } from '../types';
 import type { RailTable } from './rail';
 import { setRailTable } from './rail';
 import { setIslandRail } from './routing';
+import { nameIslandHubs } from './island';
 
 export interface CountryIndex {
   country: string;
@@ -42,7 +43,8 @@ export async function loadCountry(country: string): Promise<CountryIndex> {
   // 어느 섬에 철도가 있는지 교통 엔진에 알린다. 모르면 섬에는 없다고 본다 —
   // 없는 열차를 지어내는 것보다 있는 열차를 놓치는 편이 낫다.
   setIslandRail(idx.islands ?? []);
-  return idx;
+  // 섬은 도시가 아니라 섬 하나가 여행 단위다. 거점 도시는 섬 이름으로 부른다.
+  return { ...idx, cities: nameIslandHubs(idx.cities, idx.islands ?? []) };
 }
 
 /**

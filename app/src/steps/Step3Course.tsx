@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { City, CourseId, Item, Preferences, Priorities, ThemeId } from '../types';
 import type { Itinerary } from '../lib/itinerary';
-import { THEMES, THEME_ICON } from '../lib/themes';
+import { THEME_ICON, THEME_LABEL } from '../lib/themes';
 import { rankItems } from '../lib/scoring';
 import { cityWorthDays, coursesFor, defaultCityDays, foodPicksFor, itemsForDays, mustSeeFor } from '../lib/course';
 import { estimateDays, isMeal } from '../lib/capacity';
@@ -11,6 +11,9 @@ import { ItemRow } from '../components/ItemRow';
 import { ItemPhoto } from '../components/ItemPhoto';
 import { josa } from '../lib/korean';
 import { bundlesFor } from '../lib/bundles';
+
+/** 등급 이름. 코스 카드와 같은 말을 쓴다. */
+const TIER_LABEL: Record<CourseId, string> = { taste: '찍먹', normal: '보통', full: '꽉찬' };
 
 /**
  * 3단계 — 도시별 추천 코스를 고르고 손본다.
@@ -22,7 +25,7 @@ import { bundlesFor } from '../lib/bundles';
  */
 export default function Step3Course({
   items, cities, itinerary, prefs, priorities, courses, cityDays, days, usableDays, ui,
-  onSet, onBulk, onCourse, onDays, onDropCity, onUi,
+  onSet, onBulk, onCourse, onDays, onDropCity, onCourseAll, onUi,
 }: {
   items: Item[];
   cities: City[];
@@ -44,6 +47,8 @@ export default function Step3Course({
   onDays: (city: string, days: number, items: Item[]) => void;
   /** 이 도시를 여행에서 뺀다. */
   onDropCity: (city: string) => void;
+  /** 도시별 코스 선택을 한 번에 기록한다. 일괄 적용에 쓴다. */
+  onCourseAll: (next: Record<string, CourseId>) => void;
   onUi: (next: { openCity?: string | null; openTheme?: ThemeId | null; onlyPicked?: boolean }) => void;
 }) {
   /**
@@ -99,6 +104,35 @@ export default function Step3Course({
   const lostDays = Math.round((days - budget) * 10) / 10;
   const picks = useMemo(() => recommend(items, cities, prefs), [items, cities, prefs]);
 
+  /**
+   * 등급 하나를 모든 도시에 적용한다.
+   *
+   * 도시마다 값어치가 다르므로 같은 등급이라도 담기는 양은 다르다 —
+   * 마드리드 꽉찬은 16곳, 네르하 꽉찬은 2곳이다. 그 도시에 그 등급이
+   * 없으면(반나절짜리 마을은 등급이 하나뿐이다) 가장 가까운 것을 쓴다.
+   */
+  const applyAll = (id: CourseId) => {
+    const next: Priorities = { ...priorities };
+    const chosenCourses: Record<string, CourseId> = {};
+    for (const { city } of stops) {
+      const list = itemsOf.get(city.slug) ?? [];
+      if (!list.length) continue;
+      const courses = coursesFor(city, list, prefs, cities);
+      if (!courses.length) continue;
+      const want = courses.find((c) => c.id === id) ?? courses[courses.length - 1];
+      // 이 도시 것만 갈아 끼운다. 다른 도시의 선택은 건드리지 않는다.
+      for (const i of list) delete next[i.id];
+      for (const i of want.items) next[i.id] = 2;
+      chosenCourses[city.slug] = want.id;
+    }
+    onBulk(next);
+    onCourseAll(chosenCourses);
+  };
+
+  /** 모든 도시가 이 등급인가 — 버튼을 켜 두는 데 쓴다. */
+  const everyCityIs = (id: CourseId) =>
+    stops.length > 0 && stops.every(({ city }) => courses[city.slug] === id);
+
   return (
     <>
       <h2>도시마다 코스를 골라주세요</h2>
@@ -128,6 +162,28 @@ export default function Step3Course({
           </div>
         )}
       </div>
+
+      {/*
+        도시가 여섯이면 코스를 여섯 번 고르게 된다. 대개는 '이번 여행은
+        전부 찍먹' 처럼 한 결로 가고 싶은데, 도시마다 열어 눌러야 했다.
+        한 번에 적용하고, 이후 도시별로 바꾸는 것은 그대로 된다.
+      */}
+      {stops.length > 1 && (
+        <div className="bulk">
+          <span className="bulk-label">모든 도시에 한 번에</span>
+          <div className="bulk-btns">
+            {(['taste', 'normal', 'full'] as CourseId[]).map((id) => (
+              <button
+                key={id} type="button"
+                className={everyCityIs(id) ? 'bulk-btn is-on' : 'bulk-btn'}
+                onClick={() => applyAll(id)}
+              >
+                {TIER_LABEL[id]}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {stops.map(({ city, wantDays, isDayTrip }) => {
         const cityItems = itemsOf.get(city.slug) ?? [];
@@ -173,7 +229,6 @@ export default function Step3Course({
               <CityPanel
                 city={city} cityItems={cityItems} wantDays={wantDays} prefs={prefs}
                 priorities={priorities} course={courses[city.slug]} onlyPicked={onlyPicked}
-                openTheme={ui.openTheme === undefined ? THEMES[0].id : ui.openTheme}
                 onSet={onSet} onBulk={onBulk} onCourse={onCourse} onUi={onUi}
                 onDays={onDays} cities={cities}
               />
@@ -219,7 +274,7 @@ function fmtDays(d: number): string {
 
 /** 한 도시의 코스 카드 세 장과, 그 아래 전체 아이템 목록. */
 function CityPanel({
-  city, cityItems, wantDays, prefs, priorities, course, onlyPicked, openTheme,
+  city, cityItems, wantDays, prefs, priorities, course, onlyPicked,
   cities, onSet, onBulk, onCourse, onDays, onUi,
 }: {
   city: City;
@@ -230,7 +285,6 @@ function CityPanel({
   priorities: Priorities;
   course: CourseId | undefined;
   onlyPicked: boolean;
-  openTheme: ThemeId | null;
   cities: City[];
   onSet: (id: string, v: 0 | 1 | 2 | 3) => void;
   onBulk: (next: Priorities) => void;
@@ -263,15 +317,19 @@ function CityPanel({
   const pickedIds = new Set(cityItems.filter((i) => (priorities[i.id] ?? 0) > 0).map((i) => i.id));
   const pickedDays = estimateDays(cityItems.filter((i) => pickedIds.has(i.id)), prefs);
 
-  const byTheme = useMemo(() => {
-    const map = new Map<ThemeId, Item[]>();
-    for (const { item } of rankItems(cityItems, prefs, priorities)) {
-      const list = map.get(item.theme) ?? [];
-      list.push(item);
-      map.set(item.theme, list);
-    }
-    return map;
-  }, [cityItems, prefs, priorities]);
+  /**
+   * 한 목록으로 합친 아이템.
+   *
+   * 테마별로 접힌 칸 여덟 개에 나눠 두면, 무엇이 있는지 보려고 여덟 번을
+   * 열어야 한다. 순위대로 한 줄로 세우고 테마는 줄마다 표시한다.
+   * 미식은 위의 '미식 후보' 상자에서 따로 보므로 여기서 뺀다.
+   */
+  const flat = useMemo(() => {
+    const all = rankItems(cityItems, prefs, priorities)
+      .map((r) => r.item)
+      .filter((i) => i.theme !== 'food');
+    return onlyPicked ? all.filter((i) => pickedIds.has(i.id)) : all;
+  }, [cityItems, prefs, priorities, onlyPicked, pickedIds]);
 
   const cityOf = (slug: string) => cities.find((c) => c.slug === slug);
 
@@ -493,39 +551,27 @@ function CityPanel({
           : '코스를 고르지 않고 아래에서 직접 담으셔도 됩니다.'}
       </p>
 
-      {THEMES.map((t) => {
-        const all = byTheme.get(t.id) ?? [];
-        const list = onlyPicked ? all.filter((i) => pickedIds.has(i.id)) : all;
-        if (!list.length) return null;
-        const isOpen = openTheme === t.id;
-        const chosen = all.filter((i) => pickedIds.has(i.id)).length;
-        return (
-          <div className="theme-group" key={t.id}>
-            <button
-              type="button" className="theme-head"
-              aria-expanded={isOpen}
-              onClick={() => onUi({ openTheme: isOpen ? null : t.id })}
-            >
-              <span style={{ fontSize: 20 }}>{t.icon}</span>
-              <span style={{ fontWeight: 700 }}>{t.label}</span>
-              <span className="count">
-                {chosen > 0 && <span className="picked">{chosen} / </span>}
-                {all.length}개 {isOpen ? '▴' : '▾'}
-              </span>
-            </button>
-            {isOpen && (
-              <div className="card" style={{ marginTop: 8 }}>
-                {list.map((item) => (
-                  <ItemRow
-                    key={item.id} item={item} city={cityOf(item.city)}
-                    priorities={priorities} onSet={onSet} selectable
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {/*
+        예전에는 테마마다 접힌 칸이 따로 있었다. 여덟 칸을 하나씩 열어 가며
+        고르라는 것인데, 실제로 사람이 하는 일은 '이 도시에서 뭘 볼까' 를
+        한 번에 훑는 것이지 '역사 먼저, 그다음 미술' 이 아니다. 게다가
+        접힌 칸 안의 것은 검색도 눈에 띄지도 않았다.
+
+        한 목록으로 합치고, 테마는 줄마다 구분자로 붙인다. 순서는 순위대로다.
+      */}
+      <div className="card">
+        {flat.length === 0 ? (
+          <div className="empty">담은 것이 없습니다.</div>
+        ) : (
+          flat.map((item) => (
+            <ItemRow
+              key={item.id} item={item} city={cityOf(item.city)}
+              priorities={priorities} onSet={onSet} selectable
+              badge={`${THEME_ICON[item.theme]} ${THEME_LABEL[item.theme]}`}
+            />
+          ))
+        )}
+      </div>
     </div>
   );
 }

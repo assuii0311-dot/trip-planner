@@ -141,7 +141,6 @@ export interface TransitGuide {
 }
 
 /** 도착일에 일정을 얼마나 넣을지. 오후 비행기가 가장 흔해 기본은 오전만. */
-export type LastDayPlan = 'none' | 'morning' | 'full';
 
 /** 1단계 — 기초 정보. */
 export interface Basics {
@@ -150,7 +149,6 @@ export interface Basics {
   cities: string[];
   startDate: string;
   endDate: string;
-  lastDayPlan: LastDayPlan;
   partySize: number;
   /**
    * 입국 공항과 출국 공항의 IATA 코드.

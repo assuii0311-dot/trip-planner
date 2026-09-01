@@ -190,6 +190,19 @@ export default function App() {
     });
 
   /**
+   * 4단계에서 아이템 하나를 일정에서 뺀다.
+   *
+   * 계획은 우선순위에서 다시 만들어지므로 별을 지우면 그 아이템은 다음
+   * 계산에 들어오지 않는다. 3단계로 돌아가면 다시 담을 수 있다.
+   */
+  const dropItem = (item: Item) =>
+    setState((s) => {
+      const next = { ...s.priorities };
+      delete next[item.id];
+      return { ...s, priorities: next };
+    });
+
+  /**
    * 여정 — 도시 순서·숙박·이동 수단.
    *
    * 3단계에서 담은 아이템으로 각 도시에 며칠이 필요한지 계산하고, 도시 간
@@ -334,14 +347,13 @@ export default function App() {
       items, itinerary,
       startDate: state.basics.startDate,
       days,
-      lastDayPlan: state.basics.lastDayPlan,
       prefs: state.prefs,
       priorities: state.priorities,
       dayOrder: state.dayOrder,
       firstDayStart: airportWindow?.firstDayStart ?? null,
       lastDayEnd: airportWindow?.lastDayEnd ?? null,
     });
-  }, [itinerary, items, state.basics.startDate, days, state.basics.lastDayPlan,
+  }, [itinerary, items, state.basics.startDate, days,
     state.prefs, state.priorities, state.dayOrder, airportWindow]);
 
   const plans = built?.plans ?? [];
@@ -486,6 +498,14 @@ export default function App() {
                 ui={state.ui ?? {}}
                 onSet={setPriority} onBulk={setPriorities} onCourse={chooseCourse}
                 onDays={setCityDays} onDropCity={dropCity}
+                onCourseAll={(next) => setState((st) => ({
+                  ...st,
+                  courses: { ...st.courses, ...next },
+                  // 일괄 적용은 손으로 맞춰 둔 일수를 놓아 준다.
+                  cityDays: Object.fromEntries(
+                    Object.entries(st.cityDays).filter(([slug]) => !(slug in next)),
+                  ),
+                }))}
                 onUi={(next) => setState((s) => ({ ...s, ui: { ...s.ui, ...next } }))}
               />
             )
@@ -497,6 +517,7 @@ export default function App() {
             plans={plans} overflow={built?.overflow ?? []} spare={built?.spare ?? 0}
             chosen={chosenPlan.style} onChoose={choosePlan}
             onSwap={swapEntry} onMode={setMode} onLodging={setLodging} onDropCity={dropCity}
+            onDropItem={dropItem}
             onMoveCity={moveCity} onMoveEntry={moveEntry} manualOrder={state.dayOrder}
             airport={airportWindow}
           />

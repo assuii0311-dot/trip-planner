@@ -17,7 +17,6 @@ export function defaultState(): TripState {
     cities: [],
     startDate: start.toISOString().slice(0, 10),
     endDate: end.toISOString().slice(0, 10),
-    lastDayPlan: 'morning',
     partySize: 2,
     startAirport: null,
     endAirport: null,
