@@ -583,6 +583,30 @@ console.log('\n■ 1-b. 날짜·시각 라벨이 서로 부딪히지 않는가')
   check('한국 도착일을 넣지 않도록 알린다', /한국 도착일이 아니라/.test(help),
     (help.match(/한국 도착일이 아니라[^—\n]*/) ?? [''])[0].slice(0, 50));
 
+  /*
+   * 시각 칸이 처음부터 보이는가.
+   *
+   * 공항을 고른 뒤에만 보여 줬더니, 새로 들어온 사람에게는 칸이 아예
+   * 없었다. 그러면서 바로 위 '마지막 날 일정' 은 "출발 시각을 넣으면
+   * 자동으로 정해집니다" 라고 안내했다 — 있지도 않은 칸을 가리킨 것이다.
+   */
+  check('시각 칸이 공항을 고르기 전에도 보인다',
+    (await page.locator('input[type=time]').count()) === 2,
+    `${await page.locator('input[type=time]').count()}개`);
+  const lastDayHint = (await page.locator('label.field > span').allInnerTexts())
+    .find((t) => /마지막 날 일정/.test(t)) ?? '';
+  check('안내가 가리키는 칸이 실제로 화면에 있다',
+    !/출발 시각/.test(lastDayHint) || /현지 이륙 시각/.test(lastDayHint), lastDayHint);
+
+  /* 넣은 시각이 새로고침 뒤에도 남는가 — 저장은 되는데 화면에 없으면 잃은 것과 같다. */
+  const t = page.locator('input[type=time]');
+  await t.nth(0).evaluate(setValue, '16:00'); await page.waitForTimeout(300);
+  await t.nth(1).evaluate(setValue, '12:00'); await page.waitForTimeout(900);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('.city-card', { timeout: 25000 });
+  const back = await page.locator('input[type=time]').evaluateAll((els) => els.map((e) => e.value));
+  check('새로고침해도 넣은 시각이 남는다', back.join() === '16:00,12:00', back.join(' · ') || '비어 있음');
+
   // 시각 칸도 현지 기준임을 밝히는가
   const sel = page.locator('select');
   await sel.nth(0).selectOption('MAD'); await page.waitForTimeout(400);

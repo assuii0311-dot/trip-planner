@@ -150,7 +150,7 @@ export default function Step1Basics({
           귀국편은 다음 날 한국에 내립니다.
         </p>
 
-        <Field label="마지막 날 일정" hint="출발 시각을 넣으면 자동으로 정해집니다">
+        <Field label="마지막 날 일정" hint="아래 '현지 이륙 시각'을 넣으면 자동으로 정해집니다">
           <Segmented
             value={basics.lastDayPlan}
             options={[
@@ -211,21 +211,34 @@ export default function Step1Basics({
           4시에 내리면 그날은 저녁 한 끼가 전부이고, 마지막 날 낮 12시
           비행기면 아침에 짐을 끌고 공항으로 간다.
         */}
-        {(inAirport || outAirport) && (
-          <div className="date-pair" style={{ marginTop: 12 }}>
-            <Field label="현지 착륙 시각" hint="스페인에 내리는 시각 (대략)">
-              <input
-                type="time" value={basics.arrivalTime ?? ''}
-                onChange={(e) => onChange({ arrivalTime: e.target.value || null })}
-              />
-            </Field>
-            <Field label="현지 이륙 시각" hint="귀국편이 뜨는 시각 (대략)">
-              <input
-                type="time" value={basics.departureTime ?? ''}
-                onChange={(e) => onChange({ departureTime: e.target.value || null })}
-              />
-            </Field>
-          </div>
+        {/*
+          공항을 고른 뒤에만 보여 줬더니, 새로고침하고 들어온 사람에게는
+          시간 칸이 아예 없었다. 바로 위 '마지막 날 일정' 은 "출발 시각을
+          넣으면 자동으로 정해집니다" 라고 안내하는데 그 칸이 화면에 없는
+          상태였다 — 있지도 않은 칸을 가리킨 것이다.
+
+          언제나 보여 주고, 공항이 없으면 왜 아직 계산에 못 쓰는지 적는다.
+          숨기는 대신 이유를 말한다.
+        */}
+        <div className="date-pair" style={{ marginTop: 12 }}>
+          <Field label="현지 착륙 시각" hint="스페인에 내리는 시각 (대략)">
+            <input
+              type="time" value={basics.arrivalTime ?? ''}
+              onChange={(e) => onChange({ arrivalTime: e.target.value || null })}
+            />
+          </Field>
+          <Field label="현지 이륙 시각" hint="귀국편이 뜨는 시각 (대략)">
+            <input
+              type="time" value={basics.departureTime ?? ''}
+              onChange={(e) => onChange({ departureTime: e.target.value || null })}
+            />
+          </Field>
+        </div>
+        {!inAirport && !outAirport && (basics.arrivalTime || basics.departureTime) && (
+          <p className="help" style={{ marginTop: -6 }}>
+            <b>아래에서 공항을 고르면</b> 입국심사와 공항 이동 시간까지 넣어
+            실제로 쓸 수 있는 날을 계산합니다.
+          </p>
         )}
 
         {window && (window.firstDayStart !== null || window.lastDayEnd !== null) && (
