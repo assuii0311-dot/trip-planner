@@ -128,7 +128,7 @@ function runOne(seed: number, ratio: number): Result | null {
   }
 
   const { plans, dropped } = buildPlans({
-    items, groups, startDate: '2026-05-01', days, lastDayPlan: 'morning', prefs, priorities,
+    items, groups, startDate: '2026-05-01', days, prefs, priorities,
   });
 
   const packed = plans.find((p) => p.style === 'packed')!;

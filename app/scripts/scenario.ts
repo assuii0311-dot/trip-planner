@@ -32,7 +32,7 @@ function scenario(label: string, slugs: string[], days: number) {
   for (const { item } of rankItems(items, prefs, {}).slice(0, days * 3)) priorities[item.id] = 2;
 
   const { plans, dropped } = buildPlans({
-    items, groups, startDate: '2026-05-01', days, lastDayPlan: 'morning', prefs, priorities,
+    items, groups, startDate: '2026-05-01', days, prefs, priorities,
   });
   const plan = plans.find((p) => p.style === 'balanced')!;
   const name = (s: string) => index.cities.find((c) => c.slug === s)?.name ?? s;

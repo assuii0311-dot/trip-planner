@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import type { Basics, City, LastDayPlan, MacroRegion } from '../types';
+import type { Basics, City, MacroRegion } from '../types';
 import { Block, Field, Segmented } from '../components/Controls';
 import CityCard from '../components/CityCard';
 import BasePlan from '../components/BasePlan';
 import type { Itinerary } from '../lib/itinerary';
 import type { Island } from '../lib/data';
+import { islandAsCity } from '../lib/island';
 import { AIRPORT_GROUPS, airportOf } from '../lib/airports';
 import { withJosa } from '../lib/korean';
 import { arrivalLeg, departureLeg, fmtHm, parseHm, tripWindow } from '../lib/airporttime';
@@ -123,16 +124,32 @@ export default function Step1Basics({
       if (r.id === 'island') continue;
       out.push({ id: r.id, name: r.name, list: byRegion(r.id) });
     }
-    for (const i of islands) {
-      const list = cities.filter((c) => c.island === i.id);
+
+    /*
+     * 섬은 카드 한 장이다.
+     *
+     * 마요르카 칸을 열면 팔마·소예르·포옌사가 따로 떠 있었다. 그런데 섬
+     * 여행은 도시를 옮겨 다니는 것이 아니다 — 렌터카로 한 시간이면 섬을
+     * 가로지르고, 볼 것의 절반은 어느 자치시에도 속하지 않는 해변과 산이다.
+     * 세 곳을 따로 고르라는 것은 육지의 셈법을 섬에 들이민 것이다.
+     *
+     * 고르면 그 섬의 거점 도시가 선택되고, 나머지 마을의 아이템은 거점으로
+     * 옮겨 붙는다(lib/island.ts). 사용자에게는 섬 하나로 보인다.
+     */
+    const islandCards = islands
+      .map((i) => islandAsCity(i, cities))
+      .filter((c): c is City => !!c);
+    const shown = onlyFirst ? islandCards.filter((c) => c.firstTimer) : islandCards;
+    if (shown.length) {
       out.push({
-        id: `island:${i.id}`,
-        name: `${i.name} (섬)`,
-        note: i.note,
-        list: onlyFirst ? list.filter((c) => c.firstTimer) : list,
+        id: 'islands',
+        name: '섬 (발레아레스·카나리아)',
+        note: '섬은 하나로 묶어 보여 드립니다. 고르시면 그 섬 전체가 후보가 됩니다.',
+        list: shown,
       });
     }
-    // 섬 목록에 없는 섬 도시가 남으면 흘리지 않고 예전 칸에 담는다.
+
+    // 섬 목록에 없는 섬 도시가 남으면 흘리지 않고 따로 담는다.
     const covered = new Set(islands.flatMap((i) => i.cities));
     const rest = byRegion('island').filter((c) => !covered.has(c.slug));
     if (rest.length) out.push({ id: 'island', name: '그 밖의 섬', list: rest });
@@ -191,17 +208,6 @@ export default function Step1Basics({
           귀국편은 다음 날 한국에 내립니다.
         </p>
 
-        <Field label="마지막 날 일정" hint="아래 '현지 이륙 시각'을 넣으면 자동으로 정해집니다">
-          <Segmented
-            value={basics.lastDayPlan}
-            options={[
-              { value: 'none' as LastDayPlan, label: '없음' },
-              { value: 'morning' as LastDayPlan, label: '오전만' },
-              { value: 'full' as LastDayPlan, label: '종일' },
-            ]}
-            onChange={(v) => onChange({ lastDayPlan: v })}
-          />
-        </Field>
       </Block>
 
       {/*
@@ -254,9 +260,9 @@ export default function Step1Basics({
         */}
         {/*
           공항을 고른 뒤에만 보여 줬더니, 새로고침하고 들어온 사람에게는
-          시간 칸이 아예 없었다. 바로 위 '마지막 날 일정' 은 "출발 시각을
-          넣으면 자동으로 정해집니다" 라고 안내하는데 그 칸이 화면에 없는
-          상태였다 — 있지도 않은 칸을 가리킨 것이다.
+          시간 칸이 아예 없었다. 안내는 "출발 시각을 넣으면 자동으로
+          정해집니다" 라고 하는데 그 칸이 화면에 없는 상태였다 —
+          있지도 않은 칸을 가리킨 것이다.
 
           언제나 보여 주고, 공항이 없으면 왜 아직 계산에 못 쓰는지 적는다.
           숨기는 대신 이유를 말한다.

@@ -13,11 +13,13 @@ import { formatTime, SLOT_LABEL } from '../lib/planner';
 import { alternativesForDay } from '../lib/alternatives';
 import type { Alternative } from '../lib/alternatives';
 import { THEME_ICON, THEME_LABEL } from '../lib/themes';
+import { josa } from '../lib/korean';
 
 /** 4단계 — 담은 곳을 바탕으로 밀도가 다른 3가지 안을 만든다. */
 export default function Step5Plans({
   items, cities, itinerary, days, prefs, plans, overflow, spare, chosen,
-  onChoose, onSwap, onMode, onLodging, onDropCity, onMoveCity, onMoveEntry, manualOrder, airport,
+  onChoose, onSwap, onMode, onLodging, onDropCity, onMoveCity, onMoveEntry, onDropItem,
+  manualOrder, airport,
 }: {
   items: Item[];
   cities: City[];
@@ -42,6 +44,8 @@ export default function Step5Plans({
   onMoveCity: (city: string, dir: -1 | 1) => void;
   /** 하루 안에서 일정을 한 칸 옮긴다. */
   onMoveEntry: (date: string, itemId: string, dir: -1 | 1) => void;
+  /** 일정 하나를 계획에서 뺀다. */
+  onDropItem: (item: Item) => void;
   /** 사용자가 순서를 손댄 날짜들. 되돌리기 버튼을 띄우는 데 쓴다. */
   manualOrder: Record<string, string[]>;
   /** 공항이 정하는 여행의 앞뒤. 시각을 안 넣었으면 null. */
@@ -106,7 +110,7 @@ export default function Step5Plans({
 
       <ItineraryBar
         itinerary={itinerary} cities={cities} plan={active}
-        onLodging={onLodging} onMoveCity={onMoveCity}
+        onLodging={onLodging} onMoveCity={onMoveCity} onDropCity={onDropCity}
       />
 
       <LodgingPanel plan={active} cities={cities} />
@@ -150,7 +154,8 @@ export default function Step5Plans({
           airport={airport}
           isFirst={i === 0} isLast={i === active.days.length - 1}
           cityName={cityName} onSwap={onSwap} onMode={onMode}
-          onMoveEntry={onMoveEntry} touched={Boolean(manualOrder[day.date])}
+          onMoveEntry={onMoveEntry} onDropItem={onDropItem}
+          touched={Boolean(manualOrder[day.date])}
         />
       ))}
     </>
@@ -159,7 +164,8 @@ export default function Step5Plans({
 
 /** 하루치. 대안은 여기서 한 번에 뽑아 자리마다 나눠 준다. */
 function Day({
-  day, pool, prefs, cities, airport, isFirst, isLast, cityName, onSwap, onMode, onMoveEntry, touched,
+  day, pool, prefs, cities, airport, isFirst, isLast, cityName,
+  onSwap, onMode, onMoveEntry, onDropItem, touched,
 }: {
   day: PlanDay;
   pool: Item[];
@@ -172,6 +178,8 @@ function Day({
   onSwap: (out: Item, inItems: Item[]) => void;
   onMode: (from: string, to: string, mode: string) => void;
   onMoveEntry: (date: string, itemId: string, dir: -1 | 1) => void;
+  /** 이 일정을 계획에서 뺀다. */
+  onDropItem: (item: Item) => void;
   touched: boolean;
 }) {
   const altsByItem = useMemo(() => alternativesForDay(day, pool, prefs), [day, pool, prefs]);
@@ -280,17 +288,31 @@ function Day({
                         </div>
                       );
                     })()}
-                    <div className="entry-move" role="group" aria-label="순서 바꾸기">
+                    <div className="entry-actions">
+                      {/*
+                        계획을 보다가 '이건 빼자' 가 되는 것이 자연스러운데,
+                        그러려면 3단계로 돌아가 그 도시를 찾아 체크를 풀어야
+                        했다. 여기서 바로 뺀다. 순서 바꾸기와는 하는 일이
+                        다르니 같은 묶음에 넣지 않는다.
+                      */}
                       <button
-                        type="button" disabled={i === 0}
-                        aria-label={`${e.item.name} 앞으로`}
-                        onClick={() => onMoveEntry(day.date, e.item.id, -1)}
-                      >↑</button>
-                      <button
-                        type="button" disabled={i === day.entries.length - 1}
-                        aria-label={`${e.item.name} 뒤로`}
-                        onClick={() => onMoveEntry(day.date, e.item.id, 1)}
-                      >↓</button>
+                        type="button" className="entry-drop"
+                        aria-label={`${e.item.name} 일정에서 빼기`}
+                        title={`${e.item.name} 빼기`}
+                        onClick={() => onDropItem(e.item)}
+                      >✕</button>
+                      <div className="entry-move" role="group" aria-label="순서 바꾸기">
+                        <button
+                          type="button" disabled={i === 0}
+                          aria-label={`${e.item.name} 앞으로`}
+                          onClick={() => onMoveEntry(day.date, e.item.id, -1)}
+                        >↑</button>
+                        <button
+                          type="button" disabled={i === day.entries.length - 1}
+                          aria-label={`${e.item.name} 뒤로`}
+                          onClick={() => onMoveEntry(day.date, e.item.id, 1)}
+                        >↓</button>
+                      </div>
                     </div>
                   </div>
                   <Alternatives alts={altsByItem.get(e.item.id) ?? []} target={e.item} onSwap={onSwap} />
@@ -671,7 +693,7 @@ function TravelBlock({
  * 계획 전체를 좌우하는데, 찾을 수 없으면 없는 기능이나 마찬가지다.
  */
 function ItineraryBar({
-  itinerary, cities, plan, onLodging, onMoveCity,
+  itinerary, cities, plan, onLodging, onMoveCity, onDropCity,
 }: {
   itinerary: Itinerary;
   cities: City[];
@@ -679,6 +701,7 @@ function ItineraryBar({
   plan: Plan;
   onLodging: (city: string, how: 'sleep' | 'daytrip') => void;
   onMoveCity: (city: string, dir: -1 | 1) => void;
+  onDropCity: (city: string) => void;
 }) {
   const name = (slug: string) => cities.find((c) => c.slug === slug)?.name ?? slug;
 
@@ -752,6 +775,22 @@ function ItineraryBar({
                 ? `🛏 ${nightsOf.get(s.city.slug) ?? s.nights}박`
                 : `${name(s.base ?? '')}에서 당일치기 · 왕복 ${fmtDur(s.dayTripMin)}`}
             </span>
+            {/*
+              여기서도 도시를 뺄 수 있어야 한다. 계획을 다 보고 나서야
+              '이 도시는 빼자' 가 되는 것이 보통인데, 그러려면 3단계까지
+              되돌아가야 했다. 날이 모자랄 때만 빼기 버튼이 나왔다.
+            */}
+            <button
+              type="button" className="itin-drop"
+              aria-label={`${s.city.name} 여행에서 빼기`}
+              title={`${s.city.name} 빼기`}
+              disabled={itinerary.stops.length <= 1}
+              onClick={() => {
+                if (confirm(`${s.city.name}${josa(s.city.name, '을를')} 이번 여행에서 뺄까요? 그 도시의 일정도 함께 사라집니다.`)) {
+                  onDropCity(s.city.slug);
+                }
+              }}
+            >빼기</button>
             <button
               type="button" className="itin-swap"
               disabled={s.sleep && itinerary.stops.filter((x) => x.sleep).length <= 1}

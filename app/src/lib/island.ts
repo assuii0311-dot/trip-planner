@@ -81,3 +81,77 @@ export function rehomeIslandItems(
     };
   });
 }
+
+/**
+ * 섬을 도시 하나처럼 보여 준다.
+ *
+ * 1단계에 마요르카 칸을 열면 팔마·소예르·포옌사가 따로 떠 있었다. 그런데
+ * 섬 여행은 도시를 옮겨 다니는 것이 아니다. 렌터카로 한 시간이면 섬을
+ * 가로지르고, 볼 것의 절반은 어느 자치시에도 속하지 않는 해변과 산이다.
+ * 세 곳을 따로 고르라는 것은 육지의 셈법을 섬에 그대로 들이민 것이다.
+ *
+ * 그래서 섬은 카드 한 장이다. 고르면 그 섬의 거점 도시가 선택되고,
+ * 나머지 마을의 아이템은 {@link rehomeIslandItems} 가 거점으로 옮겨 붙인다.
+ *
+ * 돌려주는 것은 화면에 그릴 '도시처럼 생긴 것' 이다. slug 는 실제 거점
+ * 도시의 것이라, 이후 단계는 아무것도 달라지지 않는다.
+ */
+export function islandAsCity(island: Island, cities: City[]): City | null {
+  const mine = island.cities
+    .map((slug) => cities.find((c) => c.slug === slug))
+    .filter((c): c is City => !!c);
+  if (!mine.length) return null;
+
+  // 거점은 그 섬에서 실제로 묵는 도시다. 데이터에 isHub 로 적혀 있다.
+  const base = mine.find((c) => c.isHub) ?? mine[0];
+  const others = mine.filter((c) => c.slug !== base.slug);
+
+  const themes: Record<string, number> = {};
+  for (const c of mine) for (const [k, v] of Object.entries(c.themes ?? {})) {
+    themes[k] = (themes[k] ?? 0) + (v as number);
+  }
+
+  return {
+    ...base,
+    // 화면에 보이는 이름만 섬 이름이다. slug 는 거점 도시 그대로다.
+    name: island.name,
+    nameEn: island.nameEn,
+    itemCount: mine.reduce((a, c) => a + (c.itemCount ?? 0), 0),
+    themes: themes as City['themes'],
+    // 섬 전체의 대표를 모은다. 팔마만 보면 발데모사도 트라문타나도 안 보인다.
+    highlights: [...new Set(mine.flatMap((c) => c.highlights ?? []))].slice(0, 5),
+    tags: [...new Set(mine.flatMap((c) => c.tags ?? []))].slice(0, 5),
+    tagline: others.length
+      ? `${base.tagline} · ${others.map((c) => c.name).join('·')}까지 섬 전체`
+      : base.tagline,
+    suitedFor: island.note ?? base.suitedFor,
+    // 섬 하나를 도는 데 필요한 날은 거점 하나보다 길다.
+    nights: [
+      Math.max(...mine.map((c) => c.nights?.[0] ?? 0)),
+      mine.reduce((a, c) => a + (c.nights?.[1] ?? 1), 0),
+    ] as City['nights'],
+  };
+}
+
+/**
+ * 섬의 거점 도시 이름을 섬 이름으로 바꾼다.
+ *
+ * 1단계에서 '마요르카' 를 골랐는데 3·4단계에서 '팔마데마요르카' 로 적히면,
+ * 같은 것을 두 이름으로 부르는 셈이다. 사용자는 섬 하나를 골랐고, 실제로도
+ * 그 섬 전체를 도는 일정이 나온다. 그러니 이름도 섬 이름이어야 한다.
+ *
+ * slug 는 건드리지 않는다 — 저장된 계획도, 데이터 참조도 그대로 산다.
+ */
+export function nameIslandHubs(cities: City[], islands: Island[]): City[] {
+  if (!islands.length) return cities;
+  const hub = new Map<string, Island>();
+  for (const i of islands) {
+    const mine = i.cities.map((s) => cities.find((c) => c.slug === s)).filter((c): c is City => !!c);
+    if (!mine.length) continue;
+    hub.set((mine.find((c) => c.isHub) ?? mine[0]).slug, i);
+  }
+  return cities.map((c) => {
+    const i = hub.get(c.slug);
+    return i ? { ...c, name: i.name, nameEn: i.nameEn } : c;
+  });
+}

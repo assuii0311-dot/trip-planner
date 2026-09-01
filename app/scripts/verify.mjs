@@ -207,10 +207,16 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
   // (도시 패널 자체가 .theme-group 이라 .foodbox 를 따로 빼야 한다)
   const box = page.locator('.item:not(.foodbox .item) input[type=checkbox]:not(:checked)').first();
   if (await box.count()) {
-    await box.check(); await page.waitForTimeout(700);
-    check('아이템 개별 추가', (await cnt()) === c0 + 1, `${c0} → ${await cnt()}`);
-    await page.locator('.item:not(.foodbox .item) input[type=checkbox]:checked').first().uncheck();
-    await page.waitForTimeout(700);
+    /*
+      담으면 그 줄이 목록 위로 올라간다(담은 것이 먼저 보인다). 그래서
+      '첫 번째 빈 칸' 으로 잡아 두면 끌 때는 다른 줄을 끄게 된다 —
+      개수는 맞는데 담긴 목록이 조용히 달라진다. 이름으로 그 줄을 잡는다.
+    */
+    const label = await box.getAttribute('aria-label');
+    const same = page.getByLabel(label, { exact: true });
+    await same.check(); await page.waitForTimeout(700);
+    check('아이템 개별 추가', (await cnt()) === c0 + 1, `${c0} → ${await cnt()} · ${label}`);
+    await same.uncheck(); await page.waitForTimeout(700);
     check('아이템 개별 제거', (await cnt()) === c0, `→ ${await cnt()}`);
   }
   /*
@@ -231,16 +237,25 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
     // 담고 빼기 — 개수가 아니라 그 묶음의 항목이 실제로 들어갔다 나오는지 본다.
     const names = await page.locator('.bundle').first().locator('.bundle-item').allInnerTexts();
     const onCount = async () => page.locator('.bundle').first().locator('.bundle-item.is-on').count();
+    /*
+      고른 코스가 이미 그 묶음을 통째로 담고 있을 수도 있다. 그때는 첫
+      누름이 '빼기' 다. 어느 쪽에서 시작하든 통째로 들어갔다 나오는지를 본다.
+    */
+    const take = page.locator('.bundle-take').first();
     const before0 = await onCount();
-    await page.locator('.bundle-take').first().click();
-    await page.waitForTimeout(900);
-    check('묶음을 담으면 통째로 들어간다', (await onCount()) === names.length,
-      `${before0}/${names.length} → ${await onCount()}/${names.length}`);
-    check('담은 묶음은 빼기로 바뀐다',
-      (await page.locator('.bundle-take').first().innerText()).includes('빼기'));
-    await page.locator('.bundle-take').first().click();
-    await page.waitForTimeout(900);
-    check('묶음을 통째로 뺄 수 있다', (await onCount()) === 0, `→ ${await onCount()}/${names.length}`);
+    const startedIn = before0 === names.length;
+    check('담긴 묶음은 빼기로, 아닌 묶음은 담기로 나온다',
+      (await take.innerText()).includes(startedIn ? '빼기' : '담기'),
+      `${before0}/${names.length} · ${await take.innerText()}`);
+    await take.click(); await page.waitForTimeout(900);
+    const mid = await onCount();
+    check(startedIn ? '묶음을 통째로 뺄 수 있다' : '묶음을 담으면 통째로 들어간다',
+      mid === (startedIn ? 0 : names.length), `${before0} → ${mid} / ${names.length}`);
+    check('누른 뒤 버튼 말이 뒤집힌다',
+      (await take.innerText()).includes(startedIn ? '담기' : '빼기'), await take.innerText());
+    await take.click(); await page.waitForTimeout(900);
+    check('한 번 더 누르면 처음으로 돌아온다', (await onCount()) === before0,
+      `${mid} → ${await onCount()}/${names.length}`);
   }
 
   await page.screenshot({ path: new URL('01-step3.png', shots).pathname });
@@ -677,7 +692,7 @@ console.log('\n■ 4. 경계 — 섬 포함 (항공만) · 왕복 공항');
   const page = await ctx.newPage();
   watch(page, allErrors, '[섬]');
   const next = await build(page, {
-    cities: [['카탈루냐', '바르셀로나'], ['마요르카', '팔마데마요르카']],
+    cities: [['카탈루냐', '바르셀로나'], ['섬', '마요르카']],
     from: '2026-09-14', to: '2026-09-21',
     airports: ['BCN', 'BCN'],
   });
@@ -707,24 +722,37 @@ console.log('\n■ 4. 경계 — 섬 포함 (항공만) · 왕복 공항');
   }
   await page.waitForSelector('.city-card', { timeout: 20000 });
   const groupNames = await page.locator('main .theme-head').allInnerTexts();
-  const islandGroups = groupNames.filter((t) => /\(섬\)/.test(t));
-  check('섬이 섬마다 한 칸으로 나뉜다', islandGroups.length === 3,
-    islandGroups.map((t) => t.split('\n')[0].trim()).join(' · '));
+  const islandGroup = groupNames.find((t) => /^섬 \(/.test(t.trim()));
+  check('섬은 한 칸에 모인다', !!islandGroup, (islandGroup ?? '없음').split('\n')[0].trim());
+  // 그 칸을 열면 도시가 아니라 섬 카드가 나와야 한다.
+  const head = page.locator('main .theme-head').filter({ hasText: /^섬 \(/ }).first();
+  if ((await head.getAttribute('aria-expanded')) !== 'true') {
+    await head.click(); await page.waitForTimeout(600);
+  }
+  const cardNames = await page.locator('.theme-group .city-name').allInnerTexts();
+  check('섬은 섬 이름 카드 한 장이다',
+    cardNames.includes('마요르카') && !cardNames.includes('소예르')
+    && !cardNames.includes('팔마데마요르카'),
+    cardNames.join(' · '));
 
   await page.getByRole('button', { name: /^다음$/ }).click(); await page.waitForTimeout(900);
   await page.getByRole('button', { name: /^다음$/ }).click(); await page.waitForTimeout(1800);
   await page.waitForSelector('.course', { timeout: 25000 });
-  const palmaHead = page.locator('.city-head .theme-head').filter({ hasText: '팔마' }).first();
+  const palmaHead = page.locator('.city-head .theme-head').filter({ hasText: '마요르카' }).first();
+  // 1단계에서 '마요르카' 를 골랐는데 뒤에서 '팔마데마요르카' 로 적히면
+  // 같은 것을 두 이름으로 부르는 셈이다.
+  const step3Names = (await page.locator('.city-head .theme-head').allInnerTexts()).join(' ');
+  check('섬은 3단계에서도 섬 이름으로 나온다',
+    /마요르카/.test(step3Names) && !/팔마데마요르카/.test(step3Names),
+    step3Names.replace(/\s+/g, ' ').slice(0, 60));
   if (await palmaHead.count()) {
     if ((await palmaHead.getAttribute('aria-expanded')) !== 'true') {
       await palmaHead.click(); await page.waitForTimeout(800);
     }
-    // 해변·자연은 테마 목록 안에 있으므로 그 칸을 열고 본다.
-    const nature = page.locator('.city-panel .theme-head').filter({ hasText: '자연' }).first();
-    if (await nature.count()) { await nature.click(); await page.waitForTimeout(700); }
+    // 아이템은 이제 테마별 접이식이 아니라 한 목록에 모여 있다.
     const panel = await page.locator('main').innerText();
     for (const n of ['드라크 동굴', '에스 트렌크']) {
-      check(`팔마 후보에 ${n} 이 있다`, panel.includes(n));
+      check(`마요르카 후보에 ${n} 이 있다`, panel.includes(n));
     }
     check('섬 안 다른 동네에 표시가 붙는다', (await page.locator('.tag.is-away').count()) > 0,
       `${await page.locator('.tag.is-away').count()}곳`);
@@ -825,6 +853,126 @@ console.log('\n■ 6. 렌터카 — 편도 반납 · 대안 · 일정 영향');
       `${before.split('·')[0].trim()} → ${after.split('·')[0].trim()}`);
   }
   await page.screenshot({ path: new URL('06-car.png', shots).pathname, fullPage: true });
+  await ctx.close();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+console.log('\n■ 7. 3·4단계에서 직접 손보기 — 통합 목록 · 일괄 등급 · 빼기');
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });
+  const page = await ctx.newPage();
+  watch(page, allErrors, '[손보기]');
+
+  /*
+   * 1단계: '마지막 날 일정' 선택은 없어졌다.
+   *
+   * 오전/하루 중에 고르라고 했는데, 이제는 귀국편 이륙 시각을 직접 넣는다.
+   * 시각이 있으면 그 날 무엇이 가능한지는 계산으로 정해진다 — 두 곳에서
+   * 같은 것을 정하면 서로 어긋난다.
+   */
+  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('.city-card', { timeout: 25000 });
+  const labels1 = (await page.locator('label.field > span').allInnerTexts()).join(' | ');
+  check('1단계에 마지막 날 일정 선택이 없다', !/마지막 날 일정/.test(labels1),
+    labels1.replace(/\s+/g, ' ').slice(0, 90));
+  check('대신 이륙 시각으로 정한다', /현지 이륙 시각/.test(labels1));
+
+  const next = await build(page, {
+    cities: [['마드리드', '마드리드'], ['안달루시아', '세비야'], ['안달루시아', '그라나다']],
+    from: '2026-05-04', to: '2026-05-11',
+    airports: ['MAD', 'MAD'], times: ['15:00', '13:00'],
+    courses: false,
+  });
+
+  /*
+   * 3단계: 테마별 접이식 여덟 칸을 한 목록으로 합쳤다.
+   *
+   * 무엇이 있는지 보려고 여덟 번을 열어야 했다. 한 줄로 세우고 테마는
+   * 줄마다 표시로 붙인다.
+   */
+  await page.waitForSelector('.course', { timeout: 25000 });
+  const head0 = page.locator('main > .theme-group > .city-head > .theme-head').first();
+  if ((await head0.getAttribute('aria-expanded')) !== 'true') {
+    await head0.click(); await page.waitForTimeout(700);
+  }
+  check('도시 안에 테마별 접이식 칸이 없다',
+    (await page.locator('.city-panel .theme-head').count()) === 0,
+    `${await page.locator('.city-panel .theme-head').count()}칸`);
+  const cats = await page.locator('.city-panel .tag.is-cat').allInnerTexts();
+  check('줄마다 카테고리 표시가 붙는다', cats.length > 0, `${cats.length}줄 · ${cats.slice(0, 3).join(' / ')}`);
+  check('카테고리가 한 가지로만 몰려 있지 않다', new Set(cats).size > 1,
+    [...new Set(cats)].join(' · '));
+  check('미식은 이 목록에 섞이지 않는다', !cats.some((t) => /미식/.test(t)),
+    [...new Set(cats)].join(' · '));
+
+  /*
+   * 3단계: 등급 일괄 적용.
+   *
+   * 도시가 여섯이면 코스를 여섯 번 골라야 했다. 대개는 '이번 여행은 전부
+   * 찍먹' 처럼 한 결로 간다.
+   */
+  const bulk = page.locator('.bulk-btn');
+  check('모든 도시에 한 번에 적용하는 버튼이 있다', (await bulk.count()) === 3,
+    (await bulk.allInnerTexts()).join(' · '));
+  const pickCount = async () => Number((((await page.locator('main').innerText())
+    .match(/(\d+)곳 선택 · 예상/)) ?? [0, 0])[1]);
+  await page.locator('.bulk-btn', { hasText: '찍먹' }).click();
+  await page.waitForTimeout(1400);
+  const taste = await pickCount();
+  const onTaste = await page.locator('.course[aria-pressed=true]').count();
+  await page.locator('.bulk-btn', { hasText: '꽉찬' }).click();
+  await page.waitForTimeout(1400);
+  const full = await pickCount();
+  check('찍먹 일괄 적용이 모든 도시에 걸린다', taste > 0 && onTaste >= 1, `${taste}곳`);
+  check('꽉찬이 찍먹보다 많이 담긴다', full > taste, `찍먹 ${taste}곳 → 꽉찬 ${full}곳`);
+  const onBtn = await page.locator('.bulk-btn.is-on').innerText().catch(() => '');
+  check('지금 걸린 등급이 버튼에 표시된다', onBtn.includes('꽉찬'), onBtn || '표시 없음');
+  await page.locator('.bulk-btn', { hasText: '보통' }).click();
+  await page.waitForTimeout(1400);
+  const normal = await pickCount();
+  check('보통은 찍먹과 꽉찬 사이다', normal >= taste && normal <= full,
+    `${taste} ≤ ${normal} ≤ ${full}`);
+  await page.screenshot({ path: new URL('07-step3.png', shots).pathname, fullPage: true });
+
+  /*
+   * 4단계: 도시와 아이템을 여기서 뺀다.
+   *
+   * 계획을 다 보고 나서야 '이 도시는 빼자' 가 되는 것이 보통인데, 그러려면
+   * 3단계까지 되돌아가야 했다.
+   */
+  await next();
+  await page.waitForSelector('.plan-tab', { timeout: 30000 });
+  const itin = page.locator('.itin');
+  if ((await itin.getAttribute('open')) === null) { await itin.click(); await page.waitForTimeout(500); }
+
+  const entryNames = async () => page.locator('.entry .title').allInnerTexts();
+  const e0 = await entryNames();
+  check('4단계 일정 줄마다 빼기 버튼이 있다',
+    (await page.locator('.entry-drop').count()) === e0.length,
+    `${await page.locator('.entry-drop').count()} / ${e0.length}줄`);
+  const gone = e0[0];
+  await page.locator('.entry-drop').first().click();
+  await page.waitForTimeout(1400);
+  const e1 = await entryNames();
+  check('아이템을 4단계에서 뺄 수 있다', !e1.includes(gone), `${gone} 빠짐 · ${e0.length} → ${e1.length}줄`);
+  check('빼도 순서 바꾸기는 그대로다', (await page.locator('.entry-move').count()) === e1.length,
+    `${await page.locator('.entry-move').count()} / ${e1.length}`);
+
+  const cityNames = async () => page.locator('.itin-city').allInnerTexts();
+  const c0 = await cityNames();
+  check('4단계 도시 줄마다 빼기 버튼이 있다',
+    (await page.locator('.itin-drop').count()) === c0.length, `${c0.length}도시`);
+  page.once('dialog', (d) => d.accept());
+  await page.locator('.itin-drop').last().click();
+  await page.waitForTimeout(1800);
+  const c1 = await cityNames();
+  check('도시를 4단계에서 뺄 수 있다', c1.length === c0.length - 1 && !c1.includes(c0[c0.length - 1]),
+    `${c0.join('·')} → ${c1.join('·')}`);
+  check('뺀 도시의 일정도 함께 사라진다',
+    !(await page.locator('main').innerText()).includes(`${c0[c0.length - 1]} 일정`),
+    c1.join(' · '));
+  // 마지막 한 도시는 뺄 수 없어야 한다 — 여행이 없어진다.
+  await page.screenshot({ path: new URL('07-step4.png', shots).pathname, fullPage: true });
   await ctx.close();
 }
 
