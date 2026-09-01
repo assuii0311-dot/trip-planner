@@ -298,6 +298,18 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
   check('공항 시간의 내역을 밝힌다',
     apBlocks.some((t) => /입국심사|체크인/.test(t) && /시내 이동|공항 이동/.test(t)));
 
+  // 장거리 비행으로 내린 날에 밤 일정을 넣지 않는가
+  {
+    const first = page.locator('.day').first();
+    const slots = await first.locator('.entry .slot').allInnerTexts();
+    const times = await first.locator('.entry .time').allInnerTexts();
+    const m = (t) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
+    check('장거리 도착일에 밤 일정을 넣지 않는다', !slots.includes('밤'),
+      slots.join(' · ') || '일정 없음');
+    check('도착일은 저녁까지만 쓴다', times.every((t) => m(t) <= 22 * 60),
+      times.length ? `마지막 ${times[times.length - 1]}` : '일정 없음');
+  }
+
   // 첫날 첫 일정이 착륙 뒤인가
   {
     const first = page.locator('.day').first();
@@ -543,6 +555,41 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
     (await page.locator('.step-label span').first().innerText()).startsWith('5'));
   check('새로고침해도 지도가 남는다', (await page.locator('.trip-map').count()) === 1);
   check('이어서 하기 배너가 뜬다', (await page.locator('.resume').count()) === 1);
+  await ctx.close();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+console.log('\n■ 1-b. 날짜·시각 라벨이 서로 부딪히지 않는가');
+{
+  /*
+   * '출발일/도착일' 과 '도착 시각/출발 시각' 이 같은 화면에서 정반대 날을
+   * 가리켰다 — 출발일은 스페인 첫날인데 출발 시각은 스페인 마지막 날이었다.
+   * 무엇을 넣으라는 것인지 알 수가 없다.
+   */
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });
+  const page = await ctx.newPage();
+  watch(page, allErrors, '[라벨]');
+  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('.city-card', { timeout: 25000 });
+  const labels = await page.locator('label.field > span').allInnerTexts();
+  const dateish = labels.filter((t) => /첫날|마지막 날|출발일|도착일/.test(t));
+  check('날짜 칸이 스페인 기준임을 밝힌다',
+    dateish.some((t) => /스페인 첫날/.test(t)) && dateish.some((t) => /스페인 마지막 날/.test(t)),
+    dateish.join(' · '));
+  check('예전의 모호한 이름이 남아 있지 않다',
+    !labels.some((t) => /^출발일$/.test(t.trim()) || /^도착일$/.test(t.trim())),
+    labels.filter((t) => /^(출발일|도착일)$/.test(t.trim())).join(' · ') || '없음');
+  const help = await page.locator('main').innerText();
+  check('한국 도착일을 넣지 않도록 알린다', /한국 도착일이 아니라/.test(help),
+    (help.match(/한국 도착일이 아니라[^—\n]*/) ?? [''])[0].slice(0, 50));
+
+  // 시각 칸도 현지 기준임을 밝히는가
+  const sel = page.locator('select');
+  await sel.nth(0).selectOption('MAD'); await page.waitForTimeout(400);
+  const timeLabels = await page.locator('label.field > span').allInnerTexts();
+  check('시각 칸이 현지 기준임을 밝힌다',
+    timeLabels.some((t) => /현지 착륙 시각/.test(t)) && timeLabels.some((t) => /현지 이륙 시각/.test(t)),
+    timeLabels.filter((t) => /시각/.test(t)).join(' · '));
   await ctx.close();
 }
 

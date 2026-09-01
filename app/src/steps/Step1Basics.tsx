@@ -119,15 +119,24 @@ export default function Step1Basics({
       </p>
 
       <Block title="일정">
+        {/*
+          '출발일 / 도착일' 이었다. 그런데 아래에서 묻는 '도착 시각' 은
+          스페인에 내리는 시각(첫날)이고 '출발 시각' 은 스페인에서 뜨는
+          시각(마지막 날)이라, 같은 화면에서 같은 말이 정반대 날을
+          가리켰다. 무엇을 넣으라는 것인지 알 수가 없다.
+
+          전부 '스페인 기준' 으로 통일한다. 귀국편은 다음 날 한국에
+          내리므로, 한국 도착일을 넣지 않도록 따로 적어 둔다.
+        */}
         <div className="date-pair">
-          <Field label="출발일">
+          <Field label="스페인 첫날" hint="현지에 도착하는 날">
             <input
               type="date" value={basics.startDate}
               max={basics.endDate}
               onChange={(e) => onChange({ startDate: e.target.value })}
             />
           </Field>
-          <Field label="도착일">
+          <Field label="스페인 마지막 날" hint="현지에서 떠나는 날">
             <input
               type="date" value={basics.endDate}
               min={basics.startDate}
@@ -135,9 +144,13 @@ export default function Step1Basics({
             />
           </Field>
         </div>
-        <p className="help">현지에서 {days}일 {nights}박입니다.</p>
+        <p className="help">
+          현지에서 {days}일 {nights}박입니다.
+          {' '}<b>한국 도착일이 아니라 스페인을 떠나는 날</b>을 넣으세요 —
+          귀국편은 다음 날 한국에 내립니다.
+        </p>
 
-        <Field label="도착일 일정" hint="오후 비행기가 가장 흔해 기본은 오전만입니다">
+        <Field label="마지막 날 일정" hint="출발 시각을 넣으면 자동으로 정해집니다">
           <Segmented
             value={basics.lastDayPlan}
             options={[
@@ -200,13 +213,13 @@ export default function Step1Basics({
         */}
         {(inAirport || outAirport) && (
           <div className="date-pair" style={{ marginTop: 12 }}>
-            <Field label="도착 시각" hint="스페인에 내리는 시각 (대략)">
+            <Field label="현지 착륙 시각" hint="스페인에 내리는 시각 (대략)">
               <input
                 type="time" value={basics.arrivalTime ?? ''}
                 onChange={(e) => onChange({ arrivalTime: e.target.value || null })}
               />
             </Field>
-            <Field label="출발 시각" hint="돌아가는 비행기 시각 (대략)">
+            <Field label="현지 이륙 시각" hint="귀국편이 뜨는 시각 (대략)">
               <input
                 type="time" value={basics.departureTime ?? ''}
                 onChange={(e) => onChange({ departureTime: e.target.value || null })}

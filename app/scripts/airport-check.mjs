@@ -66,6 +66,21 @@ console.log('\n=== 쓸 수 있는 날 계산 ===');
     '시각을 안 넣으면 예전처럼 달력 일수', '11일');
 }
 
+console.log('\n=== 날짜의 뜻이 헷갈리지 않는가 ===');
+{
+  /*
+   * '출발일/도착일' 과 '도착 시각/출발 시각' 이 같은 화면에서 정반대 날을
+   * 가리켰다. 출발일은 스페인 첫날인데 출발 시각은 스페인 마지막 날이었다.
+   * 라벨은 화면 검사(verify.mjs)에서 보고, 여기서는 계산이 스페인 기준으로
+   * 일관되는지만 본다.
+   */
+  const mad = airportOf('MAD');
+  const w = tripWindow(11, parseHm('16:00'), parseHm('12:00'),
+    arrivalLeg(mad, C('madrid')), departureLeg(mad, C('madrid'), 0), 9.5 * 60, 22 * 60);
+  ok(w.firstDayStart > parseHm('16:00'), '첫날은 착륙 시각 뒤에 시작한다', fmtHm(w.firstDayStart));
+  ok(w.lastDayEnd < parseHm('12:00'), '마지막 날은 이륙 시각 앞에 끝난다', fmtHm(w.lastDayEnd));
+}
+
 console.log('\n=== 마지막 날 있는 도시가 공항 도시와 다를 때 ===');
 {
   const mad = airportOf('MAD');

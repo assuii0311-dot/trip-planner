@@ -135,6 +135,17 @@ function buildDay(
    */
   startAtMin: number | null = null,
   endByMin: number | null = null,
+  /**
+   * 장거리 비행으로 도착한 날인가.
+   *
+   * 한국에서 스페인은 직항 14시간, 경유면 16~20시간이다. 그렇게 내린 날
+   * 밤 10시에 라운지 일정을 넣는 것은 — 실제로 그렇게 나왔다 — 몸으로는
+   * 새벽 5시에 술을 마시라는 말이다. 도착일은 저녁까지만 쓴다.
+   *
+   * 비행 시간을 따로 묻지 않는 이유는, 한국에서 스페인으로 오는 길에
+   * 짧은 것이 없기 때문이다. 물어봐야 답이 달라지지 않는다.
+   */
+  longHaulArrival = false,
 ): PlanDay {
   const inCity = pool.filter((p) => !used.has(p.item.id) && p.item.city === city);
   const anchor = inCity.find((p) => p.item.theme !== 'food' && p.item.theme !== 'nightlife');
@@ -158,9 +169,14 @@ function buildDay(
   const base = DAY_START[prefs.dayStart] + (isDayTrip ? 75 : 0);
   const start = Math.max(base, arrival ?? 0, startAtMin ?? 0);
   // 도착일 오전만 쓰는 경우 점심 전에 끝낸다.
-  const specs = spec.slots(start).filter((s) => (morningOnly ? s.slot === 'morning' : true));
+  const specs = spec.slots(start)
+    .filter((s) => (morningOnly ? s.slot === 'morning' : true))
+    // 장거리 비행으로 내린 날은 밤 일정을 넣지 않는다.
+    .filter((s) => !(longHaulArrival && s.slot === 'night'));
   // 거점으로 돌아와 저녁을 먹으므로 근교라고 해서 하루를 일찍 끊지 않는다.
-  const natural = morningOnly ? 13 * 60 : isDayTrip && !returnTo ? 20 * 60 : 24 * 60 + 30;
+  const natural = morningOnly ? 13 * 60
+    : longHaulArrival ? 22 * 60
+      : isDayTrip && !returnTo ? 20 * 60 : 24 * 60 + 30;
   const lastCall = endByMin !== null ? Math.min(natural, endByMin) : natural;
 
   // 근교에서 하루를 보내도 저녁은 거점으로 돌아와 먹는다. 소도시는 저녁
@@ -458,6 +474,8 @@ export function buildPlans(input: PlanInput): {
         ranked, used, spec, input.prefs, addDays(input.startDate, i), i + 1,
         s.city, s.isDayTrip, lastDay === 'morning', s.returnTo, s.returnMinutes, s.returnAfter,
         s.travel, s.sleepAt, s.dayTripMode, startAt, endBy,
+        // 첫날에 착륙 시각이 들어왔다면 장거리 비행으로 내린 날이다.
+        i === 0 && startAt !== null,
       );
     });
 
