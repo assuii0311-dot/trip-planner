@@ -3,6 +3,7 @@ import type { Basics, CourseId, Item, PlanStyle, Preferences, Priorities, ThemeI
 import { loadCountry, loadItemsFor, loadRail, type CountryIndex } from './lib/data';
 import type { RailTable } from './lib/rail';
 import { clearState, defaultState, exportState, importState, isInstalled, loadState, saveState } from './lib/store';
+import { hardRefetch } from './lib/refetch';
 import type { SaveResult } from './lib/store';
 import { SaveStatus } from './components/SaveStatus';
 import { ResumeBanner, StorageWarning } from './components/ResumeBanner';
@@ -27,6 +28,10 @@ export default function App() {
   const [index, setIndex] = useState<CountryIndex | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [error, setError] = useState<string | null>(null);
+  /** 도시 아이템 받기 실패. 나라 데이터 실패(error)와 달리 화면은 살아 있다. */
+  const [itemsError, setItemsError] = useState<string | null>(null);
+  /** '다시 받기' 를 누른 횟수. 같은 도시라도 효과를 다시 돌리는 열쇠다. */
+  const [itemsTry, setItemsTry] = useState(0);
   const [loadingItems, setLoadingItems] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -109,10 +114,20 @@ export default function App() {
     [index, state.basics.cities],
   );
 
+  /*
+   * 아이템 받아오기.
+   *
+   * 예전에는 실패하면 error 에만 적었다. 그런데 error 는 나라 데이터가 아직
+   * 없을 때만 화면에 나오므로, 도시 아이템 받기가 실패하면 **아무 말 없이**
+   * 빈 목록이 됐다 — 3단계에 아무것도 없고 왜인지 알 길이 없다. 게다가
+   * 고른 도시가 그대로면 이 효과는 다시 돌지 않아 스스로 낫지도 않았다.
+   * 이제는 화면에 적고, 눌러서 다시 받을 수 있게 한다.
+   */
   useEffect(() => {
-    if (cityScope.length === 0) { setItems([]); return; }
+    if (cityScope.length === 0) { setItems([]); setItemsError(null); return; }
     let alive = true;
     setLoadingItems(true);
+    setItemsError(null);
     loadItemsFor(cityScope)
       .then((list) => {
         if (!alive) return;
@@ -121,10 +136,10 @@ export default function App() {
           ? rehomeIslandItems(list, index.cities, index.islands ?? [], state.basics.cities)
           : list);
       })
-      .catch((e: Error) => { if (alive) setError(e.message); })
+      .catch((e: Error) => { if (alive) setItemsError(e.message); })
       .finally(() => { if (alive) setLoadingItems(false); });
     return () => { alive = false; };
-  }, [cityScope.join(',')]);
+  }, [cityScope.join(','), itemsTry]);
 
   /** 아이템 id → 도시. 코스를 갈아 끼울 때 그 도시 것만 골라내는 데 쓴다. */
   const itemCityOf = useMemo(() => new Map(items.map((i) => [i.id, i.city])), [items]);
@@ -468,7 +483,20 @@ export default function App() {
   };
 
   if (error && !index) {
-    return <div className="app"><main><div className="empty">{error}</div></main></div>;
+    return (
+      <div className="app"><main>
+        <div className="empty">
+          <p>{error}</p>
+          <p className="help" style={{ marginTop: 8 }}>
+            연결이 잠깐 끊겼을 수 있습니다. 다시 받아 보세요.
+          </p>
+          <div className="crash-btns" style={{ marginTop: 12 }}>
+            <button type="button" className="primary" onClick={() => location.reload()}>다시 받기</button>
+            <button type="button" onClick={() => void hardRefetch()}>받아 둔 것 비우고 새로 받기</button>
+          </div>
+        </div>
+      </main></div>
+    );
   }
   if (!index) {
     return <div className="app"><main><div className="spinner">여행지 데이터를 불러오는 중…</div></main></div>;
@@ -511,6 +539,18 @@ export default function App() {
               }
             }}
           />
+        )}
+        {itemsError && (
+          <div className="notice" style={{ marginBottom: 14 }}>
+            <b>가볼 곳 목록을 받지 못했습니다.</b>
+            <p className="help" style={{ margin: '6px 0 10px' }}>{itemsError}</p>
+            <div className="crash-btns">
+              <button type="button" className="primary" onClick={() => setItemsTry((n) => n + 1)}>
+                다시 받기
+              </button>
+              <button type="button" onClick={() => void hardRefetch()}>받아 둔 것 비우고 새로 받기</button>
+            </div>
+          </div>
         )}
         {showStorageWarning && (
           <StorageWarning
