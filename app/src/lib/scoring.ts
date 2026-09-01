@@ -1,6 +1,12 @@
 import type { Item, Preferences, Priorities } from '../types';
 
-/** 별점(3단계) 가중치. 0 은 제외이므로 후보에서 빠진다. */
+/**
+ * 별점(3단계) 가중치.
+ *
+ * 0(또는 별을 준 적 없음)은 가산이 없을 뿐이고, 취향 점수만으로 후보에는
+ * 남는다. 실제로 후보에서 빼는 것은 플래너 쪽이다 — 우선순위에 0 이
+ * 적혀 있으면 4단계에서 뺀 것으로 보고 후보에서 제외한다(lib/planner.ts).
+ */
 const STAR_WEIGHT: Record<number, number> = { 1: 18, 2: 40, 3: 75 };
 
 const BUDGET_CEILING: Record<Preferences['budget'], number> = { low: 15, mid: 40, high: 120 };

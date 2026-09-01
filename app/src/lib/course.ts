@@ -173,9 +173,6 @@ export function foodPicksFor(cityItems: Item[], prefs: Preferences, limit = 8): 
     .map((x) => x.i);
 }
 
-/** 계획을 세우려면 최소한 이 정도는 담아야 한다 (하루 2곳 기준). */
-export const minimumPicks = (days: number) => Math.max(4, days * 2);
-
 /** 담은 것으로 계산한 일수. 식사는 세지 않는다. */
 export const daysOf = (items: Item[], prefs: Preferences) => estimateDays(items, prefs);
 

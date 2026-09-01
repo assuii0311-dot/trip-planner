@@ -932,6 +932,36 @@ console.log('\n■ 7. 3·4단계에서 직접 손보기 — 통합 목록 · 일
   const normal = await pickCount();
   check('보통은 찍먹과 꽉찬 사이다', normal >= taste && normal <= full,
     `${taste} ≤ ${normal} ≤ ${full}`);
+
+  /*
+   * 등급을 고르면 다음으로 갈 수 있는가.
+   *
+   * 예전 조건은 '여행 일수 × 2 개 이상' 이었다. 여덟 날 여행을 세 도시에서
+   * 전부 찍먹으로 잡으면 9곳이라, 앱이 내준 선택을 고르면 '계획 세우기' 가
+   * 잠겼다. 게다가 왜 잠겼는지 아무 데도 적혀 있지 않아 화면이 죽은 것처럼
+   * 보였다.
+   */
+  const goBtn = page.getByRole('button', { name: '계획 세우기' });
+  for (const tier of ['찍먹', '보통', '꽉찬']) {
+    await page.locator('.bulk-btn', { hasText: tier }).click();
+    await page.waitForTimeout(1300);
+    check(`${tier}을 골라도 계획 세우기가 열려 있다`, !(await goBtn.isDisabled()),
+      `${await pickCount()}곳`);
+  }
+
+  /* 잠겼을 때는 왜인지 화면에 적혀 있어야 한다. */
+  await page.locator('.bulk-btn', { hasText: '찍먹' }).click(); await page.waitForTimeout(1200);
+  const boxes = page.locator('.item:not(.foodbox .item) input[type=checkbox]:checked');
+  let guard = 0;
+  while ((await boxes.count()) > 0 && guard++ < 40) {
+    await boxes.first().uncheck(); await page.waitForTimeout(200);
+  }
+  const why = await page.locator('.bar-why').innerText().catch(() => '');
+  check('막혔을 때 왜인지 적혀 있다', why.length > 0 && (await goBtn.isDisabled()),
+    why || '아무 말 없음');
+  await page.locator('.bulk-btn', { hasText: '보통' }).click(); await page.waitForTimeout(1300);
+  check('다시 담으면 안내가 사라지고 열린다',
+    (await page.locator('.bar-why').count()) === 0 && !(await goBtn.isDisabled()));
   await page.screenshot({ path: new URL('07-step3.png', shots).pathname, fullPage: true });
 
   /*
@@ -957,6 +987,30 @@ console.log('\n■ 7. 3·4단계에서 직접 손보기 — 통합 목록 · 일
   check('아이템을 4단계에서 뺄 수 있다', !e1.includes(gone), `${gone} 빠짐 · ${e0.length} → ${e1.length}줄`);
   check('빼도 순서 바꾸기는 그대로다', (await page.locator('.entry-move').count()) === e1.length,
     `${await page.locator('.entry-move').count()} / ${e1.length}`);
+
+  /*
+   * 빼기를 누르면 정말 줄어드는가.
+   *
+   * 후보는 담은 것만이 아니다 — 별을 주지 않은 것도 취향 점수만으로 남아
+   * 3안의 다양성을 만든다. 그래서 별만 지우는 방식으로는 뺀 자리에 그대로
+   * 다시 들어오거나, 애초에 별이 없던 식당은 눌러도 사라지지 않았다.
+   * 열 번을 눌러 열 줄이 줄어드는지 본다.
+   */
+  const dropped = [];
+  const stuck = [];
+  for (let i = 0; i < 10 && (await page.locator('.entry-drop').count()) > 0; i++) {
+    const name = (await entryNames())[0];
+    await page.locator('.entry-drop').first().click();
+    await page.waitForTimeout(500);
+    dropped.push(name);
+    if ((await entryNames()).includes(name)) stuck.push(name);
+  }
+  check('누른 줄은 그때마다 사라진다', stuck.length === 0,
+    stuck.length ? `안 빠짐: ${stuck.join(' · ')}` : `${dropped.length}줄 확인`);
+  const after10 = await entryNames();
+  check('뺀 것이 나중에도 되돌아오지 않는다',
+    dropped.every((n) => !after10.includes(n)),
+    dropped.filter((n) => after10.includes(n)).join(' · ') || `${dropped.length}줄 그대로 빠져 있음`);
 
   const cityNames = async () => page.locator('.itin-city').allInnerTexts();
   const c0 = await cityNames();
