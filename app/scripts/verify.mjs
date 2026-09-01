@@ -1177,6 +1177,64 @@ console.log('\n■ 9. 서비스 워커 — 낡은 데이터가 남지 않는가'
   await ctx.close();
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+console.log('\n■ 10. 아이패드 — 골라도 계속 고를 수 있는가');
+{
+  const ctx = await browser.newContext({ viewport: { width: 1024, height: 1366 }, hasTouch: true });
+  const page = await ctx.newPage();
+  watch(page, allErrors, '[아이패드]');
+  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('.city-card', { timeout: 25000 });
+
+  /*
+   * 페이지가 화면보다 길면 body 는 min-height 여야 한다. height: 100% 로
+   * 두면 body 상자는 화면 높이에 고정되고 내용만 밖으로 삐져나간다 —
+   * 사파리에서 스크롤·합성·히트테스트가 어긋나는 자리다.
+   */
+  const box = await page.evaluate(() => {
+    const cs = (el) => getComputedStyle(el);
+    return {
+      bodyH: cs(document.body).height,
+      docH: document.documentElement.scrollHeight,
+      view: window.innerHeight,
+      blurred: [...document.querySelectorAll('*')]
+        .filter((el) => {
+          const c = cs(el);
+          return c.backdropFilter !== 'none' && (c.position === 'fixed' || c.position === 'sticky');
+        })
+        .map((el) => el.className).join(', '),
+    };
+  });
+  check('본문이 화면보다 길어도 body 가 잘리지 않는다',
+    parseFloat(box.bodyH) >= box.docH - 2, `body ${box.bodyH} · 문서 ${box.docH}px`);
+  check('붙박이 막대에 흐림 합성이 없다', box.blurred === '', box.blurred || '없음');
+
+  // 실제로 눌러 본다 — 하나 고르고 나서 다음 것이 눌리는가.
+  await page.getByRole('button', { name: /마드리드·중부/ }).first().click();
+  await page.waitForTimeout(600);
+  const names = await page.locator('.city-name').allInnerTexts();
+  const picked = [];
+  for (const n of names.slice(0, 4)) {
+    await page.locator('.city-main', { hasText: n }).first().click();
+    await page.waitForTimeout(500);
+    picked.push(await page.locator('.city-card.is-selected').count());
+  }
+  check('첫 도시를 고른 뒤에도 계속 고를 수 있다',
+    picked.join() === '1,2,3,4', `${names.slice(0, 4).join('·')} → ${picked.join(' → ')}곳`);
+
+  // 아래까지 스크롤해도 카드가 계속 눌리는가(붙박이 막대에 가리지 않는가).
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(500);
+  const last = page.locator('.city-main').last();
+  const lb = await last.boundingBox();
+  const covered = lb ? await page.evaluate(([x, y]) => {
+    const el = document.elementFromPoint(x, y);
+    return el ? !el.closest('.city-main') : true;
+  }, [lb.x + lb.width / 2, lb.y + 10]) : true;
+  check('맨 아래 카드가 막대에 가리지 않는다', !covered);
+  await ctx.close();
+}
+
 await browser.close();
 
 // ─────────────────────────────────────────────────────────────────────────
