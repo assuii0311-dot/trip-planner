@@ -38,7 +38,7 @@ export function defaultState(): TripState {
     transport: ['walk', 'metro'],
     dayTripAppetite: 2,
   };
-  return { version: 2, step: 1, basics, prefs, priorities: {}, chosenPlan: null, savedPlans: [], baseOverrides: {}, courses: {}, modePicks: {}, lodging: {}, cityOrder: [], cityDays: {}, dayOrder: {} };
+  return { version: 2, step: 1, basics, prefs, priorities: {}, chosenPlan: null, savedPlans: [], baseOverrides: {}, courses: {}, modePicks: {}, lodging: {}, cityOrder: [], cityDays: {}, dayOrder: {}, moveTiming: {} };
 }
 
 /**
@@ -95,6 +95,8 @@ function migrate(parsed: TripState): TripState {
     cityOrder: parsed.cityOrder ?? [],
     cityDays: parsed.cityDays ?? {},
     dayOrder: parsed.dayOrder ?? {},
+    // 예전 저장분에는 없다. 없으면 규칙대로 자동으로 고른다.
+    moveTiming: parsed.moveTiming ?? {},
   };
 }
 

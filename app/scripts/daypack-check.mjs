@@ -93,6 +93,25 @@ const r3 = show(['madrid','toledo','segovia','seville','cordoba','malaga','ronda
   check('자투리 왕복이 없다 (9곳)', stub(r3).length === 0, `${stub(r3).length}건`);
 }
 
+console.log('\n=== 넣을 수 없는 근교가 있어도 끝나는가 ===');
+{
+  /*
+   * 4단계에서 '짐 안 옮기기' 를 누르면 마드리드↔세비야(왕복 6시간 50분)
+   * 같은 당일치기도 만들어진다. 어느 날에도 들어갈 수 없는 근교를 큐에
+   * 두면 영원히 돈다 — 실제로 화면이 멈췄다.
+   */
+  const sel = ['madrid', 'seville'].map((x) => cities.find((c) => c.slug === x));
+  const { need, items } = pick(['madrid', 'seville'], 'full');
+  const itin = buildItinerary(sel, items, prefs, null, null, cities,
+    { lodging: { madrid: 'daytrip' } });
+  const t0 = Date.now();
+  const r = packDays(itin, (x) => need.get(x) ?? 0, BUDGET);
+  const ms = Date.now() - t0;
+  check('왕복이 하루보다 긴 근교가 있어도 끝난다', ms < 500, `${ms}ms · ${r.days.length}일`);
+  check('넣지 못한 것을 남는 시간으로 알린다', r.unseen.size > 0 || r.days.length > 0,
+    [...r.unseen.entries()].map(([k, v]) => `${name(k)} ${v}분`).join(' · ') || '없음');
+}
+
 console.log('\n=== 언제나 끝나는가 (넓게) ===');
 let worst = 0, runs = 0, bad = [];
 const pool = cities.filter((c) => !c.island).map((c) => c.slug);

@@ -4,7 +4,8 @@ import type { Itinerary } from '../lib/itinerary';
 import { THEME_ICON, THEME_LABEL } from '../lib/themes';
 import { rankItems } from '../lib/scoring';
 import { cityWorthDays, coursesFor, defaultCityDays, foodPicksFor, itemsForDays, mustSeeFor } from '../lib/course';
-import { estimateDays, isMeal } from '../lib/capacity';
+import { dailyMinutes, estimateDays, isMeal, itemMinutes } from '../lib/capacity';
+import { packDays } from '../lib/daypack';
 import { recommend } from '../lib/recommend';
 import { mapsPlaceUrl } from '../lib/deeplinks';
 import { ItemRow } from '../components/ItemRow';
@@ -71,7 +72,7 @@ export default function Step3Course({
      * 위에 '4일치 코스' 를 담아 놓고 아래 조절기가 '2일' 이라고 하면
      * 그것대로 두 값이 어긋난다.
      */
-    const picked = mine.length ? Math.max(0.5, Math.round(estimateDays(mine, prefs) * 2) / 2) : null;
+    const picked = mine.length ? Math.max(STEP, snap(estimateDays(mine, prefs))) : null;
     return {
       city: s.city,
       wantDays: cityDays[s.city.slug] ?? picked ?? defaultCityDays(s.city),
@@ -96,7 +97,31 @@ export default function Step3Course({
     () => items.filter((i) => (priorities[i.id] ?? 0) > 0),
     [items, priorities],
   );
-  const needDays = estimateDays(chosen, prefs);
+  /*
+   * 두 숫자를 나란히 둔다.
+   *
+   *   볼거리 — 담은 곳의 소요 시간 합. 도시 수도 이동도 세지 않는다
+   *   일정   — 그것을 실제로 날에 배치했을 때 필요한 날. 이동이 들어간다
+   *
+   * 예전에는 볼거리만 '예상 N일' 로 보여 줬는데, 4단계는 달력 칸을 셌다.
+   * 같은 여행을 3단계는 8.7일, 4단계는 15칸이라고 불렀다. 이제 일정 쪽은
+   * 4단계와 **같은 엔진**(packDays)을 쓰므로 어긋날 수 없다.
+   *
+   * 둘 다 두는 이유는 넘칠 때 해법이 다르기 때문이다 — 볼거리가 많아
+   * 넘치면 아이템을 줄이고, 이동이 많아 넘치면 도시를 뺀다.
+   */
+  const volumeDays = estimateDays(chosen, prefs);
+  const packed = useMemo(
+    () => (itinerary ? packDays(itinerary, (slug) => chosen
+      .filter((i) => i.city === slug && !isMeal(i))
+      .reduce((a, i) => a + itemMinutes(i), 0), dailyMinutes(prefs)) : null),
+    [itinerary, chosen, prefs],
+  );
+  // 아무것도 담지 않았으면 일정도 0일이다. 거점마다 최소 하루를 주는 것은
+  // 담은 것이 있을 때의 이야기다.
+  const needDays = chosen.length === 0 ? 0 : packed ? packed.days.length : Math.ceil(volumeDays);
+  const moveDays = chosen.length === 0 || !packed
+    ? 0 : Math.round((packed.moveMin / dailyMinutes(prefs)) * 10) / 10;
   const meals = chosen.filter(isMeal).length;
   /* 달력 일수가 아니라 실제로 쓸 수 있는 날과 견준다 — 첫날은 착륙하고
      시내에 들어와야 시작하고, 마지막 날은 공항으로 나서기 전에 끝난다. */
@@ -142,14 +167,16 @@ export default function Step3Course({
 
       <div className={needDays > budget ? 'notice' : 'card'} style={{ padding: 12, marginBottom: 18 }}>
         <b>
-          {chosen.length - meals}곳 선택 · 예상 {needDays}일
-          {meals > 0 && <span className="sum-meal"> + 미식 {meals}곳</span>}
+          {chosen.length - meals}곳 선택 · 볼거리 {volumeDays}일치
+          {moveDays > 0 && <span className="sum-move"> + 이동 {moveDays}일치</span>}
+          {' → '}일정 {needDays}일
+          {meals > 0 && <span className="sum-meal"> · 미식 {meals}곳</span>}
         </b>
         {' '}
         {needDays === 0
           ? '— 아직 아무것도 담기지 않았습니다.'
           : needDays > budget
-            ? `— 실제로 쓸 수 있는 날은 ${budget}일입니다. 이대로면 ${Math.round((needDays - budget) * 10) / 10}일치가 일정에서 빠집니다.`
+            ? `— 실제로 쓸 수 있는 날은 ${budget}일입니다. ${Math.round((needDays - budget) * 10) / 10}일이 모자랍니다.`
             : `— 쓸 수 있는 ${budget}일 안에 들어갑니다.`}
         {lostDays > 0 && (
           <div className="help" style={{ marginTop: 6 }}>
@@ -265,11 +292,16 @@ export default function Step3Course({
   );
 }
 
+/** 눈금 단위. 아이템 하나가 중앙값 78분이므로 0.2일(약 101분)이 대략 한 곳이다. */
+const STEP = 0.2;
+const snap = (n: number) => Math.round(n / STEP) * STEP;
+
 /** 0.5 는 '반나절' 로 읽는다. '0.5일' 은 사람이 쓰는 말이 아니다. */
 function fmtDays(d: number): string {
-  if (d === 0.5) return '반나절';
-  const whole = Math.floor(d);
-  return d % 1 === 0 ? `${whole}일` : `${whole}일 반`;
+  const r = Math.round(d * 10) / 10;
+  // 0.5 만 사람 말이 따로 있다. 눈금이 0.2 라 나머지는 소수로 적는 편이 정직하다.
+  if (Math.abs(r - 0.5) < 0.001) return '반나절';
+  return `${r}일`;
 }
 
 /** 한 도시의 코스 카드 세 장과, 그 아래 전체 아이템 목록. */
@@ -312,7 +344,7 @@ function CityPanel({
    * 2.5 < 2.7 이라 ＋ 가 열려 있는데 눌러도 담을 것이 없다. 0.5 단위로
    * 내림한 값을 천장으로 삼아, 열려 있는 버튼은 반드시 무언가를 바꾼다.
    */
-  const capDays = Math.max(0.5, Math.floor(worth * 2) / 2);
+  const capDays = Math.max(STEP, Math.floor(worth / STEP) * STEP);
   const atCeiling = wantDays >= capDays;
   const pickedIds = new Set(cityItems.filter((i) => (priorities[i.id] ?? 0) > 0).map((i) => i.id));
   const pickedDays = estimateDays(cityItems.filter((i) => pickedIds.has(i.id)), prefs);
@@ -342,7 +374,7 @@ function CityPanel({
    * 표현할 수가 없다.
    */
   const setDays = (n: number) => {
-    const next = Math.min(7, Math.max(0.5, Math.round(n * 2) / 2));
+    const next = Math.min(7, Math.max(STEP, snap(n)));
     onDays(city.slug, next, itemsForDays(city, cityItems, prefs, next, course, cities));
   };
 
@@ -413,14 +445,22 @@ function CityPanel({
         <span className="days-label">{city.name} 며칠</span>
         <div className="days-step" role="group" aria-label={`${city.name} 일수`}>
           <button
-            type="button" aria-label="반나절 줄이기" disabled={wantDays <= 0.5}
-            onClick={() => setDays(wantDays - 0.5)}
+            type="button" aria-label="조금 줄이기" disabled={wantDays <= STEP + 0.001}
+            onClick={() => setDays(wantDays - STEP)}
           >−</button>
-          <span className="days-value">{fmtDays(wantDays)}</span>
+          {/*
+            눈금은 0.2일이다. 0.5일은 한 번에 세 곳이 움직여 조절이 거칠었다
+            (아이템 하나가 중앙값 78분이므로 0.2일이 대략 한 곳이다).
+            다만 '0.2일' 은 사람이 못 읽는 말이므로 곳 수를 함께 적는다.
+          */}
+          <span className="days-value">
+            {fmtDays(wantDays)}
+            <span className="days-count"> ≈ {itemsForDays(city, cityItems, prefs, wantDays, course, cities).length}곳</span>
+          </span>
           <button
-            type="button" aria-label="반나절 늘리기" disabled={wantDays >= 7 || atCeiling}
+            type="button" aria-label="조금 늘리기" disabled={wantDays >= 7 || atCeiling}
             title={atCeiling ? `${city.name}에 볼 만한 곳은 ${worth}일치입니다` : undefined}
-            onClick={() => setDays(wantDays + 0.5)}
+            onClick={() => setDays(wantDays + STEP)}
           >＋</button>
         </div>
         <span className="days-hint">

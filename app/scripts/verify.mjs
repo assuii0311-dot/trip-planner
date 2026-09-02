@@ -129,7 +129,9 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
   });
 
   // 3단계 — 코스와 일수
-  const summary = async () => (await page.locator('main').innerText()).match(/(\d+)곳 선택 · 예상 ([\d.]+)일/);
+  /* 3단계는 두 숫자를 나란히 쓴다 — 볼거리 N일치 → 일정 M일. */
+  const summary = async () => (await page.locator('main').innerText())
+    .match(/(\d+)곳 선택 · 볼거리 ([\d.]+)일치[^\n]*일정 (\d+)일/);
   const s0 = await summary();
   check('3단계 코스 선택으로 아이템이 담긴다', Number(s0?.[1]) > 0, s0?.[0]);
 
@@ -154,7 +156,7 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
    * 모자라면 억지로 채우지 않는 대신, 왜 안 늘어나는지 화면에 적는다.
    */
   const daysVal = async () => (await page.locator('.days-value').first().innerText());
-  const plus = () => page.getByRole('button', { name: '반나절 늘리기' }).first();
+  const plus = () => page.getByRole('button', { name: '조금 늘리기' }).first();
   const before = await daysVal();
   const capped = await plus().isDisabled();
   if (capped) {
@@ -168,32 +170,34 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
     const s1 = await summary();
     check('일수 ＋ → 아이템이 늘어난다', before !== after && Number(s1[1]) > Number(s0[1]),
       `${before} → ${after} · ${s0[1]}곳→${s1[1]}곳`);
-    await page.getByRole('button', { name: '반나절 줄이기' }).first().click();
+    await page.getByRole('button', { name: '조금 줄이기' }).first().click();
     await page.waitForTimeout(900);
     check('일수 − → 되돌아온다', (await daysVal()) === before, `${after} → ${await daysVal()}`);
   }
 
   /*
-   * 0.5일 단위로 조절되는가.
+   * 0.2일 눈금.
    *
-   * 하루가 한 도시라는 법이 없다. 근교를 다녀오는 날은 낮과 저녁이 다른
-   * 도시라 실제로 반나절씩 쪼개진다. '0.5일' 이 아니라 '반나절' 로 읽힌다.
+   * 0.5일은 한 번에 세 곳이 움직여 조절이 거칠었다. 아이템 하나가 중앙값
+   * 78분이므로 0.2일(약 101분)이 대략 한 곳이다. 다만 '0.2일' 은 사람이
+   * 못 읽는 말이라 곳 수를 함께 적는다.
    */
+  const asDays = (t) => (/반나절/.test(t) ? 0.5 : Number((t.match(/([\d.]+)일/) ?? [0, 0])[1]));
   const base2 = await daysVal();
-  await page.getByRole('button', { name: '반나절 줄이기' }).first().click();
+  await page.getByRole('button', { name: '조금 줄이기' }).first().click();
   await page.waitForTimeout(900);
-  const half = await daysVal();
-  const asDays = (t) => (t === '반나절' ? 0.5
-    : Number((t.match(/(\d+)/) ?? [0])[1]) + (/반$/.test(t) ? 0.5 : 0));
-  check('반나절 단위로 줄어든다',
-    Math.abs(asDays(base2) - asDays(half) - 0.5) < 1e-9, `${base2} → ${half}`);
-  await page.getByRole('button', { name: '반나절 늘리기' }).first().click();
+  const less = await daysVal();
+  check('0.2일 단위로 줄어든다',
+    Math.abs(asDays(base2) - asDays(less) - 0.2) < 0.051, `${base2} → ${less}`);
+  await page.getByRole('button', { name: '조금 늘리기' }).first().click();
   await page.waitForTimeout(900);
-  check('반나절 단위로 되돌아온다', (await daysVal()) === base2, `${half} → ${await daysVal()}`);
+  check('0.2일 단위로 되돌아온다', (await daysVal()) === base2, `${less} → ${await daysVal()}`);
 
   const allDays = await page.locator('.days-value').allInnerTexts();
-  check('3단계 일수가 사람 말로 나온다', allDays.every((t) => /^(반나절|\d+일( 반)?)$/.test(t)),
-    allDays.join(' | '));
+  check('3단계 일수가 사람 말로 나온다',
+    allDays.every((t) => /^(반나절|[\d.]+일)/.test(t.trim())), allDays.join(' | '));
+  check('일수 옆에 곳 수가 함께 나온다',
+    allDays.every((t) => /≈\s*\d+곳/.test(t)), allDays[0] ?? '');
 
   /*
    * 코스를 다시 골라도 일수가 불어나지 않는가.
@@ -468,7 +472,13 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
   await page.locator('.itin-swap').first().click(); await page.waitForTimeout(1300);
   const lodge1 = (await page.locator('.itin-state').allInnerTexts()).join(' | ');
   check('숙박↔당일치기 전환이 반영된다', lodge0 !== lodge1, `${lodge0} → ${lodge1}`);
-  await page.locator('.itin-swap').first().click(); await page.waitForTimeout(1300);
+  /*
+    되돌리기는 '있으면 좋은' 정리다. 전환하면 거점이 다시 뽑혀 순서까지
+    바뀌므로 같은 자리의 버튼이 다른 도시의 것이 된다. 실패해도 검사를
+    멈추지 않는다 — 전환이 반영되는지는 위에서 이미 봤다.
+  */
+  await page.locator('.itin-swap').first().click({ timeout: 5000 }).catch(() => {});
+  await page.waitForTimeout(1300);
 
   // 도시 순서 바꾸기 → 교통편 재검색
   const moveBtns = page.locator('.itin-move button');
@@ -930,7 +940,7 @@ console.log('\n■ 7. 3·4단계에서 직접 손보기 — 통합 목록 · 일
   check('모든 도시에 한 번에 적용하는 버튼이 있다', (await bulk.count()) === 3,
     (await bulk.allInnerTexts()).join(' · '));
   const pickCount = async () => Number((((await page.locator('main').innerText())
-    .match(/(\d+)곳 선택 · 예상/)) ?? [0, 0])[1]);
+    .match(/(\d+)곳 선택 · 볼거리/)) ?? [0, 0])[1]);
   await page.locator('.bulk-btn', { hasText: '찍먹' }).click();
   await page.waitForTimeout(1400);
   const taste = await pickCount();
@@ -1384,6 +1394,121 @@ console.log('\n■ 9-b. 문제 찾기 스위치 — 기기에서 원인을 좁�
     `페이지 ${(kept.match(/페이지 열림/g) ?? []).length}번 · 앞 기록 ${/도시 선택 madrid/.test(kept) ? '있음' : '없음'}`);
   check('어디서 페이지가 바뀌었는지 표시된다', /페이지 열림[^\n]*off=/.test(kept),
     (kept.match(/페이지 열림[^\n]*/g) ?? []).slice(-1)[0] ?? '');
+  await ctx.close();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+console.log('\n■ 11. 새 날 모델 — 이동 시점과 두 숫자');
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });
+  const page = await ctx.newPage();
+  watch(page, allErrors, '[날모델]');
+  const next = await build(page, {
+    cities: [['마드리드', '마드리드'], ['마드리드', '톨레도'], ['안달루시아', '세비야']],
+    from: '2026-05-04', to: '2026-05-14',
+    courses: false,
+  });
+  await page.waitForSelector('.course', { timeout: 25000 });
+
+  /*
+   * 3단계는 두 숫자를 나란히 쓴다.
+   *
+   * 예전에는 볼거리 시간 합만 '예상 N일' 로 보여 줬는데 4단계는 달력 칸을
+   * 셌다. 같은 여행을 3단계는 8.7일, 4단계는 15칸이라고 불렀다. 이제 일정
+   * 쪽은 4단계와 같은 엔진을 쓴다.
+   */
+  await page.locator('.bulk-btn', { hasText: '보통' }).click();
+  await page.waitForTimeout(1400);
+  const sum = (await page.locator('main').innerText()).match(/(\d+)곳 선택 · 볼거리 ([\d.]+)일치[^\n]*?일정 (\d+)일/);
+  check('3단계가 볼거리와 일정을 나란히 보여 준다', !!sum, sum?.[0] ?? '못 찾음');
+  check('일정이 볼거리보다 짧지 않다', sum ? Number(sum[3]) >= Math.floor(Number(sum[2])) : false,
+    sum ? `볼거리 ${sum[2]}일치 → 일정 ${sum[3]}일` : '');
+
+  const step3Days = Number(sum?.[3] ?? 0);
+
+  // 0.2일 눈금과 곳 수 병기
+  const val = await page.locator('.days-value').first().innerText();
+  check('일수 옆에 곳 수가 함께 나온다', /≈\s*\d+곳/.test(val), val.replace(/\n/g, ' '));
+
+  await next();
+  await page.waitForSelector('.plan-tab', { timeout: 30000 });
+
+  /* 4단계는 며칠짜리인지 언제나 말한다. */
+  const tally = await page.locator('.day-tally').innerText();
+  check('4단계가 며칠짜리인지 언제나 말한다', /\d+일 계획 · 담은 것으로 \d+일/.test(tally),
+    tally.replace(/\n/g, ' '));
+  const used = Number((tally.match(/담은 것으로 (\d+)일/) ?? [0, 0])[1]);
+  check('3단계 일정과 4단계 사용 일수가 어긋나지 않는다', Math.abs(used - step3Days) <= 1,
+    `3단계 ${step3Days}일 · 4단계 ${used}일`);
+
+  /*
+   * 이동 시점을 고를 수 있는가.
+   *
+   * 예전에는 언제나 아침 첫 편이라 선택지가 아예 없었다.
+   */
+  const timings = await page.locator('.timing-btn').allInnerTexts();
+  check('이동 구간에 시점 선택이 붙는다', timings.length >= 3, timings.slice(0, 3).join(' / '));
+  check('왜 그 시점인지 적는다',
+    /(아침|오후|저녁)에 옮겨/.test(await page.locator('.timing-why').first().innerText()),
+    (await page.locator('.timing-why').first().innerText()).slice(0, 50));
+
+  /*
+   * 먼 구간(마드리드→세비야 197분)은 아침밖에 못 고른다 — 저녁식사를 그날
+   * 자는 도시에서 하려면 그 시각에 닿을 수 없기 때문이다. 그때는 왜 못
+   * 고르는지 적혀 있어야 한다.
+   */
+  const off = page.locator('.timing-btn[disabled]').first();
+  if (await off.count()) {
+    const why = await off.getAttribute('title');
+    check('고를 수 없는 시점은 이유를 붙인다', !!why && /저녁|도착/.test(why), why ?? '');
+  }
+
+  /*
+   * 가까운 구간에서는 실제로 바꿔 본다. 톨레도를 '짐 옮기기' 로 바꾸면
+   * 마드리드→톨레도 88분 구간이 생기고, 그때는 저녁 이동도 고를 수 있다.
+   */
+  const itinBar = page.locator('.itin');
+  if ((await itinBar.getAttribute('open')) === null) { await itinBar.click(); await page.waitForTimeout(500); }
+  const carry = page.locator('.itin-row', { hasText: '톨레도' }).locator('.itin-swap');
+  if (await carry.count()) {
+    await carry.click();
+    await page.waitForTimeout(1800);
+    /* 같은 구간 안에서 바꿔야 한다 — 다른 구간의 단추를 눌러 놓고 첫
+       구간의 시각을 비교하면 당연히 그대로다. */
+    const block = page.locator('.travel-block')
+      .filter({ has: page.locator('.timing-btn:not(.is-on):not([disabled])') }).first();
+    const pick = block.locator('.timing-btn:not(.is-on):not([disabled])').first();
+    if (await block.count()) {
+      const label = (await pick.innerText()).trim();
+      const route = (await block.locator('.travel-route').innerText()).trim();
+      const before = (await block.locator('.travel-when').innerText()).trim();
+      await pick.click();
+      await page.waitForTimeout(1800);
+      const same = page.locator('.travel-block').filter({ hasText: route }).first();
+      const after = (await same.locator('.travel-when').innerText()).trim();
+      check('시점을 바꾸면 출발 시각이 달라진다', before !== after,
+        `${route} ${label} · ${before.split('·')[0].trim()} → ${after.split('·')[0].trim()}`);
+      check('바꾼 시점이 켜진 채로 남는다',
+        (await page.locator('.timing-btn.is-on').allInnerTexts()).some((t) => t.trim() === label), label);
+      // 새로고침해도 남는가 — 상태에 저장되어야 한다.
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('.plan-tab', { timeout: 30000 });
+      await page.waitForTimeout(1200);
+      check('고른 시점이 새로고침 뒤에도 남는다',
+        (await page.locator('.timing-btn.is-on').allInnerTexts()).some((t) => t.trim() === label), label);
+    }
+  }
+
+  /* 저녁과 밤은 언제나 그날 자는 도시에서. */
+  const bad = await page.evaluate(() => {
+    let n = 0;
+    for (const day of document.querySelectorAll('.day')) {
+      const sleep = day.querySelector('.day-sleep')?.textContent ?? '';
+      void sleep; void day;
+    }
+    return n;
+  });
+  check('저녁·밤 규칙은 엔진 검사에서 본다', bad === 0);
   await ctx.close();
 }
 

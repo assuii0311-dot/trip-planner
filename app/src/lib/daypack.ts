@@ -218,7 +218,19 @@ export function packDays(
       stop: t,
       minutes: Math.max(0, needMinOf(t.city.slug)),
       round: Math.round(t.dayTripMin),
-    }));
+    /*
+     * 왕복만으로 하루가 넘는 근교는 당일치기가 될 수 없다.
+     *
+     * 사용자가 4단계에서 '짐 안 옮기기' 로 바꾸면 마드리드↔세비야(왕복
+     * 6시간 50분) 같은 조합도 만들어진다. 그걸 큐에 두면 어느 날에도 들어가지
+     * 못해 **큐가 영원히 비지 않는다** — 실제로 화면이 멈췄다. 넣을 수 없는
+     * 것은 넣을 수 없다고 하고 넘어간다.
+     */
+    })).filter((t) => {
+      if (t.round + MIN_STAY_MIN <= budgetMin) return true;
+      unseen.set(t.stop.city.slug, (unseen.get(t.stop.city.slug) ?? 0) + t.minutes);
+      return false;
+    });
 
     // 이 거점의 볼거리와 근교를 날에 채운다.
     for (;;) {
@@ -308,7 +320,24 @@ export function packDays(
        * 아직 남았는데 오늘은 더 못 넣는다(예산이 찼거나 짐을 옮긴 날이다).
        * 날을 닫고 새 날을 연다.
        */
+      const before = day.legs.length;
       close();
+      /*
+       * 마지막 방어선.
+       *
+       * 빈 날을 열었는데도 아무것도 못 넣었다면 다음 바퀴도 똑같다 —
+       * 그대로 두면 영원히 돈다. 넣을 수 없는 것은 넣을 수 없다고 하고
+       * 큐에서 뺀다. 끝나지 않는 계산은 사용자에게 멈춘 화면으로 보인다.
+       */
+      if (before === 0) {
+        if (queue.length) {
+          const t = queue.shift()!;
+          if (t.minutes > 0) unseen.set(t.stop.city.slug, (unseen.get(t.stop.city.slug) ?? 0) + t.minutes);
+        } else if (need > 0) {
+          unseen.set(stop.city.slug, (unseen.get(stop.city.slug) ?? 0) + need);
+          need = 0;
+        }
+      }
     }
 
     // 볼거리도 근교도 없는 거점이라도 짐을 옮겼으면 밤은 보낸다.

@@ -443,16 +443,30 @@ export function scheduleFromItinerary(
   }
 
   /*
-   * 날이 남으면 그대로 둔다.
+   * 날이 남으면 도시들에 고르게 나눈다.
    *
-   * 예전에는 숙박지에 고르게 나눠 주었는데, 이제는 볼거리 분량이 곧 날이므로
-   * 남는 날은 '고른 곳을 다 봐도 날이 남는다' 는 뜻이다. 채울 것이 없다고
-   * 달력을 짧게 끝내지는 않는다 — 사용자는 그날에도 스페인에 있다.
+   * 볼거리 분량이 곧 날이므로 남는 날은 '고른 곳을 다 봐도 날이 남는다' 는
+   * 뜻이다. 채울 것이 없다고 달력을 짧게 끝내지는 않는다 — 사용자는 그날에도
+   * 스페인에 있다. 다만 남는 날을 전부 마지막 도시 뒤에 붙이면 '세비야 8박'
+   * 처럼 한 도시에 몰린다. 도시마다 돌아가며 하루씩 얹는다.
    */
   const spare = Math.max(0, totalDays - schedule.length);
-  while (schedule.length < totalDays && schedule.length > 0) {
-    const last = schedule[schedule.length - 1];
-    schedule.push({ ...last, travel: null, moveTiming: null, segments: [] });
+  if (spare > 0 && schedule.length > 0) {
+    // 같은 도시에서 자는 날의 마지막 자리를 도시별로 찾는다.
+    const tail = new Map<string, number>();
+    schedule.forEach((d, i) => { if (d.sleepAt) tail.set(d.sleepAt, i); });
+    const blocks = [...tail.entries()].sort((a, b) => a[1] - b[1]);
+    let k = 0;
+    while (schedule.length < totalDays && blocks.length) {
+      const [slug, at] = blocks[k % blocks.length];
+      const src = schedule[Math.min(at, schedule.length - 1)];
+      schedule.splice(at + 1, 0, { ...src, travel: null, moveTiming: null, segments: [] });
+      // 뒤 블록의 자리가 한 칸씩 밀린다.
+      for (let j = 0; j < blocks.length; j++) if (blocks[j][1] > at) blocks[j][1] += 1;
+      blocks[k % blocks.length][1] = at + 1;
+      void slug;
+      k += 1;
+    }
   }
 
   return { schedule, overflow, spare, unseen: packed.unseen, needDays };
