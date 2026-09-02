@@ -63,6 +63,9 @@ export const MOVE_RULE = {
 /** 옮겨 가서 이만큼도 못 쓰면 오늘은 옮기지 않는다. 대표 명소 하나가 보통 60~90분이다. */
 export const MIN_STAY_MIN = 90;
 
+/** 이보다 짧은 구간은 만들지 않는다. 6분짜리 구간은 계획이 아니라 찌꺼기다. */
+export const MIN_SEG_MIN = 60;
+
 /** 이미 시작한 일정이 마감을 넘겨도 이만큼은 봐 준다. 공항 마감에는 쓰지 않는다. */
 export const GRACE_MIN = 60;
 
@@ -221,7 +224,14 @@ export function packDays(
     for (;;) {
       const day: Open = cur ?? (cur = open(stop.city.slug));
 
-      if (need > 0 && day.left > 0) {
+      /*
+       * 자투리 구간을 만들지 않는다.
+       *
+       * '마드리드 6분 + 톨레도 358분' 같은 날이 나왔다. 6분짜리 구간은
+       * 계획이 아니라 계산의 찌꺼기다. 한 곳도 못 볼 시간이면 그 도시는
+       * 오늘 넣지 않고 다음 날로 넘긴다.
+       */
+      if (need >= MIN_SEG_MIN && day.left >= MIN_SEG_MIN) {
         const use = Math.min(need, day.left);
         add(day, { city: stop.city.slug, minutes: use, isDayTrip: false, base: null, roundTripMin: 0 });
         need -= use;
@@ -255,12 +265,44 @@ export function packDays(
         moveTotal += t.round;
         day.left -= t.round + use;
         t.minutes -= use;
-        if (t.minutes < MIN_STAY_MIN) {
-          if (t.minutes > 0) unseen.set(t.stop.city.slug, (unseen.get(t.stop.city.slug) ?? 0) + t.minutes);
-          queue.shift();
-        } else break;                     // 하루치가 더 남은 근교는 다음 날 다시 간다
+        /*
+         * 같은 근교는 하루만 간다.
+         *
+         * 코르도바를 사흘 연속 당일치기로 다녀오면 왕복 164분을 세 번 쓴다.
+         * 그렇게 볼 곳이 많은 도시라면 거기서 자는 편이 낫고, 그 판단은
+         * 거점 엔진이 이미 한다(옮길 값어치 1.5일). 당일치기로 볼 수 있는
+         * 것은 하루치까지다 — 남는 것은 조용히 버리지 않고 unseen 으로 알린다.
+         */
+        if (t.minutes > 0) unseen.set(t.stop.city.slug, (unseen.get(t.stop.city.slug) ?? 0) + t.minutes);
+        queue.shift();
       }
 
+      /*
+       * 한 구간도 못 될 만큼 적게 남았으면 이미 그 도시를 보던 날에 얹는다.
+       *
+       * '마드리드 6분' 짜리 날을 새로 만드는 것은 계획이 아니라 계산의
+       * 찌꺼기다. 어제 마저 보면 되는 시간이다.
+       */
+      if (need > 0 && need < MIN_SEG_MIN) {
+        const pools = [...(cur ? [{ legs: cur.legs }] : []), ...[...days].reverse()];
+        let put = false;
+        for (const d of pools) {
+          const leg = d.legs.find((l) => l.city === stop.city.slug && !l.isDayTrip);
+          if (leg) {
+            leg.minutes += need;
+            given.set(stop.city.slug, (given.get(stop.city.slug) ?? 0) + need);
+            put = true;
+            break;
+          }
+        }
+        if (!put && day.left >= need) {
+          add(day, { city: stop.city.slug, minutes: need, isDayTrip: false, base: null, roundTripMin: 0 });
+          day.left -= need;
+        } else if (!put) {
+          unseen.set(stop.city.slug, (unseen.get(stop.city.slug) ?? 0) + need);
+        }
+        need = 0;
+      }
       if (need <= 0 && !queue.length) break;
       /*
        * 아직 남았는데 오늘은 더 못 넣는다(예산이 찼거나 짐을 옮긴 날이다).
