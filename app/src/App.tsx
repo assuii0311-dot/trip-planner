@@ -237,6 +237,10 @@ export default function App() {
       return { ...s, priorities: next };
     });
 
+  /** 도시 간 이동을 하루의 어디에서 할지 사용자가 정한다. */
+  const setMoveTiming = (from: string, to: string, t: 'morning' | 'midday' | 'evening') =>
+    setState((s) => ({ ...s, moveTiming: { ...s.moveTiming, [`${from}>${to}`]: t } }));
+
   /**
    * 4단계에서 아이템 하나를 일정에서 뺀다.
    *
@@ -398,11 +402,12 @@ export default function App() {
       prefs: state.prefs,
       priorities: state.priorities,
       dayOrder: state.dayOrder,
+      moveTiming: state.moveTiming,
       firstDayStart: airportWindow?.firstDayStart ?? null,
       lastDayEnd: airportWindow?.lastDayEnd ?? null,
     });
   }, [itinerary, items, state.basics.startDate, days, state.step,
-    state.prefs, state.priorities, state.dayOrder, airportWindow]);
+    state.prefs, state.priorities, state.dayOrder, state.moveTiming, airportWindow]);
 
   const plans = built?.plans ?? [];
 
@@ -667,9 +672,10 @@ export default function App() {
           <Step5Plans
             items={items} cities={index.cities} itinerary={itinerary!}
             days={days} prefs={state.prefs}
-            plans={plans} overflow={built?.overflow ?? []} spare={built?.spare ?? 0}
+            plans={plans} overflow={built?.overflow ?? []} needDays={built?.needDays ?? 0}
             chosen={chosenPlan.style} onChoose={choosePlan}
-            onSwap={swapEntry} onMode={setMode} onLodging={setLodging} onDropCity={dropCity}
+            onSwap={swapEntry} onMode={setMode} onTiming={setMoveTiming}
+            onLodging={setLodging} onDropCity={dropCity}
             onDropItem={dropItem}
             onMoveCity={moveCity} onMoveEntry={moveEntry} manualOrder={state.dayOrder}
             airport={airportWindow}

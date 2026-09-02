@@ -76,8 +76,10 @@ if (courseTitles.length < 2) throw new Error('추천 코스가 2개 미만입니
 await shot('step3-courses');
 await page.locator('.course').first().click();
 await page.waitForTimeout(600);
-const summary = (await page.locator('main').innerText()).match(/(\d+)곳 선택 · 예상 ([\d.]+)일/);
-if (!summary) throw new Error('선택 요약(N곳 · 예상 M일)이 보이지 않습니다');
+/* 3단계는 두 숫자를 나란히 쓴다 — 볼거리 N일치 → 일정 M일. */
+const summary = (await page.locator('main').innerText())
+  .match(/(\d+)곳 선택 · 볼거리 ([\d.]+)일치[^\n]*일정 (\d+)일/);
+if (!summary) throw new Error('선택 요약(N곳 · 볼거리 M일치 → 일정 K일)이 보이지 않습니다');
 console.log(`  코스 선택 후: ${summary[0]}`);
 if (Number(summary[1]) === 0) throw new Error('코스를 골랐는데 담긴 곳이 없습니다');
 // 나머지 도시도 첫 코스로 채워 계획을 만들 수 있게 한다.

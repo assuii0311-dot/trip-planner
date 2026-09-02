@@ -16,6 +16,8 @@
  */
 import { readFileSync } from 'node:fs';
 import { buildItinerary } from '../src/lib/itinerary.ts';
+import { isMeal } from '../src/lib/capacity.ts';
+import { rankAll, RANK_FLOOR } from '../src/lib/rank.ts';
 import { buildPlans } from '../src/lib/planner.ts';
 import { setIslandRail } from '../src/lib/routing.ts';
 
@@ -104,6 +106,53 @@ for (let start = 0; start < pool.length; start += 3) {
 }
 check(`${runs}가지 조합이 모두 예산 안에 끝난다`, slow === 0, `느린 것 ${slow}가지`);
 console.log(`  훑은 조합 ${runs}가지 · 가장 오래 걸린 것 ${worst.ms.toFixed(1)}ms (${worst.what})`);
+
+/*
+ * 새 날 모델이 지키는 것들.
+ *
+ * 저녁·밤은 언제나 그날 자는 도시에서(합의한 원칙 1), 6분짜리 찌꺼기 구간이
+ * 없을 것, 같은 근교를 자투리 때문에 다시 가지 않을 것.
+ */
+console.log('\n=== 하루 모양 ===');
+{
+  const slugs = ['madrid', 'toledo', 'segovia', 'seville', 'cordoba', 'granada'];
+  const sel = slugs.map((x) => cities.find((c) => c.slug === x)).filter(Boolean);
+  const all = slugs.flatMap(itemsOf);
+  const priorities = {};
+  for (const x of slugs) {
+    const list = itemsOf(x).filter((i) => !isMeal(i));
+    const ranked = rankAll(list, cities).filter((r) => r.score >= RANK_FLOOR).sort((a, b) => b.score - a.score);
+    for (const r of ranked.slice(0, 5)) priorities[r.item.id] = 2;
+  }
+  const picked = all.filter((i) => priorities[i.id]);
+  const itin = buildItinerary(sel, picked, prefs, null, null, cities, {});
+  const built = buildPlans({ items: all, itinerary: itin, startDate: '2026-05-04', days: 12,
+    prefs, priorities, dayOrder: {}, firstDayStart: null, lastDayEnd: null });
+
+  let badHome = 0, stub = 0, twice = 0, empty = 0;
+  for (const plan of built.plans) {
+    const seen = new Map();
+    for (const d of plan.days) {
+      if (!d.entries.length) empty++;
+      for (const e of d.entries) {
+        if ((e.slot === 'dinner' || e.slot === 'night') && e.item.city !== d.sleepAt) badHome++;
+      }
+      for (const g of d.segments ?? []) {
+        if (g.minutes > 0 && g.minutes < 60) stub++;
+        if (g.isDayTrip) {
+          const k = `${plan.style}:${g.city}`;
+          seen.set(k, (seen.get(k) ?? 0) + 1);
+        }
+      }
+    }
+    for (const [, n] of seen) if (n > 1) twice++;
+  }
+  check('저녁과 밤은 언제나 그날 자는 도시에서', badHome === 0, `${badHome}건`);
+  check('6분짜리 찌꺼기 구간이 없다', stub === 0, `${stub}건`);
+  check('같은 근교를 여러 날 가지 않는다', twice === 0, `${twice}건`);
+  check('빈 날이 없다', empty === 0, `${empty}일`);
+  check('필요한 날이 여행 일수 안에 든다', built.needDays <= 12, `${built.needDays}일 / 12일`);
+}
 
 const failed = results.filter((r) => !r.ok);
 console.log(`\n검사 ${results.length}건 · 통과 ${results.length - failed.length} · 실패 ${failed.length}`);

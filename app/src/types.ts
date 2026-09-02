@@ -249,8 +249,15 @@ export interface PlanDay {
   returnTo: string | null;
   /** 이 날 아침에 도시를 옮긴다면 그 구간. 일정은 도착 시각부터 시작한다. */
   travel: PlanTravel | null;
-  /** 이 날 밤 어디서 자는가. */
+  /** 이 날 밤 어디서 자는가. 저녁식사와 밤 일정도 여기서 한다. */
   sleepAt: string | null;
+  /**
+   * 그날의 구간들. 하루에 도시가 둘 이상 들어갈 수 있다 —
+   * 반나절 도시를 이어 붙이거나, 오후에 옮기거나, 근교를 다녀오는 날.
+   */
+  segments?: { city: string; minutes: number; inboundMin: number; isDayTrip: boolean; base: string | null; roundTripMin: number }[];
+  /** 도시를 옮긴 날이면 하루의 어디에서 옮겼는가. */
+  moveTiming?: 'morning' | 'midday' | 'evening' | null;
   entries: PlanEntry[];
   walkKm: number;
 }
@@ -307,6 +314,11 @@ export interface TripState {
    * 특수한 사정(예약 시각, 누구와 만나기로 한 시각)은 앱이 알 수 없다.
    */
   dayOrder: Record<string, string[]>;
+  /**
+   * 사용자가 정한 도시 간 이동 시점. `"출발도시>도착도시"` → 아침/오후/저녁.
+   * 비어 있으면 규칙대로 자동으로 고른다.
+   */
+  moveTiming: Record<string, 'morning' | 'midday' | 'evening'>;
   /** 2단계에서 역산 결과를 한 번이라도 확인했는지. */
   tasteConfirmed?: boolean;
   /** 마지막으로 저장된 시각(epoch ms). 저장할 때 store 가 찍는다. */

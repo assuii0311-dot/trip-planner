@@ -14,10 +14,11 @@ import { alternativesForDay } from '../lib/alternatives';
 import type { Alternative } from '../lib/alternatives';
 import { THEME_ICON, THEME_LABEL } from '../lib/themes';
 import { josa } from '../lib/korean';
+import { MOVE_LABEL, MOVE_TIMINGS, timingBlocked, whyTiming, type MoveTiming } from '../lib/daypack';
 
 /** 4단계 — 담은 곳을 바탕으로 밀도가 다른 3가지 안을 만든다. */
 export default function Step5Plans({
-  items, cities, itinerary, days, prefs, plans, overflow, spare, chosen,
+  items, cities, itinerary, days, prefs, plans, overflow, needDays, chosen, onTiming,
   onChoose, onSwap, onMode, onLodging, onDropCity, onMoveCity, onMoveEntry, onDropItem,
   manualOrder, airport,
 }: {
@@ -29,13 +30,15 @@ export default function Step5Plans({
   /** 계획은 App 이 만든다. 어느 단계를 보고 있든 존재해야 하기 때문이다. */
   plans: Plan[];
   overflow: { city: string; name: string; days: number }[];
-  spare: number;
+  /** 담은 것으로 차는 날. 3단계와 같은 엔진이 센 값이다. */
+  needDays: number;
   chosen: PlanStyle;
   onChoose: (style: PlanStyle) => void;
   /** 일정 하나를 빼고 다른 곳(들)을 넣는다. 계획은 우선순위에서 다시 만들어진다. */
   onSwap: (out: Item, inItems: Item[]) => void;
   /** 도시 간 이동 수단을 바꾼다. 바꾸면 도착 시각이 달라져 그날 일정이 다시 짜인다. */
   onMode: (from: string, to: string, mode: string) => void;
+  onTiming: (from: string, to: string, t: MoveTiming) => void;
   /** 이 도시에서 잘지 당일치기로 다녀올지 바꾼다. */
   onLodging: (city: string, how: 'sleep' | 'daytrip') => void;
   /** 날이 모자랄 때 이 도시를 뺀다. */
@@ -52,6 +55,23 @@ export default function Step5Plans({
   airport?: AirportInfo | null;
 }) {
   const active = plans.find((p) => p.style === chosen) ?? plans[0];
+  /*
+   * 담은 것으로 실제로 차는 날.
+   *
+   * '일정이 들어간 날' 로 세면 안 된다 — 남는 날에도 담지 않은 후보가
+   * 자동으로 채워지므로 언제나 여행 일수와 같아진다. 실제로 3단계는 6일,
+   * 4단계는 11일이라고 말하는 일이 있었다. 3단계와 같은 엔진이 센 값을 쓴다.
+   */
+  const usedDays = needDays;
+  /*
+   * 여유는 실제로 쓴 날에서 센다.
+   *
+   * 엔진이 돌려주는 spare 는 '자르기 전 일정 길이' 로 잰 값이라, 뒤에 빈
+   * 날을 채워 넣은 뒤의 화면과 어긋났다 — '11일 계획 · 11일 사용 · 5일 여유'
+   * 처럼 합이 맞지 않는 줄이 나왔다.
+   */
+  const shortfall = overflow.reduce((a, o) => a + o.days, 0);
+  const freeDays = Math.max(0, days - usedDays);
   const cityName = (slug: string) => cities.find((c) => c.slug === slug)?.name ?? slug;
 
   /** 이 계획에 안 들어간 아이템 — 대안은 여기서만 나온다. */
@@ -77,6 +97,22 @@ export default function Step5Plans({
       <h2>계획 3가지</h2>
       <p className="lede">같은 우선순위로 하루 밀도만 다르게 짰습니다. 탭으로 비교해 보세요.</p>
 
+      {/*
+        이 계획이 며칠짜리인지 언제나 보인다.
+
+        예전에는 모자라거나 남을 때만 말하고, 딱 맞으면 아무 말도 없었다.
+        그래서 '며칠짜리 계획인가' 를 알 방법이 없었다. 3단계와 같은 엔진이
+        센 값이라 두 화면이 어긋나지 않는다.
+      */}
+      <p className="day-tally">
+        <b>{days}일 계획</b> · 담은 것으로 {usedDays}일
+        {shortfall > 0
+          ? ` · ${shortfall}일 모자람`
+          : freeDays > 0
+            ? ` · ${freeDays}일 여유 — 남는 날은 담지 않은 곳으로 채워 두었습니다`
+            : ' · 딱 맞습니다'}
+      </p>
+
       {overflow.length > 0 && (
         <div className="notice" style={{ marginBottom: 16 }}>
           <p style={{ margin: '0 0 8px' }}>
@@ -100,9 +136,9 @@ export default function Step5Plans({
         </div>
       )}
 
-      {spare > 0 && (
+      {freeDays > 0 && (
         <div className="notice" style={{ marginBottom: 16 }}>
-          <b>{spare}일이 빕니다.</b> 고르신 곳을 다 봐도 날이 남습니다.
+          <b>{freeDays}일이 빕니다.</b> 고르신 곳을 다 봐도 날이 남습니다.
           3단계에서 아이템을 더 담거나, 1단계에서 도시를 더 고르세요.
           그대로 두면 그 날들은 자유 시간이 됩니다.
         </div>
@@ -153,7 +189,7 @@ export default function Step5Plans({
           key={day.dayIndex} day={day} pool={pool} prefs={prefs} cities={cities}
           airport={airport}
           isFirst={i === 0} isLast={i === active.days.length - 1}
-          cityName={cityName} onSwap={onSwap} onMode={onMode}
+          cityName={cityName} onSwap={onSwap} onMode={onMode} onTiming={onTiming}
           onMoveEntry={onMoveEntry} onDropItem={onDropItem}
           touched={Boolean(manualOrder[day.date])}
         />
@@ -165,7 +201,7 @@ export default function Step5Plans({
 /** 하루치. 대안은 여기서 한 번에 뽑아 자리마다 나눠 준다. */
 function Day({
   day, pool, prefs, cities, airport, isFirst, isLast, cityName,
-  onSwap, onMode, onMoveEntry, onDropItem, touched,
+  onSwap, onMode, onTiming, onMoveEntry, onDropItem, touched,
 }: {
   day: PlanDay;
   pool: Item[];
@@ -177,6 +213,7 @@ function Day({
   cityName: (slug: string) => string;
   onSwap: (out: Item, inItems: Item[]) => void;
   onMode: (from: string, to: string, mode: string) => void;
+  onTiming: (from: string, to: string, t: MoveTiming) => void;
   onMoveEntry: (date: string, itemId: string, dir: -1 | 1) => void;
   /** 이 일정을 계획에서 뺀다. */
   onDropItem: (item: Item) => void;
@@ -233,7 +270,10 @@ function Day({
             </div>
           )}
           {day.travel && (
-            <TravelBlock travel={day.travel} cityName={cityName} onMode={onMode} />
+            <TravelBlock
+              travel={day.travel} timing={day.moveTiming}
+              cityName={cityName} onMode={onMode} onTiming={onTiming}
+            />
           )}
           <div className="card">
             {day.entries.length === 0 ? (
@@ -616,13 +656,16 @@ function ScheduleImpact({ day, slowerMin }: { day: PlanDay | null; slowerMin: nu
  * 눈에 보여야 한다.
  */
 function TravelBlock({
-  travel, cityName, onMode,
+  travel, timing, cityName, onMode, onTiming,
 }: {
   travel: PlanTravel;
+  timing: MoveTiming | null | undefined;
   cityName: (slug: string) => string;
   onMode: (from: string, to: string, mode: string) => void;
+  onTiming: (from: string, to: string, t: MoveTiming) => void;
 }) {
   const c = travel.chosen;
+  const now = timing ?? 'morning';
   return (
     <div className="travel-block">
       <div className="travel-head">
@@ -645,6 +688,36 @@ function TravelBlock({
         {c.estimated ? ' · 시간은 추정치입니다' : ' · Renfe 실제 시간표'}
       </div>
       {c.note && <div className="travel-note">{c.note}</div>}
+
+      {/*
+        하루의 어디에서 옮기는가.
+
+        예전에는 언제나 아침 첫 편이었다. 선택지가 아예 없어서, 오전에 이
+        도시를 더 보고 오후에 옮기는 것이 불가능했다. 기본은 규칙이 고르고
+        (저녁식사는 그날 자는 도시에서 — 그 제약이 문턱값을 정한다),
+        여기서 바꿀 수 있다.
+      */}
+      <div className="timing-row" role="group" aria-label="이동 시점">
+        <span className="timing-label">언제 옮길까요</span>
+        <div className="timing-btns">
+          {MOVE_TIMINGS.map((t) => {
+            const why = timingBlocked(t, c.totalMin);
+            return (
+              <button
+                key={t} type="button"
+                className={`timing-btn${t === now ? ' is-on' : ''}`}
+                aria-pressed={t === now}
+                disabled={!!why}
+                title={why ?? undefined}
+                onClick={() => onTiming(travel.from, travel.to, t)}
+              >
+                {MOVE_LABEL[t]}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <p className="timing-why">{whyTiming(now, c.totalMin, cityName(travel.to))}</p>
 
       {travel.options.length > 1 && (
         <details className="travel-alts">
