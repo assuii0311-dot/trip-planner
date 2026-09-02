@@ -5,7 +5,7 @@ import type { RailTable } from './lib/rail';
 import { clearState, defaultState, exportState, importState, isInstalled, loadState, saveState } from './lib/store';
 import { hardRefetch } from './lib/refetch';
 import { newerBuild } from './lib/update';
-import { offList, urlWith } from './lib/rendermode';
+import { isOff, offList, urlWith } from './lib/rendermode';
 import { DiagPanel } from './components/DiagPanel';
 import { mark } from './lib/diag';
 import type { SaveResult } from './lib/store';
@@ -154,6 +154,7 @@ export default function App() {
    * 이제는 화면에 적고, 눌러서 다시 받을 수 있게 한다.
    */
   useEffect(() => {
+    if (isOff('items')) { setItems([]); setItemsError(null); return; }
     if (cityScope.length === 0) { setItems([]); setItemsError(null); return; }
     let alive = true;
     setLoadingItems(true);
@@ -386,6 +387,8 @@ export default function App() {
     state.basics.endAirport, arrival?.slug, index, days, itinerary]);
 
   const built = useMemo(() => {
+    // 이 계산은 1단계에서도 돈다. 그 자체가 용의자일 수 있어 끌 수 있게 둔다.
+    if (isOff('plans') && state.step < 4) return null;
     if (!itinerary || items.length === 0) return null;
     return buildPlans({
       items, itinerary,
@@ -397,7 +400,7 @@ export default function App() {
       firstDayStart: airportWindow?.firstDayStart ?? null,
       lastDayEnd: airportWindow?.lastDayEnd ?? null,
     });
-  }, [itinerary, items, state.basics.startDate, days,
+  }, [itinerary, items, state.basics.startDate, days, state.step,
     state.prefs, state.priorities, state.dayOrder, airportWindow]);
 
   const plans = built?.plans ?? [];

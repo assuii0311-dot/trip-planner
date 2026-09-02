@@ -30,6 +30,8 @@ export const SWITCHES = [
   { id: 'fixed', label: '바닥 막대 고정', why: 'position: fixed 도 마찬가지다.' },
   { id: 'shadow', label: '그림자·둥근 모서리', why: 'overflow:hidden + border-radius + box-shadow 는 클립 레이어를 만든다.' },
   { id: 'preview', label: '1단계 미리보기', why: '도시를 고르면 아래에 새로 붙는 부분.' },
+  { id: 'plans', label: '계획 미리 계산', why: '1단계에서도 4단계 계획 3안을 매번 다시 만든다.' },
+  { id: 'items', label: '아이템 받아오기', why: '도시를 고르면 그 도시의 장소 목록을 내려받는다.' },
 ] as const;
 
 export type SwitchId = (typeof SWITCHES)[number]['id'];
