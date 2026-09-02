@@ -4,9 +4,12 @@ import App from './App';
 import { Crashguard } from './components/Crashguard';
 import { clearState, exportState, loadState } from './lib/store';
 import { startDiag } from './lib/diag';
+import { applyRenderMode } from './lib/rendermode';
 import './styles.css';
 
 // 무엇이든 그리기 전에 켜 둔다. 그려지기 전에 나는 오류가 가장 알기 어렵다.
+// 주소의 스위치를 가장 먼저 적용한다. 그려지기 전에 붙어 있어야 한다.
+applyRenderMode();
 startDiag();
 
 createRoot(document.getElementById('root')!).render(

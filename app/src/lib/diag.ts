@@ -17,6 +17,8 @@
  * 개인적인 것은 남기지 않는다 — 누른 자리와 오류 문구, 브라우저 종류뿐이다.
  */
 
+import { offList } from './rendermode';
+
 export interface DiagEntry {
   t: number;
   kind: 'tap' | 'act' | 'err' | 'info';
@@ -107,6 +109,7 @@ async function environment(): Promise<string> {
   lines.push(`브라우저 ${navigator.userAgent}`);
   lines.push(`화면     ${window.innerWidth}x${window.innerHeight} · 배율 ${window.devicePixelRatio} · 터치 ${navigator.maxTouchPoints}`);
   lines.push(`언어     ${navigator.language} · 온라인 ${navigator.onLine}`);
+  lines.push(`끈 것    ${offList().join(', ') || '없음 (평소 모드)'}`);
   try {
     const html = await (await fetch(location.href, { cache: 'no-store' })).text();
     const m = html.match(/assets\/index-[A-Za-z0-9_-]+\.js/);

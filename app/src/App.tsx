@@ -5,6 +5,7 @@ import type { RailTable } from './lib/rail';
 import { clearState, defaultState, exportState, importState, isInstalled, loadState, saveState } from './lib/store';
 import { hardRefetch } from './lib/refetch';
 import { newerBuild } from './lib/update';
+import { offList, urlWith } from './lib/rendermode';
 import { DiagPanel } from './components/DiagPanel';
 import { mark } from './lib/diag';
 import type { SaveResult } from './lib/store';
@@ -559,6 +560,16 @@ export default function App() {
       </header>
 
       <main>
+        {/*
+          스위치가 걸려 있으면 반드시 화면에 알린다. 모르고 쓰다가 '사진이
+          안 나온다' 를 새 문제로 보고하게 되면 더 나빠진다.
+        */}
+        {offList().length > 0 && (
+          <div className="mode-bar">
+            문제 찾기 모드 — 끈 것: {offList().join(', ')} ·{' '}
+            <a href={urlWith([])}>원래대로</a>
+          </div>
+        )}
         {showResume && (
           <ResumeBanner
             state={state} now={now}

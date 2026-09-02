@@ -9,6 +9,7 @@ import { islandAsCity } from '../lib/island';
 import { AIRPORT_GROUPS, airportOf } from '../lib/airports';
 import { withJosa } from '../lib/korean';
 import { mark } from '../lib/diag';
+import { isOff } from '../lib/rendermode';
 import { arrivalLeg, departureLeg, fmtHm, parseHm, tripWindow } from '../lib/airporttime';
 
 
@@ -422,7 +423,7 @@ export default function Step1Basics({
         })}
       </Block>
 
-      {selected.length > 0 && itinerary && (
+      {selected.length > 0 && itinerary && !isOff('preview') && (
         <BasePlan itinerary={itinerary} cities={cities} />
       )}
     </>

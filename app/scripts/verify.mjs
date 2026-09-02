@@ -1218,6 +1218,90 @@ console.log('\n■ 9. 서비스 워커 — 낡은 데이터가 남지 않는가'
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+console.log('\n■ 9-b. 문제 찾기 스위치 — 기기에서 원인을 좁힐 수 있는가');
+{
+  const ctx = await browser.newContext({ viewport: { width: 810, height: 1080 } });
+  const page = await ctx.newPage();
+  watch(page, allErrors, '[스위치]');
+
+  /*
+   * 아이패드에서만 나는 그리기 문제는 헤드리스로 재현되지 않는다 — 사파리
+   * 엔진으로 같은 흐름을 돌려도 DOM 은 멀쩡하다. 그러니 원인은 그 기기에서
+   * 좁혀야 하고, 그러려면 하나씩 끌 수 있어야 한다.
+   */
+  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('.city-card', { timeout: 25000 });
+  check('평소에는 스위치가 걸려 있지 않다',
+    (await page.locator('.mode-bar').count()) === 0
+    && (await page.locator('.city-photo').count()) > 0);
+
+  await page.goto(`${base}?off=photos`, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('.city-card', { timeout: 25000 });
+  await page.getByRole('button', { name: /마드리드·중부/ }).first().click();
+  await page.waitForTimeout(600);
+  const shown = await page.locator('.city-photo').evaluateAll(
+    (els) => els.filter((e) => getComputedStyle(e).display !== 'none').length);
+  check('사진만 끌 수 있다', shown === 0 && (await page.locator('.city-card').count()) > 0,
+    `보이는 사진 ${shown}장 · 카드 ${await page.locator('.city-card').count()}장`);
+  check('끈 상태를 화면에 알린다',
+    (await page.locator('.mode-bar').innerText().catch(() => '')).includes('photos'));
+  check('끄고도 도시를 고를 수 있다', await (async () => {
+    await page.locator('.city-main', { hasText: '마드리드' }).first().click();
+    await page.waitForTimeout(500);
+    return (await page.locator('.city-card.is-selected').count()) === 1;
+  })());
+
+  await ctx.close();
+}
+{
+  /*
+    '전부 끄기' 는 새 창에서 본다. 앞 단계에서 고른 것이 저장돼 있으면
+    같은 카드를 다시 눌러 선택이 풀리고, 스위치가 고장난 것처럼 보인다.
+  */
+  const ctx = await browser.newContext({ viewport: { width: 810, height: 1080 } });
+  const page = await ctx.newPage();
+  watch(page, allErrors, '[스위치2]');
+  await page.goto(`${base}?safe=1`, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('.city-card', { timeout: 25000 });
+  const pos = await page.evaluate(() => ({
+    top: getComputedStyle(document.querySelector('.topbar')).position,
+    bottom: getComputedStyle(document.querySelector('.bottombar')).position,
+    shadow: getComputedStyle(document.querySelector('.city-card')).boxShadow,
+  }));
+  check('전부 끄기가 붙박이와 그림자를 모두 푼다',
+    pos.top === 'static' && pos.bottom === 'static' && pos.shadow === 'none',
+    `머리줄 ${pos.top} · 바닥 ${pos.bottom} · 그림자 ${pos.shadow}`);
+
+  // 끈 상태에서도 끝까지 갈 수 있어야 한다. 못 가면 좁히는 데 쓸 수가 없다.
+  await page.getByRole('button', { name: /마드리드·중부/ }).first().click();
+  await page.waitForTimeout(700);
+  await page.locator('.city-main', { hasText: '마드리드' }).first().click();
+  await page.waitForTimeout(900);
+  check('전부 끈 채로도 도시가 골라진다',
+    (await page.locator('.city-card.is-selected').count()) === 1,
+    `${await page.locator('.city-card.is-selected').count()}곳`);
+  const nextBtn = page.getByRole('button', { name: /^다음$/ });
+  const why = await page.locator('.bar-why').innerText().catch(() => '');
+  if (!(await nextBtn.isDisabled())) {
+    await nextBtn.click();
+    await page.waitForTimeout(1400);
+  }
+  check('전부 끈 채로도 다음 단계로 간다',
+    (await page.locator('body').innerText()).includes('2단계'),
+    (await page.locator('body').innerText()).match(/\d단계 · [^\n]+/)?.[0] ?? (why || '?'));
+
+  // 진단 기록에 어떤 조합이었는지 남아야 나중에 맞대어 볼 수 있다.
+  await page.locator('.diag > summary').click();
+  await page.waitForTimeout(1200);
+  const rep = await page.locator('.diag-text').inputValue();
+  check('진단에 어떤 것을 껐는지 남는다', /끈 것 {4}.*photos/.test(rep),
+    (rep.match(/끈 것 {4}[^\n]*/) ?? [''])[0]);
+  const links = await page.locator('.diag-modes a').allInnerTexts();
+  check('화면에서 눌러 하나씩 끌 수 있다', links.length >= 6, links.join(' / '));
+  await ctx.close();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 console.log('\n■ 10. 아이패드 — 골라도 계속 고를 수 있는가');
 {
   const ctx = await browser.newContext({ viewport: { width: 1024, height: 1366 }, hasTouch: true });
