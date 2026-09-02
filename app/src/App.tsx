@@ -7,6 +7,7 @@ import { hardRefetch } from './lib/refetch';
 import { newerBuild } from './lib/update';
 import { isOff, offList, urlWith } from './lib/rendermode';
 import { DiagPanel } from './components/DiagPanel';
+import { TroubleBanner } from './components/TroubleBanner';
 import { mark } from './lib/diag';
 import type { SaveResult } from './lib/store';
 import { SaveStatus } from './components/SaveStatus';
@@ -584,6 +585,12 @@ export default function App() {
             }}
           />
         )}
+        {/*
+          화면이 죽으면 아래쪽 진단 패널까지 내려갈 수가 없다. 다시 열렸을 때
+          앱이 먼저 말해 주어야 그때 보낼 수 있다.
+        */}
+        <TroubleBanner />
+
         {stale && (
           <div className="notice update-bar">
             <b>새 판이 나와 있습니다.</b>

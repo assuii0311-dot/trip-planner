@@ -21,11 +21,19 @@ import { offList } from './rendermode';
 
 export interface DiagEntry {
   t: number;
-  kind: 'tap' | 'act' | 'err' | 'info';
+  kind: 'tap' | 'act' | 'err' | 'info' | 'stall';
   text: string;
 }
 
-const MAX = 300;
+const MAX = 400;
+/*
+ * localStorage 다. sessionStorage 는 탭을 닫으면 사라진다.
+ *
+ * 화면이 멈추거나 검게 되면 페이지를 누를 수가 없다. 그때 사용자가 할 수
+ * 있는 것은 새로고침이나 탭을 닫고 다시 여는 것뿐인데, 그 순간 기록이
+ * 사라지면 정작 알고 싶은 순간이 영영 남지 않는다. 기록은 앱보다 오래
+ * 살아남아야 한다.
+ */
 const KEY = 'trip-planner.diag';
 let log: DiagEntry[] = [];
 let started = 0;
@@ -42,12 +50,12 @@ let started = 0;
  * 어디서 페이지가 바뀌었는지 알아볼 수 있게 한다.
  */
 function persist() {
-  try { sessionStorage.setItem(KEY, JSON.stringify(log.slice(-MAX))); } catch { /* 못 써도 앱은 돈다 */ }
+  try { localStorage.setItem(KEY, JSON.stringify(log.slice(-MAX))); } catch { /* 못 써도 앱은 돈다 */ }
 }
 
 function restore(): DiagEntry[] {
   try {
-    const raw = sessionStorage.getItem(KEY);
+    const raw = localStorage.getItem(KEY);
     return raw ? (JSON.parse(raw) as DiagEntry[]) : [];
   } catch {
     return [];
@@ -129,6 +137,51 @@ export function startDiag(): void {
     push('err', `처리되지 않은 거절: ${r instanceof Error ? `${r.message}\n${r.stack?.split('\n').slice(0, 4).join('\n')}` : String(r)}`);
   });
 
+  /*
+   * 멈춤 감시자.
+   *
+   * 화면이 멈추거나 검게 되면 사용자는 아무것도 누를 수 없다. 그러니 그
+   * 순간을 **앱이 스스로** 적어야 한다. 두 가지를 따로 본다 — 둘이 갈라져야
+   * 원인이 갈린다.
+   *
+   *   ① 심장박동(setInterval) 이 멈춘다  → 메인 스레드가 막혔다 (자바스크립트)
+   *   ② 심장박동은 도는데 그리기(rAF) 만 멈춘다 → 합성기·그리기 층이 죽었다
+   *
+   * ②가 바로 '커서는 카드 위에 있는데 눌리지 않고 화면이 빈다' 의 모양이다.
+   * 지금까지 이것을 구별할 방법이 없었다.
+   */
+  let lastBeat = Date.now();
+  let lastPaint = Date.now();
+  let beats = 0;
+
+  setInterval(() => {
+    const now = Date.now();
+    const gap = now - lastBeat;
+    lastBeat = now;
+    beats++;
+    // 200ms 마다 도는데 1.5초가 넘게 비었으면 그동안 메인 스레드가 막혔다.
+    if (gap > 1500) push('stall', `자바스크립트가 ${(gap / 1000).toFixed(1)}초 멈췄습니다 (메인 스레드 막힘)`);
+    // 심장은 뛰는데 그리기가 오래 멈췄으면 그리기 층의 문제다.
+    if (document.visibilityState === 'visible' && now - lastPaint > 3000) {
+      push('stall', `그리기가 ${((now - lastPaint) / 1000).toFixed(1)}초 멈췄습니다 (자바스크립트는 도는 중)`);
+      lastPaint = now;
+    }
+  }, 200);
+
+  const beat = () => { lastPaint = Date.now(); requestAnimationFrame(beat); };
+  requestAnimationFrame(beat);
+
+  // 페이지를 떠날 때 마지막 상태를 남긴다. 새로고침·탭 닫기 직전이 그때다.
+  // 두 이벤트가 다 오는 브라우저가 있으므로 한 번만 적는다.
+  let said = false;
+  const bye = () => {
+    if (said) return;
+    said = true;
+    push('info', `─── 페이지 떠남 (심장 ${beats}회)`);
+  };
+  window.addEventListener('pagehide', bye);
+  window.addEventListener('beforeunload', bye);
+
   // console.error 도 담는다. 리액트가 내는 경고가 단서가 되는 일이 많다.
   const real = console.error.bind(console);
   console.error = (...args: unknown[]) => {
@@ -174,8 +227,40 @@ export async function diagReport(): Promise<string> {
   const env = await environment();
   const body = log.map((e) => {
     const s = (e.t / 1000).toFixed(1).padStart(6);
-    const tag = { tap: '눌림', act: '동작', err: '오류', info: '정보' }[e.kind];
+    const tag = { tap: '눌림', act: '동작', err: '오류', info: '정보', stall: '멈춤' }[e.kind];
     return `${s}s ${tag} ${e.text}`;
   }).join('\n');
   return `=== 여행 계획 진단 ===\n${env}\n\n=== 기록 (${log.length}줄) ===\n${body || '(빈 기록)'}\n`;
+}
+
+/**
+ * 직전 화면에서 이상이 있었는가.
+ *
+ * 화면이 죽으면 진단을 누를 수 없다. 그러니 다시 열었을 때 앱이 먼저
+ * "직전에 이런 일이 있었습니다" 라고 말해 주어야 한다. 그래야 그때 보낼 수
+ * 있다. 사용자가 문제를 기억해 두었다가 찾아 들어오게 만들면 안 된다.
+ */
+export function lastRunTrouble(): { stalls: number; errors: number; when: string } | null {
+  const prev = log.filter((e) => e.kind === 'stall' || e.kind === 'err');
+  if (!prev.length) return null;
+  /*
+    이번 페이지가 열린 뒤의 것은 뺀다 — 지금 화면의 문제는 지금 보면 된다.
+    (findLastIndex 는 쓰지 않는다. 예전 사파리에 없다.)
+  */
+  let opened = -1;
+  for (let i = log.length - 1; i >= 0; i--) {
+    if (log[i].kind === 'info' && log[i].text.startsWith('─── 페이지 열림')) { opened = i; break; }
+  }
+  const before = opened > 0 ? log.slice(0, opened) : [];
+  const stalls = before.filter((e) => e.kind === 'stall').length;
+  const errors = before.filter((e) => e.kind === 'err').length;
+  if (!stalls && !errors) return null;
+  let when = '직전';
+  for (let i = before.length - 1; i >= 0; i--) {
+    if (before[i].kind === 'info' && before[i].text.includes('페이지 열림')) {
+      when = (before[i].text.match(/\d\d:\d\d:\d\d/) ?? ['직전'])[0];
+      break;
+    }
+  }
+  return { stalls, errors, when };
 }
