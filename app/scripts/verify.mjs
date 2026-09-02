@@ -1150,6 +1150,53 @@ console.log('\n■ 8-b. 진단 정보 — 사용자가 무슨 일이 났는지 �
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+console.log('\n■ 8-c. 화면이 죽었을 때 — 그래도 기록이 남아 오는가');
+{
+  const ctx = await browser.newContext({ viewport: { width: 810, height: 1080 } });
+  const page = await ctx.newPage();
+  watch(page, allErrors, '[멈춤]');
+
+  /*
+   * 화면이 멈추거나 검게 되면 사용자는 아무것도 누를 수 없다 — 아래쪽 진단
+   * 패널까지 내려가 펼치는 것은 애초에 불가능하다. 할 수 있는 것은 새로고침
+   * 하거나 탭을 닫고 다시 여는 것뿐이다. 그러니 (1) 멈춘 순간을 앱이 스스로
+   * 적고, (2) 기록이 페이지보다 오래 살아남고, (3) 다시 열렸을 때 앱이 먼저
+   * 말해 주어야 한다. 셋 중 하나만 빠져도 기록은 오지 않는다.
+   */
+  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('.city-card', { timeout: 25000 });
+  await page.getByRole('button', { name: /마드리드·중부/ }).first().click();
+  await page.waitForTimeout(500);
+  await page.locator('.city-main', { hasText: '마드리드' }).first().click();
+  await page.waitForTimeout(600);
+  // 메인 스레드를 실제로 막는다. 이 동안 화면은 멈추고 아무것도 눌리지 않는다.
+  await page.evaluate(() => { const t = Date.now(); while (Date.now() - t < 3500) { /* 막는다 */ } });
+  await page.waitForTimeout(1200);
+
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('.city-card', { timeout: 25000 });
+  await page.waitForTimeout(1200);
+  const banner = await page.locator('.notice.trouble').count();
+  check('멈춘 뒤 다시 열면 앱이 먼저 알린다', banner === 1,
+    banner ? (await page.locator('.notice.trouble b').innerText()).trim() : '안내 없음');
+  if (banner) {
+    await page.locator('.notice.trouble button', { hasText: '기록 복사하기' }).click();
+    await page.waitForTimeout(1200);
+    const t = await page.locator('.notice.trouble textarea').inputValue();
+    check('멈춘 것을 기록해 두었다', /멈춤 자바스크립트가 [\d.]+초 멈췄습니다/.test(t),
+      (t.match(/멈춤 [^\n]*/) ?? [''])[0]);
+    check('멈추기 직전에 무엇을 눌렀는지 남아 있다',
+      /동작 도시 선택 madrid/.test(t) && /눌림/.test(t),
+      (t.match(/동작 도시 선택[^\n]*/) ?? [''])[0]);
+    check('새로고침으로 기록이 지워지지 않는다', (t.match(/페이지 열림/g) ?? []).length >= 2,
+      `페이지 ${(t.match(/페이지 열림/g) ?? []).length}번치`);
+    check('떠난 것도 한 번만 적힌다', (t.match(/페이지 떠남/g) ?? []).length === 1,
+      `${(t.match(/페이지 떠남/g) ?? []).length}회`);
+  }
+  await ctx.close();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 console.log('\n■ 9. 서비스 워커 — 낡은 데이터가 남지 않는가');
 {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });

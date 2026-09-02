@@ -1364,3 +1364,6 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
 }
 .diag-modes a.is-on { border-color: var(--accent); color: var(--accent); }
 .diag-why { font-size: 12px; color: var(--muted); margin: 0 0 10px; line-height: 1.6; }
+
+/* 직전 화면에서 무슨 일이 있었는지 — 가장 먼저 보여야 한다. */
+.notice.trouble { margin-bottom: 14px; border-color: var(--accent); }
