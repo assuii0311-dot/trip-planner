@@ -388,24 +388,50 @@ export function scheduleFromItinerary(
     const totalW = weights.reduce((a, b) => a + b, 0);
     let extra = totalDays - schedule.length;
 
-    // 최대 몫 순으로 한 장씩 나눠 준다(최대 잔여법).
+    /*
+     * 남는 날을 숙박지에 나눠 준다 — 최대 잔여법.
+     *
+     * ## 예전에 무엇이 잘못됐나 (화면이 20초 멈추던 원인)
+     *
+     * 배부른 도시를 만나면 후보에서 빼지 않고 **가중치만 0.001 로 낮추고
+     * `continue`** 했다. 그런데 `continue` 는 `extra` 를 줄이지 않는다.
+     * 그리고 점수는
+     *
+     *     weights[i] / totalW − given[i] / 남는날
+     *
+     * 이라, 아직 배부르지 않은 도시가 하루라도 받으면 그 도시 점수가 음수로
+     * 내려간다. 그러면 가중치를 0.001 로 낮춘 **배부른 도시가 다시 1등**이
+     * 되고, 배불러서 또 `continue` — 영원히 같은 자리를 돈다.
+     *
+     *     바르셀로나 6박 · 볼거리 3일치 → 이미 배부름
+     *     발렌시아   2박 · 볼거리 2일치
+     *     남는 날 2   →   발렌시아에 하루 주고 나면 끝나지 않는다
+     *
+     * 실제로 20만 바퀴를 돌아도 끝나지 않았다. 메인 스레드가 통째로 막히니
+     * 화면은 그리다 만 채 멈추고 아무것도 눌리지 않는다. 아이패드에서 보고된
+     * '화면이 잘리면서 멈춤 / 검은 화면 / 클릭 불가' 가 전부 이것이었다.
+     *
+     * ## 지금
+     *
+     * 배부른 곳은 **후보에서 뺀다.** 그러면 매 바퀴마다 반드시 하루가
+     * 나가거나(extra 감소) 더 줄 곳이 없어 끝난다. 끝나지 않을 수가 없다.
+     */
     const given = new Array(sleepStops.length).fill(0);
+    const isFull = (i: number) =>
+      given[i] + sleepStops[i].nights >= Math.ceil(sleepStops[i].itemDays) + 2;
+
     while (extra > 0) {
-      let best = 0;
+      let best = -1;
       let bestScore = -Infinity;
       for (let i = 0; i < sleepStops.length; i++) {
+        // 볼거리가 다 찬 도시에는 더 주지 않는다.
+        if (isFull(i)) continue;
         // 이미 자기 몫보다 많이 받았으면 점수가 떨어진다.
         const score = weights[i] / totalW - given[i] / Math.max(1, totalDays - schedule.length);
         if (score > bestScore) { bestScore = score; best = i; }
       }
-      // 볼거리가 하루치도 안 되는 도시에는 더 주지 않는다.
-      const stop = sleepStops[best];
-      if (given[best] + stop.nights >= Math.ceil(stop.itemDays) + 2) {
-        // 모든 도시가 배부르면 남은 날은 그대로 둔다.
-        if (sleepStops.every((st, i) => given[i] + st.nights >= Math.ceil(st.itemDays) + 2)) break;
-        weights[best] = 0.001;
-        continue;
-      }
+      // 모든 도시가 배부르면 남은 날은 그대로 둔다(spare 로 화면에 알린다).
+      if (best < 0) break;
       given[best] += 1;
       extra -= 1;
     }
