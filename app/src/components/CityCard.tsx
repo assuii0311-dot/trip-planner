@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { City } from '../types';
 import { THEME_ICON, THEME_LABEL } from '../lib/themes';
+import { isOff } from '../lib/rendermode';
 import type { ThemeId } from '../types';
 
 /** 성격 점수가 3인 테마를 강점으로 본다. 없으면 2점짜리를 쓴다. */
@@ -22,7 +23,12 @@ export default function CityCard({
   return (
     <div className={`city-card${selected ? ' is-selected' : ''}`}>
       <button type="button" className="city-main" onClick={onToggle} aria-pressed={selected}>
-        {city.photo && photoOk && (
+        {/*
+          스위치를 끄면 아예 그리지 않는다. display:none 으로 숨기기만 하면
+          브라우저는 여전히 받아서 디코딩한다 — 이미지 메모리를 의심하는
+          중이라면 숨기는 것으로는 아무것도 확인할 수 없다.
+        */}
+        {city.photo && photoOk && !isOff('photos') && (
           <img
             className="city-photo" src={`${import.meta.env.BASE_URL}${city.photo}`}
             alt="" loading="lazy" decoding="async"

@@ -1239,10 +1239,15 @@ console.log('\n■ 9-b. 문제 찾기 스위치 — 기기에서 원인을 좁�
   await page.waitForSelector('.city-card', { timeout: 25000 });
   await page.getByRole('button', { name: /마드리드·중부/ }).first().click();
   await page.waitForTimeout(600);
-  const shown = await page.locator('.city-photo').evaluateAll(
-    (els) => els.filter((e) => getComputedStyle(e).display !== 'none').length);
-  check('사진만 끌 수 있다', shown === 0 && (await page.locator('.city-card').count()) > 0,
-    `보이는 사진 ${shown}장 · 카드 ${await page.locator('.city-card').count()}장`);
+  /*
+    숨기는 것으로는 부족하다. display:none 이어도 브라우저는 받아서
+    디코딩한다 — 이미지 메모리를 의심하는 중이라면 아무것도 확인할 수 없다.
+    DOM 에서 아예 빠져야 한다.
+  */
+  const imgs = await page.locator('.city-photo').count();
+  check('사진 스위치가 이미지를 DOM 에서 뺀다',
+    imgs === 0 && (await page.locator('.city-card').count()) > 0,
+    `사진 요소 ${imgs}개 · 카드 ${await page.locator('.city-card').count()}장`);
   check('끈 상태를 화면에 알린다',
     (await page.locator('.mode-bar').innerText().catch(() => '')).includes('photos'));
   check('끄고도 도시를 고를 수 있다', await (async () => {
@@ -1298,6 +1303,40 @@ console.log('\n■ 9-b. 문제 찾기 스위치 — 기기에서 원인을 좁�
     (rep.match(/끈 것 {4}[^\n]*/) ?? [''])[0]);
   const links = await page.locator('.diag-modes a').allInnerTexts();
   check('화면에서 눌러 하나씩 끌 수 있다', links.length >= 6, links.join(' / '));
+
+  /*
+   * 기록은 페이지를 넘어 살아남아야 한다.
+   *
+   * 스위치를 누르면 주소가 바뀌며 페이지가 새로 열린다. 그때 기록이 지워지면
+   * 정작 재현하신 순간이 하나도 남지 않는다 — 실제로 사용자가 보내 준 기록이
+   * 두 줄뿐이었던 것이 이 때문이다. 필요한 순간을 못 담는 계기는 계기가 아니다.
+   */
+  await ctx.close();
+}
+{
+  // 앞 단계에서 2단계까지 갔으므로 새 창에서 본다.
+  const ctx = await browser.newContext({ viewport: { width: 810, height: 1080 } });
+  const page = await ctx.newPage();
+  watch(page, allErrors, '[기록]');
+  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('.city-card', { timeout: 25000 });
+  await page.getByRole('button', { name: /마드리드·중부/ }).first().click();
+  await page.waitForTimeout(600);
+  await page.locator('.city-main', { hasText: '마드리드' }).first().click();
+  await page.waitForTimeout(700);
+  await page.locator('.diag > summary').click();
+  await page.waitForTimeout(900);
+  await page.locator('.diag-modes a', { hasText: '전부 끄기' }).click();
+  await page.waitForSelector('.city-card', { timeout: 25000 });
+  await page.waitForTimeout(800);
+  await page.locator('.diag > summary').click();
+  await page.waitForTimeout(1200);
+  const kept = await page.locator('.diag-text').inputValue();
+  check('페이지가 바뀌어도 앞의 기록이 남는다',
+    /동작 도시 선택 madrid/.test(kept) && (kept.match(/페이지 열림/g) ?? []).length >= 2,
+    `페이지 ${(kept.match(/페이지 열림/g) ?? []).length}번 · 앞 기록 ${/도시 선택 madrid/.test(kept) ? '있음' : '없음'}`);
+  check('어디서 페이지가 바뀌었는지 표시된다', /페이지 열림[^\n]*off=/.test(kept),
+    (kept.match(/페이지 열림[^\n]*/g) ?? []).slice(-1)[0] ?? '');
   await ctx.close();
 }
 

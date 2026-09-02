@@ -26,12 +26,44 @@ export interface DiagEntry {
 }
 
 const MAX = 300;
-const log: DiagEntry[] = [];
+const KEY = 'trip-planner.diag';
+let log: DiagEntry[] = [];
 let started = 0;
+
+/*
+ * 기록은 페이지를 넘어 살아남아야 한다.
+ *
+ * 처음에는 메모리에만 담았다. 그런데 문제 찾기 스위치를 누르면 주소가 바뀌며
+ * 페이지가 새로 열리고, 그 순간 기록이 통째로 지워졌다. 실제로 사용자가 보내
+ * 준 기록은 두 줄뿐이었다 — '열림' 과 '진단 패널을 눌렀다'. 정작 재현하실 때
+ * 누른 것은 하나도 남지 않았다. 필요한 순간을 못 담는 계기는 계기가 아니다.
+ *
+ * 그래서 저장해 두고 다음 페이지에서 이어 붙인다. 열 때마다 구분선을 넣어
+ * 어디서 페이지가 바뀌었는지 알아볼 수 있게 한다.
+ */
+function persist() {
+  try { sessionStorage.setItem(KEY, JSON.stringify(log.slice(-MAX))); } catch { /* 못 써도 앱은 돈다 */ }
+}
+
+function restore(): DiagEntry[] {
+  try {
+    const raw = sessionStorage.getItem(KEY);
+    return raw ? (JSON.parse(raw) as DiagEntry[]) : [];
+  } catch {
+    return [];
+  }
+}
 
 function push(kind: DiagEntry['kind'], text: string) {
   log.push({ t: Date.now() - started, kind, text });
   if (log.length > MAX) log.splice(0, log.length - MAX);
+  persist();
+}
+
+/** 기록을 비운다. 새로 재현해 볼 때 앞의 것이 섞이지 않게. */
+export function clearDiag(): void {
+  log = [];
+  persist();
 }
 
 /** 눌린 요소를 짧게 적는다. 무엇을 눌렀는지 알아볼 정도만. */
@@ -64,7 +96,10 @@ export function startDiag(): void {
   installed = true;
   started = Date.now();
 
-  push('info', `열림 ${new Date().toISOString()}`);
+  // 앞 페이지의 기록을 이어받는다. 스위치를 누르면 페이지가 새로 열리는데,
+  // 그때 지워지면 정작 필요한 순간이 남지 않는다.
+  log = restore();
+  push('info', `─── 페이지 열림 ${new Date().toISOString().slice(11, 19)} · ${location.search || '(스위치 없음)'}`);
 
   /*
    * 캡처 단계에서 듣는다. 버블링으로 듣다가는, 위에 덮인 무언가가 이벤트를

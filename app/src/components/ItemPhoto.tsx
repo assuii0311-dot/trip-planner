@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { Item } from '../types';
 import { photoUrl, photoSourceUrl } from '../lib/deeplinks';
+import { isOff } from '../lib/rendermode';
 
 /**
  * 아이템 대표 사진.
@@ -15,7 +16,8 @@ import { photoUrl, photoSourceUrl } from '../lib/deeplinks';
 export function ItemPhoto({ item, size = 'thumb' }: { item: Item; size?: 'thumb' | 'wide' }) {
   const [ok, setOk] = useState(true);
   const src = photoUrl(item);
-  if (!src || !ok) return null;
+  // 스위치를 끄면 아예 그리지 않는다. 숨기기만 해서는 받아서 디코딩하는 것을 막지 못한다.
+  if (!src || !ok || isOff('photos')) return null;
   return (
     <img
       className={size === 'thumb' ? 'item-photo' : 'item-photo-wide'}
