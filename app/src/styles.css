@@ -1318,3 +1318,49 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
 
 /* 새 판 알림 — 예전 판을 쓰고 있다는 것은 본인이 알 길이 없다. */
 .update-bar { margin-bottom: 14px; }
+
+/* ---------- 그리기 문제 좁히기용 스위치 (?safe=1 / ?off=...) ---------- */
+/*
+  아이패드에서만 나는 그리기 문제를 기기에서 이분 탐색하기 위한 것.
+  평소에는 아무 영향이 없다 — 주소에 스위치가 있을 때만 걸린다.
+*/
+.off-photos .city-photo,
+.off-photos .item-photo,
+.off-photos .thumb { display: none !important; }
+
+.off-sticky .topbar { position: static !important; }
+
+.off-fixed .bottombar {
+  position: static !important;
+  margin-top: 16px;
+}
+.off-fixed .app { padding-bottom: 0 !important; }
+
+.off-shadow .city-card,
+.off-shadow .card,
+.off-shadow .pick,
+.off-shadow .course {
+  box-shadow: none !important;
+  transition: none !important;
+  overflow: visible !important;
+  border-radius: 0 !important;
+}
+.off-shadow .city-photo { border-radius: 0 !important; }
+
+/* 스위치가 걸려 있다는 것을 화면에 알린다. 모르고 쓰면 안 된다. */
+.mode-bar {
+  position: sticky; top: 0; z-index: 40;
+  padding: 8px 12px;
+  background: #6b2f1c; color: #fff;
+  font-size: 12.5px; line-height: 1.5;
+}
+.mode-bar a { color: #fff; text-decoration: underline; }
+.diag-modes { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 12px; }
+.diag-modes a {
+  display: inline-block; padding: 9px 12px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--surface); color: var(--text);
+  font-size: 13px; text-decoration: none;
+}
+.diag-modes a.is-on { border-color: var(--accent); color: var(--accent); }
+.diag-why { font-size: 12px; color: var(--muted); margin: 0 0 10px; line-height: 1.6; }

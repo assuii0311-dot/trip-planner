@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { diagReport } from '../lib/diag';
 import { newerBuild } from '../lib/update';
 import { hardRefetch } from '../lib/refetch';
+import { SWITCHES, isOff, offList, urlWith } from '../lib/rendermode';
 
 /**
  * 진단 정보를 꺼내는 자리.
@@ -49,6 +50,26 @@ export function DiagPanel() {
         눌렀는데 반응이 없거나 화면이 이상하면, 아래 내용을 복사해 보내 주세요.
         어디를 누르셨는지와 오류만 담기며 개인 정보는 들어가지 않습니다.
       </p>
+
+      {/*
+        화면이 비거나 눌리지 않는 문제는 이 기기에서만 보인다 — 사파리 엔진으로
+        같은 흐름을 돌려도 DOM 은 멀쩡하다. 그러니 원인은 여기서 좁혀야 한다.
+        하나씩 끄면서 어느 것에서 멀쩡해지는지 보는 것이 가장 빠르다.
+      */}
+      <p className="diag-why">
+        <b>화면이 비거나 안 눌리나요?</b> 아래를 눌러 하나씩 꺼 보세요.
+        먼저 <b>전부 끄기</b>로 증상이 사라지는지 보고, 사라지면 하나씩
+        되돌려 범인을 찾습니다. 어떤 조합이었는지는 아래 기록에 함께 남습니다.
+      </p>
+      <div className="diag-modes">
+        <a className={offList().length === SWITCHES.length ? 'is-on' : ''}
+          href={urlWith(SWITCHES.map((x) => x.id))}>전부 끄기</a>
+        {SWITCHES.map((sw) => (
+          <a key={sw.id} className={isOff(sw.id) ? 'is-on' : ''} href={urlWith([sw.id])}
+            title={sw.why}>{sw.label}만 끄기</a>
+        ))}
+        {offList().length > 0 && <a href={urlWith([])}>원래대로</a>}
+      </div>
       {stale && (
         <div className="notice" style={{ marginBottom: 10 }}>
           <b>지금 화면은 예전 판입니다.</b>
