@@ -16,7 +16,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { buildItinerary } from '../src/lib/itinerary.ts';
-import { isMeal } from '../src/lib/capacity.ts';
+import { isMeal, itemMinutes, dailyMinutes } from '../src/lib/capacity.ts';
 import { rankAll, RANK_FLOOR } from '../src/lib/rank.ts';
 import { buildPlans } from '../src/lib/planner.ts';
 import { setIslandRail } from '../src/lib/routing.ts';
@@ -152,6 +152,120 @@ console.log('\n=== 하루 모양 ===');
   check('같은 근교를 여러 날 가지 않는다', twice === 0, `${twice}건`);
   check('빈 날이 없다', empty === 0, `${empty}일`);
   check('필요한 날이 여행 일수 안에 든다', built.needDays <= 12, `${built.needDays}일 / 12일`);
+}
+
+/*
+ * 담은 것이 **말없이** 사라지지 않는가.
+ *
+ * 톨레도를 3단계에서 담고 경로에도 넣었는데 4단계 상세 일정에는 한 곳도
+ * 나오지 않는 일이 있었다. 원인이 셋이었고, 셋 다 '조용히' 가 문제였다.
+ *
+ *  1. 날을 나누는 쪽(packDays)이 첫날이 짧다는 것을 몰랐다. 18시 착륙이면
+ *     첫날은 145분인데 567분짜리 하루로 세고 일을 얹었다. 실제 일정을 짜는
+ *     쪽(buildDay)은 시각을 알기 때문에 못 들어간 것을 버렸다 — 아무 말 없이.
+ *  2. 근교를 남은 자투리에 밀어 넣었다. 하루를 통째로 주면 다 볼 수 있는
+ *     톨레도(왕복 140 + 볼거리 384 = 524 ≤ 567)를 마드리드를 보고 남은
+ *     자리에 133분만 넣고, 251분은 '같은 근교는 하루만' 규칙에 걸려 버렸다.
+ *  3. 남는 날이 앞 날을 통째로 베껴, 근교 당일치기 날 뒤의 빈 날이
+ *     '가는 길도 없는 두 번째 세고비아' 가 되었다.
+ *
+ * 그래서 결과가 아니라 **약속**을 검사한다. 담은 도시는 상세 일정에 나오거나,
+ * 안 나오는 이유가 화면에 말할 수 있는 형태로 남아 있어야 한다 — 날이
+ * 모자라거나(overflow), 당일치기로는 거기까지거나(unseen). 조용히 없어지는
+ * 것만 실패다. 저녁 도착을 함께 돌린다 — 그게 방아쇠였다.
+ */
+console.log('\n=== 담은 것이 말없이 사라지지 않는가 ===');
+{
+  const evening = 20 * 60 + 5;   // 18시 착륙 → 20:05 부터
+  const BUDGET = dailyMinutes(prefs);
+
+  function look(slugs, days, firstDayStart, n = 3) {
+    const sel = slugs.map((x) => cities.find((c) => c.slug === x)).filter(Boolean);
+    if (sel.length !== slugs.length) return null;
+    const all = slugs.flatMap(itemsOf);
+    const priorities = {};
+    for (const x of slugs) {
+      const ranked = rankAll(itemsOf(x).filter((i) => !isMeal(i)), cities)
+        .filter((r) => r.score >= RANK_FLOOR).sort((a, b) => b.score - a.score);
+      for (const r of ranked.slice(0, n)) priorities[r.item.id] = 3;
+    }
+    const need = (slug) => all
+      .filter((i) => i.city === slug && priorities[i.id] && !isMeal(i))
+      .reduce((a, i) => a + itemMinutes(i), 0);
+    const itin = buildItinerary(sel, all.filter((i) => priorities[i.id]), prefs, null, null, cities, {});
+    const built = buildPlans({ items: all, itinerary: itin, startDate: '2027-04-30', days,
+      prefs, priorities, dayOrder: {}, firstDayStart, lastDayEnd: null });
+    const plan = built.plans[0];
+
+    // (1) 경로에 있고 담은 것이 있는 도시는, 나오거나 이유가 있어야 한다.
+    const inRoute = new Set(itin.stops.map((x) => x.city.slug));
+    const shown = new Set(plan.days.flatMap((d) => d.entries.map((e) => e.item.city)));
+    const told = new Set([...built.overflow.map((o) => o.city), ...built.unseen.keys()]);
+    const silent = slugs.filter((x) => inRoute.has(x) && need(x) > 0 && !shown.has(x) && !told.has(x));
+
+    // (2) 하루를 통째로 주면 다 볼 수 있는 근교를 잘라 가지 않는다.
+    //     — 이것이 톨레도에 실제로 일어난 일이다.
+    const chopped = [];
+    for (const t of itin.stops.filter((x) => !x.sleep)) {
+      const left = built.unseen.get(t.city.slug) ?? 0;
+      const round = Math.round(t.dayTripMin);
+      if (left > 0 && round + need(t.city.slug) <= BUDGET) {
+        chopped.push(`${t.city.name} ${left}분 남김 (왕복 ${round}+볼거리 ${need(t.city.slug)} ≤ 하루 ${BUDGET})`);
+      }
+    }
+
+    // (3) 남는 날이 '가지도 않는 근교' 가 되어 있지 않은가.
+    const phantom = plan.days.filter((d) => d.isDayTrip && !d.travel
+      && !(d.segments ?? []).some((g) => g.isDayTrip)).length;
+
+    return { silent, chopped, phantom };
+  }
+
+  // 보고된 그 여행 그대로.
+  const reported = ['madrid', 'toledo', 'segovia', 'seville', 'cordoba', 'malaga',
+    'ronda', 'nerja', 'granada', 'palma', 'girona', 'barcelona', 'montserrat'];
+  for (const [label, start] of [['제한 없음', null], ['저녁 도착', evening]]) {
+    const r = look(reported, 16, start);
+    check(`보고된 13도시 16일 (${label}) — 말없이 사라진 도시가 없다`,
+      !!r && r.silent.length === 0, r ? r.silent.join(', ') : '도시 없음');
+    check(`보고된 13도시 16일 (${label}) — 하루면 다 볼 근교를 잘라 가지 않는다`,
+      !!r && r.chopped.length === 0, r ? r.chopped.join(' / ') : '도시 없음');
+    check(`보고된 13도시 16일 (${label}) — 안 가는 근교 날이 없다`,
+      !!r && r.phantom === 0, r ? `${r.phantom}일` : '도시 없음');
+  }
+
+  /* 넓게 훑는다. 방아쇠는 '근교를 거느린 거점 + 저녁 도착' 이다. */
+  const sets = [
+    ['madrid', 'toledo', 'segovia'],
+    ['madrid', 'toledo', 'segovia', 'avila'],
+    ['seville', 'cordoba', 'granada'],
+    ['barcelona', 'girona', 'montserrat', 'sitges'],
+    ['malaga', 'ronda', 'nerja'],
+    ['madrid', 'toledo', 'seville', 'cordoba'],
+    ['barcelona', 'montserrat', 'valencia'],
+  ];
+  let silent = 0, chopped = 0, phantoms = 0, runs2 = 0;
+  const why = [];
+  for (const set of sets) {
+    for (const days of [set.length, set.length + 2, set.length * 2, set.length * 3]) {
+      for (const start of [null, evening, 17 * 60]) {
+        for (const n of [2, 3, 5]) {
+          const r = look(set, days, start, n);
+          if (!r) continue;
+          runs2++;
+          const tag = `${set.join('+')} ${days}일 상위${n} ${start ? '저녁도착' : '종일'}`;
+          if (r.silent.length) { silent++; if (why.length < 4) why.push(`${tag} → ${r.silent.join(',')}`); }
+          if (r.chopped.length) { chopped++; if (why.length < 4) why.push(`${tag} → ${r.chopped.join(',')}`); }
+          phantoms += r.phantom;
+        }
+      }
+    }
+  }
+  check(`${runs2}가지 조합에서 말없이 사라지는 도시가 없다`, silent === 0,
+    `${silent}가지${why.length ? ` — ${why.join(' / ')}` : ''}`);
+  check(`${runs2}가지 조합에서 하루면 다 볼 근교를 잘라 가지 않는다`, chopped === 0,
+    `${chopped}가지${why.length ? ` — ${why.join(' / ')}` : ''}`);
+  check(`${runs2}가지 조합에 안 가는 근교 날이 없다`, phantoms === 0, `${phantoms}일`);
 }
 
 const failed = results.filter((r) => !r.ok);

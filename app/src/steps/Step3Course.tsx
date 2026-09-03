@@ -25,7 +25,8 @@ const TIER_LABEL: Record<CourseId, string> = { taste: '찍먹', normal: '보통'
  * "이 도시는 보통 이렇게 돕니다" 를 먼저 주고, 거기서 빼고 더한다.
  */
 export default function Step3Course({
-  items, cities, itinerary, prefs, priorities, courses, cityDays, days, usableDays, ui,
+  items, cities, itinerary, prefs, priorities, courses, cityDays, days, usableDays,
+  firstDayStart = null, ui,
   onSet, onBulk, onCourse, onDays, onDropCity, onCourseAll, onUi,
 }: {
   items: Item[];
@@ -37,6 +38,8 @@ export default function Step3Course({
   courses: Record<string, CourseId>;
   /** 공항에 먹히는 시간을 뺀, 실제로 쓸 수 있는 날. 모르면 days 와 같다. */
   usableDays?: number;
+  /** 첫날 일정을 시작할 수 있는 시각(분). 4단계와 같은 값을 써야 두 화면이 안 어긋난다. */
+  firstDayStart?: number | null;
   /** 도시 slug → 사용자가 정한 일수. 없으면 도시 권장 일수를 쓴다. */
   cityDays: Record<string, number>;
   days: number;
@@ -111,11 +114,15 @@ export default function Step3Course({
    * 넘치면 아이템을 줄이고, 이동이 많아 넘치면 도시를 뺀다.
    */
   const volumeDays = estimateDays(chosen, prefs);
+  /* 첫날 예산도 4단계와 같게 넘긴다 — 저녁에 내리면 첫날은 하루가 아니다. */
+  const firstDayMin = firstDayStart != null
+    ? Math.max(0, Math.min(dailyMinutes(prefs), 22 * 60 - firstDayStart))
+    : null;
   const packed = useMemo(
     () => (itinerary ? packDays(itinerary, (slug) => chosen
       .filter((i) => i.city === slug && !isMeal(i))
-      .reduce((a, i) => a + itemMinutes(i), 0), dailyMinutes(prefs)) : null),
-    [itinerary, chosen, prefs],
+      .reduce((a, i) => a + itemMinutes(i), 0), dailyMinutes(prefs), undefined, firstDayMin) : null),
+    [itinerary, chosen, prefs, firstDayMin],
   );
   // 아무것도 담지 않았으면 일정도 0일이다. 거점마다 최소 하루를 주는 것은
   // 담은 것이 있을 때의 이야기다.
