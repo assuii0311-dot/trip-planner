@@ -107,7 +107,7 @@ export function startDiag(): void {
   // 앞 페이지의 기록을 이어받는다. 스위치를 누르면 페이지가 새로 열리는데,
   // 그때 지워지면 정작 필요한 순간이 남지 않는다.
   log = restore();
-  push('info', `─── 페이지 열림 ${new Date().toISOString().slice(11, 19)} · ${location.search || '(스위치 없음)'}`);
+  push('info', `─── 페이지 열림 ${new Date().toLocaleTimeString('ko-KR', { hour12: false })} · ${location.search || '(스위치 없음)'}`);
 
   /*
    * 캡처 단계에서 듣는다. 버블링으로 듣다가는, 위에 덮인 무언가가 이벤트를

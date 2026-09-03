@@ -1,5 +1,6 @@
 import type { City, Item, PlanDay } from '../types';
 import { distanceKm } from './geo';
+import { addDays } from './caldate';
 
 /**
  * 어느 동네에 숙소를 잡을 것인가.
@@ -122,7 +123,7 @@ export function lodgingPlan(days: PlanDay[], cities: City[]): LodgingPick[] {
     const sorted = [...dates].sort();
     const checkIn = sorted[0];
     // 마지막으로 잔 날의 다음 날 아침에 나온다.
-    const checkOut = nextDay(sorted[sorted.length - 1]);
+    const checkOut = addDays(sorted[sorted.length - 1], 1);
     const nights = sorted.length;
     const pick = lodgingFor(city, items, nights, checkIn, checkOut);
     if (pick) out.push(pick);
@@ -136,12 +137,6 @@ export function lodgingPlan(days: PlanDay[], cities: City[]): LodgingPick[] {
     }
   }
   return out.sort((a, b) => a.checkIn.localeCompare(b.checkIn));
-}
-
-function nextDay(date: string): string {
-  const d = new Date(`${date}T00:00:00`);
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().slice(0, 10);
 }
 
 /** 숙소 검색 링크. 좌표를 넘겨 그 근처만 보게 한다. */

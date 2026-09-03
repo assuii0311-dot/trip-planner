@@ -1,3 +1,4 @@
+import { todayISO } from '../lib/caldate';
 import { useState } from 'react';
 import { diagReport } from '../lib/diag';
 import { newerBuild } from '../lib/update';
@@ -38,7 +39,7 @@ export function DiagPanel() {
     const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
     const a = document.createElement('a');
     a.href = url;
-    a.download = `진단-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '')}.txt`;
+    a.download = `진단-${todayISO()}-${new Date().toLocaleTimeString('ko-KR', { hour12: false }).replace(/:/g, '')}.txt`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
   };

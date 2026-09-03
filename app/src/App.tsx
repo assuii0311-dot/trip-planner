@@ -24,6 +24,7 @@ import Step2Preferences from './steps/Step2Preferences';
 import Step3Course from './steps/Step3Course';
 import Step5Plans from './steps/Step5Plans';
 import Step6Guide from './steps/Step6Guide';
+import { weekdayOf } from './lib/caldate';
 
 const STEP_TITLES = ['기초 정보', '취향 확인', '코스 선택', '계획 3안', '이동·예약'];
 const LAST_STEP = STEP_TITLES.length;
@@ -273,7 +274,7 @@ export default function App() {
         picks: state.modePicks,
         order: state.cityOrder,
         // 요일마다 안 다니는 편이 있다. 출발일 요일로 거른다.
-        weekday: new Date(`${state.basics.startDate}T00:00:00`).getDay(),
+        weekday: weekdayOf(state.basics.startDate),
       },
     );
   }, [index, tripCities, pickedItems, state.prefs, arrival?.slug, departure?.slug,

@@ -1,5 +1,6 @@
 import type { Basics, Preferences, Priorities, ThemeId, TripState } from '../types';
 import { AIRPORTS } from './airports';
+import { addDays, todayISO } from './caldate';
 
 const KEY = 'trip-planner.v1';
 
@@ -8,15 +9,13 @@ export const DEFAULT_THEMES: Record<ThemeId, number> = {
 };
 
 export function defaultState(): TripState {
-  const start = new Date();
-  start.setDate(start.getDate() + 30);
-  const end = new Date(start);
-  end.setDate(end.getDate() + 6);
+  const start = addDays(todayISO(), 30);
+  const end = addDays(start, 6);
   const basics: Basics = {
     country: 'spain',
     cities: [],
-    startDate: start.toISOString().slice(0, 10),
-    endDate: end.toISOString().slice(0, 10),
+    startDate: start,
+    endDate: end,
     partySize: 2,
     startAirport: null,
     endAirport: null,
