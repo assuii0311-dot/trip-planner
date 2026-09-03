@@ -277,15 +277,6 @@ function Day({
                   ? '반나절 근교' : '근교 당일치기'}
               </span>
             )}
-            {/*
-              하루가 한 도시라는 법이 없다. 근교를 다녀오는 날은 낮과 저녁이
-              다른 도시이고, 짐은 거점에 그대로 있다. 그것을 한 줄로 적는다.
-            */}
-            {day.dayTripMode && day.returnTo && (
-              <span className="day-ride">
-                {day.dayTripMode.icon} {day.dayTripMode.label} 편도 {fmtDur(day.dayTripMode.minutes)} · 왕복
-              </span>
-            )}
             {day.sleepAt && (
               <span className="day-sleep">
                 🛏 {cityName(day.sleepAt)}
@@ -307,12 +298,20 @@ function Day({
               <div className="airport-why">{airport.arrival.note}</div>
             </div>
           )}
-          {day.travel && (
+          {/*
+            그날 타는 것을 모두, 같은 형태로 적는다.
+
+            예전에는 짐을 옮기는 이동만 제대로 안내하고 근교 왕복은 머리줄에
+            한 줄이 전부였다. 실제로 타는 시간은 근교 쪽이 더 긴 날도 있는데
+            몇 시 편인지도, 얼마인지도, 다른 수단이 있는지도 없었다.
+            그리고 이동은 하루에 둘일 수 있다 — 아침에 들어와 저녁에 나가는 날.
+          */}
+          {day.travels.map((t) => (
             <TravelBlock
-              travel={day.travel} timing={day.moveTiming}
-              cityName={cityName} onMode={onMode} onTiming={onTiming}
+              key={`${t.kind}:${t.from}>${t.to}`}
+              travel={t} cityName={cityName} onMode={onMode} onTiming={onTiming}
             />
-          )}
+          ))}
           <div className="card">
             {day.entries.length === 0 ? (
               <div className="empty">
@@ -573,8 +572,13 @@ function CarPanel({
 
   const notes = carNotes(car);
   /** 이 구간이 도착하는 날 — 대안으로 바꾸면 이 날 일정이 밀린다. */
-  const dayOf = (from: string, to: string) =>
-    plan.days.find((d) => d.travel && d.travel.from === from && d.travel.to === to) ?? null;
+  const legOf = (from: string, to: string) => {
+    for (const d of plan.days) {
+      const t = d.travels.find((x) => x.kind === 'move' && x.from === from && x.to === to);
+      if (t) return { day: d, travel: t };
+    }
+    return null;
+  };
 
   return (
     <details className="carbox" open>
@@ -616,7 +620,7 @@ function CarPanel({
 
         <h4 className="car-h">구간마다 대안</h4>
         {car.legs.map((leg) => {
-          const day = dayOf(leg.from.slug, leg.to.slug);
+          const hit = legOf(leg.from.slug, leg.to.slug);
           return (
             <div className="car-leg" key={`${leg.from.slug}>${leg.to.slug}`}>
               <div className="car-leg-head">
@@ -643,7 +647,7 @@ function CarPanel({
                       이걸로 바꾸기
                     </button>
                   </div>
-                  <ScheduleImpact day={day} slowerMin={leg.slowerMin} />
+                  <ScheduleImpact leg={hit} slowerMin={leg.slowerMin} />
                 </>
               ) : (
                 <p className="help" style={{ margin: '6px 0 0' }}>
@@ -665,17 +669,20 @@ function CarPanel({
  * '그래서 그날 뭘 못 보게 되느냐' 다. 도착이 늦어지면 그 시각 이전에
  * 잡혀 있던 일정부터 밀리므로, 그것을 이름으로 짚어 준다.
  */
-function ScheduleImpact({ day, slowerMin }: { day: PlanDay | null; slowerMin: number }) {
-  if (!day || !day.travel) return null;
+function ScheduleImpact({ leg, slowerMin }: {
+  leg: { day: PlanDay; travel: PlanTravel } | null; slowerMin: number;
+}) {
+  if (!leg) return null;
+  const { day, travel } = leg;
   if (slowerMin <= 0) {
     return <p className="car-impact">그날 도착이 더 빨라지므로 일정은 그대로거나 늘어납니다.</p>;
   }
-  const newArrive = day.travel.arriveAt + slowerMin;
+  const newArrive = travel.arriveAt + slowerMin;
   // 늦어진 도착 시각(+짐 푸는 30분) 이전에 시작하기로 돼 있던 일정이 밀린다.
   const pushed = day.entries.filter((e) => e.startMin < newArrive + 30);
   return (
     <p className="car-impact">
-      {day.date} 도착이 {fmtHm(day.travel.arriveAt)} → <b>{fmtHm(newArrive)}</b>.
+      {day.date} 도착이 {fmtHm(travel.arriveAt)} → <b>{fmtHm(newArrive)}</b>.
       {pushed.length === 0
         ? ' 그날 일정은 그대로 들어갑니다.'
         : ` 그날 앞쪽 ${pushed.length}곳(${pushed.map((e) => e.item.name).join(', ')})이 밀립니다.`}
@@ -684,48 +691,85 @@ function ScheduleImpact({ day, slowerMin }: { day: PlanDay | null; slowerMin: nu
 }
 
 /**
- * 도시를 옮기는 구간.
+ * 그날 실제로 타는 구간 — 짐을 옮기는 이동이든, 근교 왕복이든.
  *
  * 무엇을 타고, 몇 시에 나서서, 몇 시에 닿는지를 적는다. 예전에는 이 구간이
  * 아예 없어서 오후 1시에 도착하는 도시에 오전 일정이 들어가 있었다.
+ *
+ * 근교 왕복도 여기로 들어온다. 예전에는 '🚄 고속열차 편도 1시간 28분 · 왕복'
+ * 한 줄이 전부였다 — 몇 시 편인지도, 얼마인지도, 다른 수단이 있는지도 없었다.
+ * 실제로 타는 시간은 근교 쪽이 더 긴 날도 있는데 안내는 반의 반이었다.
+ * 짐을 옮기느냐 아니냐가 다를 뿐, 사람이 알아야 할 것은 같다.
  *
  * 대안 수단을 함께 놓고 그 자리에서 바꾸게 한다. 바꾸면 도착 시각이 달라져
  * 그날 일정이 다시 짜인다 — 비행기로 바꾸면 오후가 통째로 사라지는 것이
  * 눈에 보여야 한다.
  */
 function TravelBlock({
-  travel, timing, cityName, onMode, onTiming,
+  travel, cityName, onMode, onTiming,
 }: {
   travel: PlanTravel;
-  timing: MoveTiming | null | undefined;
   cityName: (slug: string) => string;
   onMode: (from: string, to: string, mode: string) => void;
   onTiming: (from: string, to: string, t: MoveTiming) => void;
 }) {
   const c = travel.chosen;
-  const now = timing ?? 'morning';
+  const isTrip = travel.kind === 'daytrip';
+  const now = travel.timing ?? 'morning';
+  /*
+   * 머리에 크게 쓰는 숫자는 **타는 시간**이다.
+   *
+   * 한때 근교에는 '나선 시각 ~ 돌아온 시각' 을 썼는데, 그건 톨레도에서 논
+   * 시간까지 더한 11시간 24분이었다. 바로 옆 이동 블록의 3시간 25분은 순수
+   * 이동 시간이라, 같은 자리의 같은 크기 숫자가 다른 뜻이었다. 근교는
+   * 왕복이므로 편도의 두 배를 쓴다.
+   */
+  const total = isTrip ? c.totalMin * 2 : travel.arriveAt - travel.leaveAt;
+  /** 근교에 나가 있는 전체 시간. 타는 시간과는 다른 뜻이라 작게 따로 적는다. */
+  const away = isTrip && travel.back ? travel.back.arriveAt - travel.leaveAt : null;
   return (
-    <div className="travel-block">
+    <div className={`travel-block${isTrip ? ' is-daytrip' : ''}`}>
       <div className="travel-head">
         <span className="travel-icon">{c.icon}</span>
         <div>
           <div className="travel-route">
             {cityName(travel.from)} → {cityName(travel.to)}
+            {isTrip && <> → {cityName(travel.from)} <span className="travel-tag">왕복</span></>}
           </div>
           <div className="travel-when">
-            {fmtHm(travel.leaveAt)} 숙소 출발 · {fmtHm(travel.departAt)} 탑승 · {fmtHm(travel.arriveAt)} 도착
+            {isTrip ? (
+              <>
+                가는 편 {fmtHm(travel.leaveAt)} 출발 · {fmtHm(travel.arriveAt)} 도착
+                {travel.back
+                  ? ` · 오는 편 ${fmtHm(travel.back.leaveAt)} 출발 · ${fmtHm(travel.back.arriveAt)} 도착`
+                  : ` · 오는 편은 저녁 일정에 맞춰 ${fmtDur(c.totalMin)}`}
+              </>
+            ) : (
+              <>
+                {fmtHm(travel.leaveAt)} 숙소 출발 · {fmtHm(travel.departAt)} 탑승 · {fmtHm(travel.arriveAt)} 도착
+              </>
+            )}
           </div>
         </div>
-        <div className="travel-total">{fmtDur(travel.arriveAt - travel.leaveAt)}</div>
+        <div className="travel-total">
+          {fmtDur(total)}
+          {isTrip && <span className="travel-total-sub">타는 시간</span>}
+          {away !== null && <span className="travel-total-sub">나가 있는 시간 {fmtDur(away)}</span>}
+        </div>
       </div>
       <div className="travel-meta">
         {c.label}
         {c.transfers > 0 && ` · 환승 ${c.transfers}회`}
         {travel.waitMin > 0 && ` · ${c.mode === 'flight' ? '공항' : c.mode === 'bus' ? '터미널' : '역'}에서 대기 ${travel.waitMin}분`}
-        {c.costEur > 0 && ` · 약 €${c.costEur}`}
+        {c.costEur > 0 && (isTrip ? ` · 왕복 약 €${c.costEur * 2}` : ` · 약 €${c.costEur}`)}
         {c.estimated ? ' · 시간은 추정치입니다' : ' · Renfe 실제 시간표'}
       </div>
       {c.note && <div className="travel-note">{c.note}</div>}
+      {isTrip && (
+        <p className="travel-note">
+          짐은 {cityName(travel.from)}에 두고 다녀옵니다. 저녁·밤 일정과 잠자리는 {cityName(travel.from)}입니다.
+        </p>
+      )}
 
       {/*
         하루의 어디에서 옮기는가.
@@ -735,6 +779,7 @@ function TravelBlock({
         (저녁식사는 그날 자는 도시에서 — 그 제약이 문턱값을 정한다),
         여기서 바꿀 수 있다.
       */}
+      {!isTrip && (
       <div className="timing-row" role="group" aria-label="이동 시점">
         <span className="timing-label">언제 옮길까요</span>
         <div className="timing-btns">
@@ -755,7 +800,8 @@ function TravelBlock({
           })}
         </div>
       </div>
-      <p className="timing-why">{whyTiming(now, c.totalMin, cityName(travel.to))}</p>
+      )}
+      {!isTrip && <p className="timing-why">{whyTiming(now, c.totalMin, cityName(travel.to))}</p>}
 
       {travel.options.length > 1 && (
         <details className="travel-alts">
