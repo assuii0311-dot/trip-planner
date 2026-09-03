@@ -232,6 +232,19 @@ export interface PlanTravel {
   options: TravelOption[];
   /** 그날 막차가 끊겨 갈 수 없는 수단들. */
   unavailable: string[];
+  /**
+   * 짐을 옮기는 이동인가, 근교 왕복인가.
+   *
+   * 예전에는 짐을 옮기는 이동만 제대로 안내하고, 근교 왕복은 머리줄에
+   * '🚄 고속열차 편도 1시간 28분 · 왕복' 한 줄이 전부였다. 몇 시 편을
+   * 타는지도, 얼마인지도, 다른 수단이 있는지도 없었다. 실제로 타는 시간은
+   * 근교 쪽이 더 긴 날도 있는데 안내는 반의 반이었다.
+   */
+  kind: 'move' | 'daytrip';
+  /** 짐을 옮기는 이동이면 하루의 어디에서 옮기는가. 근교 왕복이면 null. */
+  timing: 'morning' | 'midday' | 'evening' | null;
+  /** 근교 왕복이면 돌아오는 편. 짐을 옮기는 이동에는 없다. */
+  back: { leaveAt: number; arriveAt: number } | null;
 }
 
 export interface PlanDay {
@@ -247,8 +260,13 @@ export interface PlanDay {
   dayTripMode?: { icon: string; label: string; minutes: number };
   /** 반나절 근교인 경우 오후에 돌아올 거점. 몬세라트는 오전만으로 충분하다. */
   returnTo: string | null;
-  /** 이 날 아침에 도시를 옮긴다면 그 구간. 일정은 도착 시각부터 시작한다. */
-  travel: PlanTravel | null;
+  /**
+   * 그날 실제로 타는 구간들 — 짐을 옮기는 이동과 근교 왕복 모두.
+   *
+   * 예전에는 하나뿐이었고(`travel`), 그래서 하루에 두 번 옮기는 날은
+   * 뒤엣것이 앞엣것을 덮어써 앞 구간이 화면에서 사라졌다.
+   */
+  travels: PlanTravel[];
   /** 이 날 밤 어디서 자는가. 저녁식사와 밤 일정도 여기서 한다. */
   sleepAt: string | null;
   /**

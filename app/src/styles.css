@@ -664,10 +664,28 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
   padding: 12px 14px;
   margin-bottom: 8px;
 }
+/*
+  근교 왕복도 같은 블록으로 그린다. 짐을 옮기느냐 아니냐만 다를 뿐,
+  사람이 알아야 할 것(무엇을 타고, 몇 시에, 얼마에)은 같다.
+  다만 '여기서 자지는 않는다' 는 것이 한눈에 보이게 테두리를 눕힌다.
+*/
+.travel-block.is-daytrip {
+  border-style: dashed;
+  background: transparent;
+}
+.travel-tag {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 1px 7px; margin-left: 6px; vertical-align: 2px;
+}
 .travel-head { display: flex; align-items: flex-start; gap: 10px; }
 .travel-icon { font-size: 22px; line-height: 1.1; }
 .travel-route { font-size: 15px; font-weight: 700; }
 .travel-when { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.travel-total-sub {
+  display: block; font-size: 10.5px; font-weight: 500;
+  color: var(--muted); white-space: nowrap;
+}
 .travel-total {
   margin-left: auto;
   font-size: 13px;
@@ -1151,7 +1169,6 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
 
 /* 지도 — 근교 왕복은 짐을 옮기는 구간보다 가늘게 */
 .map-route line.is-daytrip { opacity: 0.55; }
-.day-ride { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
 
 /* ---------- 3단계: 꼭 가야 하는 곳 ---------- */
 .must-box {

@@ -387,13 +387,15 @@ export function mapDataOf(plan: Plan, cities: City[]): { stops: MapStop[]; hops:
     const sc = sched.get(d.city) ?? [];
     sc.push({ date: d.date, dayIndex: d.dayIndex, entries: d.entries });
     sched.set(d.city, sc);
-    if (d.travel) {
+    // 하루에 두 번 옮기는 날이 있다. 전부 그린다.
+    for (const t of d.travels) {
+      if (t.kind !== 'move') continue;
       hops.push({
-        from: d.travel.from,
-        to: d.travel.to,
-        icon: d.travel.chosen.icon,
-        label: d.travel.chosen.label,
-        minutes: d.travel.arriveAt - d.travel.leaveAt,
+        from: t.from,
+        to: t.to,
+        icon: t.chosen.icon,
+        label: t.chosen.label,
+        minutes: t.arriveAt - t.leaveAt,
       });
     }
     /*

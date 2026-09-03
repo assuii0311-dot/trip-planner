@@ -1,4 +1,5 @@
 import type { Itinerary, Stop } from './itinerary';
+import { josa } from './korean';
 
 /**
  * 날 채우기 — 하루를 칸이 아니라 시간 축으로 본다.
@@ -87,7 +88,7 @@ export function whyTiming(t: MoveTiming, moveMin: number, toName: string): strin
   const h = Math.round(moveMin / 6) / 10;
   if (t === 'evening') return `${h}시간 거리라 저녁에 옮겨 ${toName}에서 저녁을 먹습니다`;
   if (t === 'midday') return `오전을 마저 보고 점심 뒤에 옮겨 ${toName}에서 저녁을 먹습니다`;
-  return `${h}시간 거리라 아침에 옮겨 ${toName}을 길게 씁니다`;
+  return `${h}시간 거리라 아침에 옮겨 ${toName}${josa(toName, '을를')} 길게 씁니다`;
 }
 
 /** 이 시점을 고를 수 있는가. 못 고르는 이유가 있으면 문자열로 돌려준다. */
@@ -114,12 +115,24 @@ export interface PackedLeg {
   roundTripMin: number;
 }
 
+/** 하루 안에서 도시를 옮기는 한 구간. */
+export interface PackedMove {
+  from: string; to: string; minutes: number; timing: MoveTiming;
+}
+
 export interface PackedDay {
   legs: PackedLeg[];
   /** 그날 밤을 보내는 도시. 저녁식사도 여기서 한다. */
   sleepAt: string;
-  /** 그날 도시를 옮겼다면 그 구간. */
-  move: { from: string; to: string; minutes: number; timing: MoveTiming } | null;
+  /**
+   * 그날 도시를 옮긴 구간들.
+   *
+   * 예전에는 하나만 담았다. 그래서 아침에 팔마→지로나로 들어와 저녁에
+   * 지로나→바르셀로나로 다시 옮기는 날에는, 뒤엣것이 앞엣것을 덮어써
+   * **팔마→지로나 이동 안내가 화면에서 통째로 사라졌다**. 하루가 한 번만
+   * 옮긴다는 법이 없다 — 새 날 모델을 만들면서 생긴 일이다.
+   */
+  moves: PackedMove[];
 }
 
 export interface PackResult {
@@ -174,11 +187,11 @@ export function packDays(
   const tripsOf = (slug: string): Stop[] => itin.stops.filter((x) => !x.sleep && x.base === slug);
 
   /** 지금 채우고 있는 날. */
-  interface Open { legs: PackedLeg[]; sleepAt: string; left: number; move: PackedDay['move'] }
+  interface Open { legs: PackedLeg[]; sleepAt: string; left: number; moves: PackedMove[] }
   let cur: Open | null = null;
-  const open = (sleepAt: string, left = budgetMin): Open => ({ legs: [], sleepAt, left, move: null });
+  const open = (sleepAt: string, left = budgetMin): Open => ({ legs: [], sleepAt, left, moves: [] });
   const close = () => {
-    if (cur && (cur.legs.length || cur.move)) days.push({ legs: cur.legs, sleepAt: cur.sleepAt, move: cur.move });
+    if (cur && (cur.legs.length || cur.moves.length)) days.push({ legs: cur.legs, sleepAt: cur.sleepAt, moves: cur.moves });
     cur = null;
   };
   const add = (day: Open, leg: PackedLeg) => {
@@ -214,13 +227,13 @@ export function packDays(
         // 오늘은 여기서 끝. 내일 아침에 옮겨 새 도시를 길게 쓴다.
         close();
         cur = open(stop.city.slug, Math.max(0, budgetMin - move));
-        cur.move = leg;
+        cur.moves.push(leg);
       } else {
         // 오늘 안에 옮긴다. 이동이 남은 예산을 먹고, 오늘 밤은 새 도시에서 잔다.
         if (!cur) cur = open(prev.city.slug);
         cur.left = Math.max(0, cur.left - move);
         cur.sleepAt = stop.city.slug;
-        cur.move = leg;
+        cur.moves.push(leg);
       }
     }
 
@@ -304,7 +317,7 @@ export function packDays(
         return room >= t.minutes;
       };
 
-      while (!day.move && queue.length && takes(day, queue[0])) {
+      while (!day.moves.length && queue.length && takes(day, queue[0])) {
         const t = queue[0];
         const room = day.left - t.round;
         const use = Math.min(t.minutes, room);
@@ -379,7 +392,7 @@ export function packDays(
     }
 
     // 볼거리도 근교도 없는 거점이라도 짐을 옮겼으면 밤은 보낸다.
-    if (cur && !cur.legs.length && !cur.move) {
+    if (cur && !cur.legs.length && !cur.moves.length) {
       add(cur, { city: stop.city.slug, minutes: 0, isDayTrip: false, base: null, roundTripMin: 0 });
     }
   }

@@ -404,11 +404,15 @@ export default function App() {
       priorities: state.priorities,
       dayOrder: state.dayOrder,
       moveTiming: state.moveTiming,
+      // 근교 왕복 안내도 고른 수단과 요일을 따른다.
+      modePicks: state.modePicks,
+      weekday: weekdayOf(state.basics.startDate),
       firstDayStart: airportWindow?.firstDayStart ?? null,
       lastDayEnd: airportWindow?.lastDayEnd ?? null,
     });
   }, [itinerary, items, state.basics.startDate, days, state.step,
-    state.prefs, state.priorities, state.dayOrder, state.moveTiming, airportWindow]);
+    state.prefs, state.priorities, state.dayOrder, state.moveTiming,
+    state.modePicks, airportWindow]);
 
   const plans = built?.plans ?? [];
 

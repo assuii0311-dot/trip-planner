@@ -230,10 +230,21 @@ export function assignLodging(
   measured: Map<string, { minutes: number; mode: string }>,
   overrides: Record<string, 'sleep' | 'daytrip'> = {},
   endpoints: (string | null)[] = [],
+  /** 사용자가 고른 교통수단. 근교 왕복 시간도 이것을 따른다. */
+  picks: Record<string, string> = {},
+  /** 0=일요일. 그 요일에 안 다니는 편은 빼고 센다. */
+  weekday: number | null = null,
 ): Stop[] {
   const { bases, attach, scores } = chooseBases(ordered, itemDaysOf, measured, endpoints, overrides);
   const isBase = new Set(bases.map((b) => b.slug));
   const nameOf = (slug: string) => ordered.find((c) => c.slug === slug)?.name ?? slug;
+
+  /** 근교에 무엇을 타고 가는가. 고른 것이 있으면 그것, 없으면 가장 빠른 편. */
+  const dayTripService = (city: City, home: City, m?: { minutes: number; mode: string }) => {
+    const list = servicesBetween(city, home, m, weekday);
+    const wanted = picks[`${home.slug}>${city.slug}`] ?? picks[`${city.slug}>${home.slug}`];
+    return list.find((o) => o.mode === wanted) ?? list[0] ?? fastest(city, home, m);
+  };
 
   const stops: Stop[] = ordered.map((city) => {
     const sleep = isBase.has(city.slug);
@@ -245,9 +256,15 @@ export function assignLodging(
       nights: 0,
       sleep,
       base,
+      /*
+       * 근교 왕복도 사용자가 고른 수단을 따른다.
+       *
+       * 예전에는 언제나 가장 빠른 편으로 셌다. 그래서 4단계에서 근교 수단을
+       * 바꿔도 왕복 시간이 그대로였고, 화면이 말하는 것과 계산이 어긋났다.
+       */
       dayTripMin: base
-        ? fastest(city, ordered.find((c) => c.slug === base)!,
-          measured.get(mkey(city.slug, base))).totalMin * 2
+        ? Math.round(dayTripService(city, ordered.find((c) => c.slug === base)!,
+          measured.get(mkey(city.slug, base))).totalMin * 2)
         : 0,
       why: sc ? explainBase(sc, sleep, base ? nameOf(base) : undefined) : '',
     };
@@ -350,7 +367,8 @@ export function buildItinerary(
    * 렌터카 2시간 26분 구간이 생긴다. 실제로는 둘 다 마드리드에서 다녀온다.
    * 거점을 먼저 정하면 그런 구간이 아예 만들어지지 않는다.
    */
-  const placed = assignLodging(cities, itemDaysOf, measured, opts.lodging, [startSlug, endSlug]);
+  const placed = assignLodging(cities, itemDaysOf, measured, opts.lodging, [startSlug, endSlug],
+    opts.picks ?? {}, opts.weekday ?? null);
   const baseCities = placed.filter((s) => s.sleep).map((s) => s.city);
   const baseOrder = manual && manual.length === cities.length
     ? manual.filter((c) => baseCities.some((b) => b.slug === c.slug))

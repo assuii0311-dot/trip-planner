@@ -153,11 +153,16 @@ function buildDay(
   const segments = slot.segments.length
     ? slot.segments
     : [{ city: slot.city, minutes: 0, inboundMin: 0, isDayTrip: false, base: null, roundTripMin: 0 }];
+  /*
+   * 근교에서 몇 시에 돌아오는가는 그날 일정이 정하고, 일정은 계획안(빡빡·
+   * 보통·느긋)마다 다르다. 그래서 사본을 만들어 안마다 따로 채운다.
+   */
+  const travels: PlanTravel[] = slot.travels.map((t) => (t.kind === 'daytrip' ? { ...t } : t));
   const sleepAt = slot.sleepAt ?? segments[segments.length - 1].city;
 
   const bare = (): PlanDay => ({
     date, dayIndex, city: slot.city, isDayTrip: slot.isDayTrip, returnTo: slot.returnTo,
-    travel: slot.travel, sleepAt: slot.sleepAt, dayTripMode: slot.dayTripMode,
+    travels, sleepAt: slot.sleepAt, dayTripMode: slot.dayTripMode,
     segments, moveTiming: slot.moveTiming, entries: [], walkKm: 0,
   });
 
@@ -179,9 +184,19 @@ function buildDay(
    * 놓고 실제로는 오후 1시에 도착하는 도시에 오전 일정을 넣으면, 그 일정은
    * 현실에서 통째로 불가능하다. 짐을 풀고 나오는 30분을 더 준다.
    */
-  const arrival = slot.travel && slot.moveTiming === 'morning' ? slot.travel.arriveAt + 30 : null;
-  const base = DAY_START[prefs.dayStart] + (segments[0].isDayTrip ? 75 : 0);
-  const start = Math.max(base, arrival ?? 0, startAtMin ?? 0);
+  const morning = travels.find((t) => t.kind === 'move' && t.timing === 'morning');
+  const arrival = morning ? morning.arriveAt + 30 : null;
+  /*
+   * 근교도 실제로 닿는 시각부터 시작한다.
+   *
+   * 예전에는 하루 시작 시각 + 75분이라는 어림수를 썼다. 이제 몇 시 편을
+   * 타는지 화면에 적으므로, 09:48 에 닿는다고 써 놓고 09:15 부터 일정을
+   * 넣으면 그 자리에서 어긋난 것이 보인다.
+   */
+  const trip = travels.find((t) => t.kind === 'daytrip');
+  const tripArrive = segments[0].isDayTrip && trip ? trip.arriveAt : null;
+  const base = DAY_START[prefs.dayStart] + (segments[0].isDayTrip && !tripArrive ? 75 : 0);
+  const start = Math.max(base, arrival ?? 0, tripArrive ?? 0, startAtMin ?? 0);
 
   const specs = spec.slots(start)
     // 장거리 비행으로 내린 날은 밤 일정을 넣지 않는다.
@@ -239,6 +254,15 @@ function buildDay(
     if (!atHome) segSpent += pick.item.durationMin;
   }
 
+  /*
+   * 근교에서 거점으로 돌아오는 편. 저녁을 먹으러 돌아오는 자리에 붙어 있다.
+   * 예전에는 이 시각이 화면 어디에도 없어, 몇 시 차를 타야 하는지 알 수 없었다.
+   */
+  const home = entries.find((e) => e.returnLeg);
+  if (home && trip) {
+    trip.back = { leaveAt: home.startMin - home.travelMin, arriveAt: home.startMin };
+  }
+
   return {
     ...bare(),
     entries,
@@ -261,6 +285,10 @@ export interface PlanInput {
    * 없으면 규칙대로 자동으로 고른다.
    */
   moveTiming?: Record<string, MoveTiming>;
+  /** 사용자가 고른 교통수단. 근교 왕복 안내도 이것을 따른다. */
+  modePicks?: Record<string, string>;
+  /** 0=일요일. 그 요일에 안 다니는 편은 근교 안내에서도 뺀다. */
+  weekday?: number | null;
   /**
    * 공항이 정하는 여행의 앞뒤(분).
    * 첫날 일정을 시작할 수 있는 시각과, 마지막 날 끝내야 하는 시각.
@@ -309,9 +337,9 @@ export interface DayPlanSlot {
   segments: DaySegment[];
   /** 그날 밤을 보내는 도시. 저녁식사와 밤 일정도 여기서 한다. */
   sleepAt: string | null;
-  /** 도시를 옮긴 날이면 그 구간. */
-  travel: PlanTravel | null;
-  /** 그 이동을 하루의 어디에서 했는가. */
+  /** 그날 실제로 타는 구간들 — 짐을 옮기는 이동과 근교 왕복 모두. */
+  travels: PlanTravel[];
+  /** 짐을 옮긴 날이면 마지막 이동을 하루의 어디에서 했는가. */
   moveTiming: MoveTiming | null;
 
   /* ── 아래는 화면 호환용 파생값 ── */
@@ -351,6 +379,10 @@ export function scheduleFromItinerary(
   timingOf: (from: string, to: string) => MoveTiming | undefined = () => undefined,
   /** 첫날 실제로 쓸 수 있는 볼거리 시간(분). 저녁에 내리면 하루가 아니다. */
   firstDayMin: number | null = null,
+  /** 사용자가 고른 교통수단. `"출발도시>도착도시"` → 수단. 근교 왕복에도 쓴다. */
+  modePicks: Record<string, string> = {},
+  /** 0=일요일. 그 요일에 실제로 다니는 편만 본다. 근교 왕복에도 쓴다. */
+  weekday: number | null = null,
 ): {
   schedule: DayPlanSlot[];
   overflow: { city: string; name: string; days: number }[];
@@ -362,6 +394,7 @@ export function scheduleFromItinerary(
   needDays: number;
 } {
   const packed = packDays(itin, needMinOf, budgetMin, timingOf, firstDayMin);
+  const pickOf = (key: string) => modePicks[key];
   const hopOf = new Map(itin.hops.map((h) => [`${h.from.slug}>${h.to.slug}`, h]));
   const cityOf = new Map(itin.stops.map((s) => [s.city.slug, s.city]));
 
@@ -376,44 +409,86 @@ export function scheduleFromItinerary(
       roundTripMin: l.roundTripMin,
     }));
 
-    let travel: PlanTravel | null = null;
-    if (d.move) {
-      const hop = hopOf.get(`${d.move.from}>${d.move.to}`);
-      if (hop) {
-        /*
-         * 몇 시에 나서는가는 시점이 정한다.
-         *
-         * 예전에는 언제나 하루 시작 시각에 나섰다. 그래서 도시 간 이동이
-         * 전부 아침에 몰렸다. 이제는 오후·저녁 이동이면 그 시각부터 편을 찾는다.
-         */
-        const readyAt = d.move.timing === 'evening' ? 19 * 60
-          : d.move.timing === 'midday' ? 15 * 60 + 30
-            : dayStartMin;
-        const dep = nextDeparture(hop.chosen, readyAt);
-        const alive = hop.options.filter((o) => nextDeparture(o, readyAt) !== null);
-        travel = {
-          from: hop.from.slug,
-          to: hop.to.slug,
-          chosen: toOption(hop.chosen),
-          leaveAt: dep?.leaveAt ?? readyAt,
-          departAt: dep?.departAt ?? readyAt,
-          arriveAt: dep?.arriveAt ?? readyAt + hop.chosen.totalMin,
-          waitMin: dep?.waitMin ?? 0,
-          options: alive.map(toOption),
-          unavailable: hop.options.filter((o) => !alive.includes(o)).map((o) => o.label),
-        };
-      }
+    /*
+     * 그날 타는 것을 모두 적는다.
+     *
+     * 짐을 옮기는 이동이 하루에 두 번일 수 있고(아침에 들어와 저녁에 나가는
+     * 날), 근교 왕복도 실제로 타는 구간이다. 예전에는 이동을 하나만 담아
+     * 뒤엣것이 앞엣것을 덮어썼고, 근교는 한 줄짜리 배지가 전부였다.
+     */
+    const travels: PlanTravel[] = [];
+
+    for (const m of d.moves) {
+      const hop = hopOf.get(`${m.from}>${m.to}`);
+      if (!hop) continue;
+      /*
+       * 몇 시에 나서는가는 시점이 정한다.
+       *
+       * 예전에는 언제나 하루 시작 시각에 나섰다. 그래서 도시 간 이동이
+       * 전부 아침에 몰렸다. 이제는 오후·저녁 이동이면 그 시각부터 편을 찾는다.
+       */
+      const readyAt = m.timing === 'evening' ? 19 * 60
+        : m.timing === 'midday' ? 15 * 60 + 30
+          : dayStartMin;
+      const dep = nextDeparture(hop.chosen, readyAt);
+      const alive = hop.options.filter((o) => nextDeparture(o, readyAt) !== null);
+      travels.push({
+        from: hop.from.slug,
+        to: hop.to.slug,
+        chosen: toOption(hop.chosen),
+        leaveAt: dep?.leaveAt ?? readyAt,
+        departAt: dep?.departAt ?? readyAt,
+        arriveAt: dep?.arriveAt ?? readyAt + hop.chosen.totalMin,
+        waitMin: dep?.waitMin ?? 0,
+        options: alive.map(toOption),
+        unavailable: hop.options.filter((o) => !alive.includes(o)).map((o) => o.label),
+        kind: 'move',
+        timing: m.timing,
+        back: null,
+      });
     }
 
     const trip = segments.find((x) => x.isDayTrip);
-    const svc = trip ? servicesBetween(cityOf.get(trip.base ?? '')!, cityOf.get(trip.city)!) : [];
-    const ride = svc.find((x) => x.mode !== 'car') ?? svc[0];
+    let ride: Service | undefined;
+    if (trip && trip.base) {
+      const from = cityOf.get(trip.base);
+      const to = cityOf.get(trip.city);
+      if (from && to) {
+        /*
+         * 근교도 짐 옮기는 이동과 같은 안내를 받는다 — 몇 시 편을 타고,
+         * 얼마이고, 다른 수단이 무엇인지. 사용자가 고른 수단이 있으면 그것을 쓴다.
+         */
+        const svc = servicesBetween(from, to, undefined, weekday);
+        const wanted = pickOf(`${trip.base}>${trip.city}`);
+        ride = svc.find((o) => o.mode === wanted) ?? svc.find((x) => x.mode !== 'car') ?? svc[0];
+        if (ride) {
+          // 근교는 아침 일찍 나선다. 하루 시작 시각부터 편을 찾는다.
+          const dep = nextDeparture(ride, dayStartMin);
+          const alive = svc.filter((o) => nextDeparture(o, dayStartMin) !== null);
+          travels.push({
+            from: trip.base,
+            to: trip.city,
+            chosen: toOption(ride),
+            leaveAt: dep?.leaveAt ?? dayStartMin,
+            departAt: dep?.departAt ?? dayStartMin,
+            arriveAt: dep?.arriveAt ?? dayStartMin + ride.totalMin,
+            waitMin: dep?.waitMin ?? 0,
+            options: alive.map(toOption),
+            unavailable: svc.filter((o) => !alive.includes(o)).map((o) => o.label),
+            kind: 'daytrip',
+            timing: null,
+            // 돌아오는 시각은 그날 일정이 정한다. buildDay 에서 채운다.
+            back: null,
+          });
+        }
+      }
+    }
 
     return {
       segments,
       sleepAt: d.sleepAt,
-      travel,
-      moveTiming: d.move?.timing ?? null,
+      travels,
+      moveTiming: d.moves.length ? d.moves[d.moves.length - 1].timing : null,
       city: segments[0]?.city ?? d.sleepAt,
       isDayTrip: !!segments[0]?.isDayTrip,
       returnTo: trip ? d.sleepAt : null,
@@ -466,7 +541,7 @@ export function scheduleFromItinerary(
        * 도시에서 쉬는 날이라고 말해야 할 자리에 안 가는 근교가 들어앉은 것이다.
        */
       schedule.splice(at + 1, 0, {
-        segments: [], sleepAt: src.sleepAt, travel: null, moveTiming: null,
+        segments: [], sleepAt: src.sleepAt, travels: [], moveTiming: null,
         city: src.sleepAt ?? src.city, isDayTrip: false,
         returnTo: null, returnMinutes: 0, returnAfter: 'dinner',
       });
@@ -526,6 +601,8 @@ export function buildPlans(input: PlanInput): {
     needMinOf, dailyMinutes(input.prefs),
     (from, to) => input.moveTiming?.[`${from}>${to}`],
     firstDayMin,
+    input.modePicks ?? {},
+    input.weekday ?? null,
   );
 
   const plans = STYLES.map((spec) => {
@@ -547,7 +624,7 @@ export function buildPlans(input: PlanInput): {
       if (lastDay === 'none') {
         return {
           date: addDays(input.startDate, i), dayIndex: i + 1, city: s.city,
-          isDayTrip: s.isDayTrip, returnTo: null, travel: s.travel, sleepAt: s.sleepAt,
+          isDayTrip: s.isDayTrip, returnTo: null, travels: s.travels, sleepAt: s.sleepAt,
           dayTripMode: s.dayTripMode, segments: s.segments, moveTiming: s.moveTiming,
           entries: [], walkKm: 0,
         };

@@ -917,13 +917,25 @@ console.log('\n■ 6. 렌터카 — 편도 반납 · 대안 · 일정 영향');
       /도착이 \d\d:\d\d → \d\d:\d\d/.test(impact) || /그대로/.test(impact),
       impact.replace(/\n/g, ' ').slice(0, 80));
 
-    // 실제로 바꿔 본다
-    const before = await page.locator('.travel-meta').first().innerText();
+    /*
+     * 실제로 바꿔 본다.
+     *
+     * 예전에는 `.travel-meta` 의 첫 번째만 봤다. 그때는 이동 구간에만
+     * 이 블록이 있었기 때문이다. 이제는 근교 왕복도 같은 블록으로 그리므로
+     * 첫 번째가 렌터카로 바꾼 그 구간이라는 보장이 없다. 전부 훑어
+     * '어딘가가 바뀌었는가' 를 본다.
+     */
+    const metas = () => page.locator('.travel-meta').allInnerTexts();
+    const before = await metas();
     await page.locator('.car-take').first().click();
     await page.waitForTimeout(1500);
-    const after = await page.locator('.travel-meta').first().innerText();
-    check('대안으로 바꾸면 계획에 반영된다', before !== after,
-      `${before.split('·')[0].trim()} → ${after.split('·')[0].trim()}`);
+    const after = await metas();
+    const moved = before.findIndex((t, i) => t !== after[i]);
+    check('대안으로 바꾸면 계획에 반영된다',
+      before.length !== after.length || moved >= 0,
+      moved >= 0
+        ? `${before[moved].split('·')[0].trim()} → ${after[moved].split('·')[0].trim()}`
+        : `구간 ${before.length}개 → ${after.length}개`);
   }
   await page.screenshot({ path: new URL('06-car.png', shots).pathname, fullPage: true });
   await ctx.close();
@@ -1557,6 +1569,93 @@ console.log('\n■ 11. 새 날 모델 — 이동 시점과 두 숫자');
     return n;
   });
   check('저녁·밤 규칙은 엔진 검사에서 본다', bad === 0);
+  await ctx.close();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+console.log('\n■ 12. 이동 안내 — 타는 것은 모두 같은 모양으로');
+{
+  /*
+   * 두 가지가 보고되었다.
+   *
+   *  1. 근교 왕복 안내가 도시 간 이동과 다른 모양이고 내용이 모자랐다.
+   *     짐을 옮기는 이동은 시각·요금·환승·대안을 다 적었는데, 근교는
+   *     머리줄에 '🚄 고속열차 편도 1시간 28분 · 왕복' 한 줄이 전부였다.
+   *  2. 마요르카 → 지로나 구간의 안내가 아예 없었다. 하루에 두 번 옮기는
+   *     날에서 뒤엣것이 앞엣것을 덮어썼기 때문이다.
+   *
+   * 엔진 쪽은 planner-check 가 본다. 여기서는 **화면에 실제로 그려지는가**를
+   * 본다 — 근교 날에도 같은 블록이 뜨고, 그 안에 시각과 대안이 있는가.
+   */
+  const ctx = await browser.newContext({ viewport: { width: 810, height: 1080 } });
+  const page = await ctx.newPage();
+  watch(page, allErrors, '[이동안내]');
+  const next = await build(page, {
+    // 톨레도·세고비아는 마드리드에서 다녀오는 근교로 잡힌다.
+    cities: [['마드리드·중부', '마드리드'], ['마드리드·중부', '톨레도'],
+      ['마드리드·중부', '세고비아'], ['안달루시아', '세비야']],
+    from: '2026-09-14', to: '2026-09-24',
+    airports: ['MAD', 'AGP'], times: ['16:00', '12:00'],
+  });
+  await next();                                     // → 4단계
+  await page.waitForTimeout(1600);
+
+  const blocks = page.locator('.travel-block');
+  const n = await blocks.count();
+  check('4단계에 이동 안내 블록이 있다', n > 0, `${n}개`);
+
+  const trips = page.locator('.travel-block.is-daytrip');
+  const t = await trips.count();
+  check('근교 왕복도 같은 블록으로 그린다', t > 0, `${t}개`);
+
+  if (t > 0) {
+    const one = trips.first();
+    const route = await one.locator('.travel-route').innerText();
+    check('근교는 왕복임을 경로에 적는다', /→.*→/.test(route) && /왕복/.test(route),
+      route.replace(/\n/g, ' '));
+    const when = await one.locator('.travel-when').innerText();
+    check('근교에 가는 편·오는 편 시각이 있다',
+      /가는 편 \d\d:\d\d/.test(when) && /오는 편 \d\d:\d\d/.test(when),
+      when.replace(/\n/g, ' '));
+    /*
+     * 짐 옮기는 이동이 적는 것을 근교도 적는가 — 수단 이름과 시간표 출처.
+     * 요금은 자료에 없는 편도 있어(무료 구간이 아니라 값을 모르는 것이다)
+     * 이동 블록도 있을 때만 적는다. 그러니 '있으면 왕복으로 적는가' 를 본다.
+     */
+    const meta = await one.locator('.travel-meta').innerText();
+    check('근교에도 수단과 시간표 출처가 적힌다',
+      meta.trim().length > 5 && /(실제 시간표|추정치)/.test(meta),
+      meta.replace(/\n/g, ' ').slice(0, 60));
+    const metas = (await trips.locator('.travel-meta').allInnerTexts()).join(' | ');
+    const priced = metas.match(/€\d+/g) ?? [];
+    /* 머리의 큰 숫자는 이동 블록과 같은 뜻이어야 한다 — 타는 시간. */
+    const tot = await one.locator('.travel-total').innerText();
+    check('근교 머리 숫자는 타는 시간이다', /타는 시간/.test(tot) && /나가 있는 시간/.test(tot),
+      tot.replace(/\n/g, ' '));
+    check('근교 요금은 왕복으로 적는다',
+      priced.length === 0 || /왕복 약 €\d+/.test(metas),
+      priced.length ? metas.replace(/\n/g, ' ').slice(0, 80) : '이 구간들은 요금 자료가 없습니다');
+    check('근교에는 짐을 두고 간다고 알린다',
+      /짐은 .*두고 다녀옵니다/.test(await one.innerText()));
+    check('근교에는 이동 시점을 묻지 않는다',
+      (await one.locator('.timing-row').count()) === 0);
+    const alts = await one.locator('.travel-alts > summary').count();
+    check('근교에도 다른 수단이 제시된다', alts > 0, `${alts}개`);
+  }
+
+  // 짐을 옮기는 이동은 예전 그대로여야 한다.
+  const move = page.locator('.travel-block:not(.is-daytrip)').first();
+  if (await move.count()) {
+    const when = await move.locator('.travel-when').innerText();
+    check('짐 옮기는 이동은 출발·탑승·도착을 적는다',
+      /숙소 출발/.test(when) && /탑승/.test(when) && /도착/.test(when), when.replace(/\n/g, ' '));
+    check('짐 옮기는 이동에는 이동 시점을 묻는다',
+      (await move.locator('.timing-row').count()) === 1);
+  }
+
+  // 예전의 한 줄짜리 배지는 사라졌는가
+  check('한 줄짜리 근교 배지가 남아 있지 않다',
+    (await page.locator('.day-ride').count()) === 0);
   await ctx.close();
 }
 

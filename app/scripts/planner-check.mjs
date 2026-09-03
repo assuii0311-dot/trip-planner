@@ -268,6 +268,140 @@ console.log('\n=== 담은 것이 말없이 사라지지 않는가 ===');
   check(`${runs2}가지 조합에 안 가는 근교 날이 없다`, phantoms === 0, `${phantoms}일`);
 }
 
+/*
+ * 실제로 타는 구간은 모두 안내가 있는가 — 그리고 안내가 같은 모양인가.
+ *
+ * 두 가지가 보고되었다.
+ *
+ *  1. 근교 왕복 안내가 도시 간 이동과 다른 모양이고 내용이 모자랐다.
+ *     짐을 옮기는 이동은 '몇 시 출발 · 몇 시 탑승 · 몇 시 도착 · 요금 ·
+ *     환승 · 대안 수단' 을 다 적었는데, 근교는 머리줄에 '🚄 고속열차 편도
+ *     1시간 28분 · 왕복' 한 줄이 전부였다. 실제로 타는 시간은 근교 쪽이 더
+ *     긴 날도 있다.
+ *  2. 팔마데마요르카 → 지로나 구간의 안내가 아예 없었다. `PackedDay.move`
+ *     가 하나뿐이라, 아침에 지로나로 들어와 저녁에 바르셀로나로 다시 옮기는
+ *     날에서 뒤엣것이 앞엣것을 **덮어썼다**. 하루가 한 번만 옮긴다는 법이
+ *     없다 — 새 날 모델을 만들면서 생긴 일이다.
+ *
+ * 그래서 약속을 검사한다. 여정에 있는 구간과 근교는 모두 어느 날엔가
+ * 안내로 나와야 하고, 그 안내는 짐을 옮기든 아니든 같은 것을 담아야 한다.
+ */
+console.log('\n=== 타는 구간에 모두 안내가 있는가 ===');
+{
+  function legs(slugs, days, lodging = {}, firstDayStart = null) {
+    const sel = slugs.map((x) => cities.find((c) => c.slug === x)).filter(Boolean);
+    if (sel.length !== slugs.length) return null;
+    const all = slugs.flatMap(itemsOf);
+    const priorities = {};
+    for (const x of slugs) {
+      const ranked = rankAll(itemsOf(x).filter((i) => !isMeal(i)), cities)
+        .filter((r) => r.score >= RANK_FLOOR).sort((a, b) => b.score - a.score);
+      for (const r of ranked.slice(0, 3)) priorities[r.item.id] = 3;
+    }
+    const itin = buildItinerary(sel, all.filter((i) => priorities[i.id]), prefs,
+      null, null, cities, { lodging });
+    const built = buildPlans({ items: all, itinerary: itin, startDate: '2027-04-30', days,
+      prefs, priorities, dayOrder: {}, firstDayStart, lastDayEnd: null });
+    const plan = built.plans[0];
+    const all2 = plan.days.flatMap((d) => d.travels);
+
+    /*
+     * 실제로 타는 이동이 모두 나오는가.
+     *
+     * 날이 모자라 계획에서 잘려 나간 도시로는 애초에 타고 가지 않는다.
+     * 그 구간까지 요구하면 '날이 모자란다' 를 '안내가 없다' 로 잘못 읽는다.
+     * 그래서 계획에 실제로 들어간 도시로 가는 구간만 본다.
+     */
+    const reached = new Set(plan.days.flatMap((d) => [
+      ...(d.segments ?? []).map((g) => g.city), d.sleepAt,
+    ].filter(Boolean)));
+    const moves = new Set(all2.filter((t) => t.kind === 'move').map((t) => `${t.from}>${t.to}`));
+    const missMove = itin.hops
+      .filter((h) => reached.has(h.from.slug) && reached.has(h.to.slug))
+      .filter((h) => !moves.has(`${h.from.slug}>${h.to.slug}`))
+      .map((h) => `${h.from.name}→${h.to.name}`);
+
+    // 근교가 모두 나오는가 (일정에 실제로 들어간 근교만)
+    const inPlan = new Set(plan.days.flatMap((d) => (d.segments ?? [])
+      .filter((g) => g.isDayTrip).map((g) => g.city)));
+    const trips = new Set(all2.filter((t) => t.kind === 'daytrip').map((t) => t.to));
+    const missTrip = [...inPlan].filter((c) => !trips.has(c))
+      .map((c) => cities.find((x) => x.slug === c)?.name ?? c);
+
+    // 안내가 같은 것을 담는가
+    const thin = all2.filter((t) => !t.chosen || !t.chosen.label || !t.options.length
+      || !Number.isFinite(t.leaveAt) || !Number.isFinite(t.arriveAt) || t.arriveAt <= t.leaveAt)
+      .map((t) => `${t.from}→${t.to}(${t.kind})`);
+
+    // 근교는 돌아오는 편까지 있어야 한다 — 일정이 들어간 날이라면.
+    const noBack = plan.days.flatMap((d) => d.travels
+      .filter((t) => t.kind === 'daytrip' && d.entries.length > 0 && !t.back)
+      .map((t) => `${d.dayIndex}일 ${t.to}`));
+
+    // 근교에 닿는 시각과 그날 첫 일정이 어긋나지 않는가
+    const early = plan.days.flatMap((d) => {
+      const t = d.travels.find((x) => x.kind === 'daytrip');
+      if (!t || !d.entries.length) return [];
+      const first = d.entries.find((e) => e.item.city === t.to);
+      return first && first.startMin < t.arriveAt ? [`${d.dayIndex}일 ${t.to} ${first.startMin}<${t.arriveAt}`] : [];
+    });
+
+    return { missMove, missTrip, thin, noBack, early };
+  }
+
+  // 보고된 그 여행. 지로나에서 자면 팔마→지로나→바르셀로나가 한 날에 겹친다.
+  const reported = ['madrid', 'toledo', 'segovia', 'avila', 'seville', 'cordoba',
+    'malaga', 'ronda', 'nerja', 'granada', 'palma', 'girona', 'barcelona', 'montserrat'];
+  const r0 = legs(reported, 16, { girona: 'sleep' }, 20 * 60 + 5);
+  check('하루에 두 번 옮기는 날도 두 구간 다 안내한다',
+    !!r0 && r0.missMove.length === 0, r0 ? r0.missMove.join(', ') : '도시 없음');
+  check('근교도 빠짐없이 안내한다', !!r0 && r0.missTrip.length === 0,
+    r0 ? r0.missTrip.join(', ') : '도시 없음');
+  check('근교 안내도 이동과 같은 것을 담는다', !!r0 && r0.thin.length === 0,
+    r0 ? r0.thin.join(', ') : '도시 없음');
+  check('근교는 돌아오는 편까지 적는다', !!r0 && r0.noBack.length === 0,
+    r0 ? r0.noBack.join(', ') : '도시 없음');
+  check('근교에 닿기 전 일정이 잡히지 않는다', !!r0 && r0.early.length === 0,
+    r0 ? r0.early.join(', ') : '도시 없음');
+
+  /* 넓게 훑는다 — 섬이 끼면 하루에 두 번 옮기는 날이 잘 나온다. */
+  const sets = [
+    ['madrid', 'toledo', 'segovia'],
+    ['barcelona', 'girona', 'montserrat'],
+    ['granada', 'palma', 'barcelona'],
+    ['malaga', 'ronda', 'nerja', 'granada'],
+    ['seville', 'cordoba', 'madrid', 'toledo'],
+    ['valencia', 'palma', 'girona', 'barcelona'],
+    ['madrid', 'avila', 'segovia', 'seville', 'granada'],
+  ];
+  let miss = 0, thin = 0, back = 0, early = 0, runs3 = 0;
+  const why3 = [];
+  for (const set of sets) {
+    for (const days of [set.length + 1, set.length * 2, set.length * 3]) {
+      for (const lodging of [{}, Object.fromEntries(set.slice(1).map((c) => [c, 'sleep']))]) {
+        for (const start of [null, 20 * 60 + 5]) {
+          const r = legs(set, days, lodging, start);
+          if (!r) continue;
+          runs3++;
+          const tag = `${set.join('+')} ${days}일${start ? ' 저녁도착' : ''}`;
+          if (r.missMove.length || r.missTrip.length) {
+            miss++;
+            if (why3.length < 4) why3.push(`${tag} → ${[...r.missMove, ...r.missTrip].join(',')}`);
+          }
+          if (r.thin.length) { thin++; if (why3.length < 4) why3.push(`${tag} 얇음 ${r.thin.join(',')}`); }
+          if (r.noBack.length) { back++; if (why3.length < 4) why3.push(`${tag} 오는편없음 ${r.noBack.join(',')}`); }
+          if (r.early.length) { early++; if (why3.length < 4) why3.push(`${tag} 도착전일정 ${r.early.join(',')}`); }
+        }
+      }
+    }
+  }
+  check(`${runs3}가지 조합에서 타는 구간이 모두 안내된다`, miss === 0,
+    `${miss}가지${why3.length ? ` — ${why3.join(' / ')}` : ''}`);
+  check(`${runs3}가지 조합에서 안내가 같은 것을 담는다`, thin === 0, `${thin}가지`);
+  check(`${runs3}가지 조합에서 근교에 오는 편이 적힌다`, back === 0, `${back}가지`);
+  check(`${runs3}가지 조합에서 근교 도착 전 일정이 없다`, early === 0, `${early}가지`);
+}
+
 const failed = results.filter((r) => !r.ok);
 console.log(`\n검사 ${results.length}건 · 통과 ${results.length - failed.length} · 실패 ${failed.length}`);
 console.log(failed.length ? '✗ 계획 생성에 끝나지 않는 조합이 있다' : '\n✓ 계획 생성 정상 — 모든 조합이 끝난다');
