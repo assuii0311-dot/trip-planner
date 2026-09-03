@@ -7,7 +7,7 @@
  */
 import { chromium } from 'playwright';
 
-const base = process.argv[2] ?? 'http://localhost:4174/0829_kos_basic_001/';
+const base = process.argv[2] ?? 'http://localhost:4174/0829_kos_basic_001/spain/';
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome';
 const b = await chromium.launch({ executablePath, args: ['--no-sandbox'] });
 const errors = [];

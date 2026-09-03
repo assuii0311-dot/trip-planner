@@ -3,7 +3,7 @@
  * 실제로 알려진 소요 시간과 비교해, 크게 어긋나면 실패시킨다.
  */
 import { readFile } from 'node:fs/promises';
-const index = JSON.parse(await readFile(new URL('../public/data/spain.json', import.meta.url), 'utf8'));
+const index = JSON.parse(await readFile(new URL('../public/data/spain/index.json', import.meta.url), 'utf8'));
 const city = (s) => index.cities.find((c) => c.slug === s);
 
 const { servicesBetween, nextDeparture, fmtHm, fmtDur, MODE_ICON } =
@@ -56,7 +56,7 @@ for (const s of servicesBetween(city('barcelona'), city('palma'))) {
 const { setRailTable, railBetween, railOnDay } = await import('../src/lib/rail.ts');
 let rail = null;
 try {
-  rail = JSON.parse(await readFile(new URL('../public/data/spain-rail.json', import.meta.url), 'utf8'));
+  rail = JSON.parse(await readFile(new URL('../public/data/spain/rail.json', import.meta.url), 'utf8'));
 } catch { /* 없으면 건너뛴다 */ }
 
 if (!rail) {

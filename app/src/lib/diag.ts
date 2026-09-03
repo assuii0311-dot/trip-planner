@@ -18,6 +18,7 @@
  */
 
 import { offList } from './rendermode';
+import { entrySrcs } from './update';
 
 export interface DiagEntry {
   t: number;
@@ -199,13 +200,21 @@ async function environment(): Promise<string> {
   lines.push(`언어     ${navigator.language} · 온라인 ${navigator.onLine}`);
   lines.push(`끈 것    ${offList().join(', ') || '없음 (평소 모드)'}`);
   try {
+    /*
+     * 서버에 올라가 있는 판과 지금 도는 판. 둘이 다르면 낡은 것을 쓰는 중이다.
+     * 파일 이름(`index-*`)을 박아 두지 않는다 — 빌드가 이름을 바꾸면 이 줄이
+     * 말없이 쓸모없어지고, 그게 정확히 예전에 놓친 고장이다. 문서가 실제로
+     * 부르는 진입 스크립트를 본다.
+     */
     const html = await (await fetch(location.href, { cache: 'no-store' })).text();
-    const m = html.match(/assets\/index-[A-Za-z0-9_-]+\.js/);
-    lines.push(`화면판   ${m ? m[0] : '(모름)'}`);
+    const served = entrySrcs(html).map((x) => x.split('/').pop()).sort();
+    lines.push(`화면판   ${served.join(' · ') || '(모름)'}`);
   } catch { lines.push('화면판   (확인 실패)'); }
   try {
-    const script = [...document.querySelectorAll('script[src]')].map((s) => s.getAttribute('src')).join(', ');
-    lines.push(`실행판   ${script}`);
+    const running = [...document.querySelectorAll('script[type="module"][src]')]
+      .map((el) => (el.getAttribute('src') ?? '').split('/').pop())
+      .filter(Boolean).sort();
+    lines.push(`실행판   ${running.join(' · ') || '(모름)'}`);
   } catch { /* noop */ }
   try {
     const keys = 'caches' in window ? await caches.keys() : [];

@@ -5,7 +5,7 @@
  * 나와야 한다" 를 사람이 아는 사례로 못 박아 둔다.
  */
 import { readFile } from 'node:fs/promises';
-const index = JSON.parse(await readFile(new URL('../public/data/spain.json', import.meta.url), 'utf8'));
+const index = JSON.parse(await readFile(new URL('../public/data/spain/index.json', import.meta.url), 'utf8'));
 const cities = index.cities;
 const C = (s) => cities.find((c) => c.slug === s);
 
@@ -16,7 +16,7 @@ const { inferThemes } = await import('../src/lib/taste.ts');
 const { fmtDur } = await import('../src/lib/routing.ts');
 
 const load = async (s) =>
-  JSON.parse(await readFile(new URL(`../public/data/cities/${s}.json`, import.meta.url), 'utf8'));
+  JSON.parse(await readFile(new URL(`../public/data/spain/cities/${s}.json`, import.meta.url), 'utf8'));
 
 const base = { pace: 3, budget: 'mid', dayStart: 'normal', nightlife: 1, discovery: 2,
   walkTolerance: 3, companion: 'couple', foodStyles: [], mobility: 'normal',

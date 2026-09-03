@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>여행 계획 — 없는 주소입니다</title>
+    <style>
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center;
+             font: 15px/1.7 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
+             background: #f7f6f3; color: #211f1c; padding: 24px; text-align: center; }
+      a { color: #b5452b; }
+      @media (prefers-color-scheme: dark) { body { background: #171614; color: #ece9e4; } a { color: #e7825f; } }
+    </style>
+  </head>
+  <body>
+    <div>
+      <p>그런 주소는 없습니다.</p>
+      <p><a id="home" href="/">나라 고르는 곳으로</a></p>
+    </div>
+    <script>
+      /*
+        나라를 잘못 적었거나(/france/), 예전 링크로 들어온 경우다.
+        나라 고르는 곳으로 돌려보낸다.
+
+        여기는 빌드가 만드는 페이지가 아니라 그대로 올라가는 파일이라
+        base 를 주입받을 수 없다. 그래서 주소에서 읽는다 — GitHub Pages 의
+        프로젝트 페이지는 /<저장소>/... 아래에 있으므로 칸이 둘 이상이면
+        첫 칸이 뿌리이고, 하나뿐이면 도메인 뿌리에 올라간 것이다.
+      */
+      var p = location.pathname.split('/').filter(Boolean);
+      var home = p.length > 1 ? '/' + p[0] + '/' : '/';
+      document.getElementById('home').href = home;
+      if (location.pathname !== home) location.replace(home);
+    </script>
+  </body>
+</html>

@@ -30,7 +30,7 @@ const SCOPE = new URL(self.registration.scope).pathname;
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE)
-      .then((c) => c.addAll([SCOPE, `${SCOPE}manifest.webmanifest`]))
+      .then((c) => c.addAll([SCOPE]))
       // 셸을 못 받아도 설치는 넘어간다. 워커 하나 때문에 앱이 막히면 안 된다.
       .catch(() => {})
       .then(() => self.skipWaiting()),
@@ -44,6 +44,22 @@ self.addEventListener('activate', (event) => {
       .then(() => self.clients.claim()),
   );
 });
+
+/**
+ * 이 주소가 속한 나라 페이지의 셸.
+ *
+ *   /trip-planner/spain/        → /trip-planner/spain/
+ *   /trip-planner/spain/?safe=1 → /trip-planner/spain/
+ *   /trip-planner/              → /trip-planner/
+ *
+ * 나라 목록을 여기 적지 않는다. 적으면 나라를 붙일 때마다 워커도 같이
+ * 고쳐야 하고, 잊으면 그 나라만 오프라인에서 엉뚱한 화면이 뜬다.
+ */
+function shellOf(url) {
+  const rest = url.pathname.startsWith(SCOPE) ? url.pathname.slice(SCOPE.length) : '';
+  const first = rest.split('/').filter(Boolean)[0];
+  return first ? `${SCOPE}${first}/` : SCOPE;
+}
 
 /** 받아 온 것을 캐시에 넣어 둔다(넣기에 실패해도 응답은 그대로 돌려준다). */
 function keep(request, res) {
@@ -60,10 +76,22 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // 문서는 망 우선 — 새 배포를 바로 받는다.
+  /*
+   * 문서는 망 우선 — 새 배포를 바로 받는다.
+   *
+   * 망이 없을 때 무엇을 대신 내주는가가 나라를 쪼개면서 달라졌다. 예전에는
+   * 언제나 SCOPE(맨 앞 페이지)를 내줬는데, 이제 그건 '나라 고르는 곳' 이다.
+   * 비행기 안에서 /spain/ 을 열었는데 나라 고르는 화면이 나오면 계획을 볼
+   * 방법이 없다. 그래서 그 페이지 → 그 나라 셸 → 맨 앞 순으로 찾는다.
+   */
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() => caches.match(SCOPE).then((r) => r ?? Response.error())),
+      fetch(request)
+        .then((res) => keep(request, res))
+        .catch(() => caches.match(request)
+          .then((r) => r ?? caches.match(shellOf(url)))
+          .then((r) => r ?? caches.match(SCOPE))
+          .then((r) => r ?? Response.error())),
     );
     return;
   }

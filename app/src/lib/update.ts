@@ -17,20 +17,53 @@
  */
 
 /** 지금 이 페이지가 실행 중인 번들 파일 이름. */
+/*
+ * 이 페이지를 띄운 진입 파일 이름.
+ *
+ * 예전에는 `index-*.js` 를 찾았다. 나라를 쪼개면서 페이지가 여럿이 되자
+ * Vite 가 번들을 나눴고 이름이 `main-*.js`·`landing-*.js` 가 되었다 —
+ * 이름을 박아 두었으면 낡은 판 알림이 **말없이 꺼졌을** 것이다. 그건
+ * 사용자가 두 판 뒤진 것을 쓰면서 같은 문제를 계속 겪게 만든 바로 그 고장이다.
+ * 그래서 이름을 찾지 않고, 문서가 실제로 부르는 진입 스크립트를 본다.
+ */
+const fileOf = (src: string): string => src.split('/').pop() ?? src;
+
+/**
+ * 문서가 부르는 진입 스크립트 전부를, 이름만 모아 한 줄로.
+ *
+ * 하나만 보면 안 된다. 지금 빌드는 진입 파일과 공통 덩어리 둘을 부르는데,
+ * 앞의 것만 보면 공통 덩어리가 그대로일 때 진입 파일만 바뀐 배포를 놓친다.
+ * 정렬해서 붙이므로 순서가 바뀌어도 같은 판은 같은 값이 된다.
+ */
+const joinNames = (srcs: string[]): string | null =>
+  (srcs.length ? srcs.map(fileOf).sort().join(' · ') : null);
+
 function runningBundle(): string | null {
-  const el = [...document.querySelectorAll('script[src]')]
-    .map((s) => s.getAttribute('src') ?? '')
-    .find((src) => /assets\/index-[A-Za-z0-9_-]+\.js/.test(src));
-  return el ? (el.match(/index-[A-Za-z0-9_-]+\.js/) ?? [null])[0] : null;
+  return joinNames([...document.querySelectorAll('script[type="module"][src]')]
+    .map((el) => el.getAttribute('src') ?? '')
+    .filter(Boolean));
 }
 
-/** 서버에 올라가 있는 번들 파일 이름. */
+/** HTML 글에서 진입 스크립트 주소를 모두 뽑는다. */
+export function entrySrcs(html: string): string[] {
+  const out: string[] = [];
+  const tag = /<script\b[^>]*>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = tag.exec(html)) !== null) {
+    const t = m[0];
+    if (!/\btype=["']module["']/i.test(t)) continue;
+    const src = t.match(/\bsrc=["']([^"']+)["']/i);
+    if (src) out.push(src[1]);
+  }
+  return out;
+}
+
+/** 서버에 올라가 있는 번들 파일 이름들. */
 async function servedBundle(): Promise<string | null> {
   // 캐시를 건너뛴다. 이 확인만큼은 반드시 서버에 물어야 한다.
   const res = await fetch(`${location.pathname}?v=${Date.now()}`, { cache: 'no-store' });
   if (!res.ok) return null;
-  const html = await res.text();
-  return (html.match(/index-[A-Za-z0-9_-]+\.js/) ?? [null])[0];
+  return joinNames(entrySrcs(await res.text()));
 }
 
 /**

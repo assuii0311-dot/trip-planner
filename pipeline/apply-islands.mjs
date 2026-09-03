@@ -9,7 +9,9 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { ISLANDS, ISLAND_OF } from './registry/spain-character.mjs';
 import { ISLAND_EXTRAS } from './island-extras.mjs';
 
-const root = new URL('../app/public/data/', import.meta.url);
+/* 데이터는 나라마다 폴더가 따로다. 기본은 스페인, 첫 인자로 바꾼다. */
+const COUNTRY = process.argv.find((a) => /^--country=/.test(a))?.split('=')[1] ?? 'spain';
+const root = new URL(`../app/public/data/${COUNTRY}/`, import.meta.url);
 const idx = JSON.parse(await readFile(new URL('spain.json', root), 'utf8'));
 
 idx.islands = ISLANDS;

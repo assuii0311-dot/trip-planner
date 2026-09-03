@@ -4,6 +4,9 @@
 //   node pipeline/dump.mjs teruel
 import { readFile, readdir } from 'node:fs/promises';
 
+/* 데이터는 나라마다 폴더가 따로다. 기본은 스페인, --country= 로 바꾼다. */
+const COUNTRY = process.argv.find((a) => /^--country=/.test(a))?.split('=')[1] ?? 'spain';
+
 const koDir = new URL('./ko/spain/', import.meta.url);
 const ko = {};
 for (const f of await readdir(koDir)) {
@@ -28,7 +31,7 @@ async function englishFor(slug) {
 }
 
 for (const slug of process.argv.slice(2)) {
-  const items = JSON.parse(await readFile(new URL(`../app/public/data/cities/${slug}.json`, import.meta.url), 'utf8'));
+  const items = JSON.parse(await readFile(new URL(`../app/public/data/${COUNTRY}/cities/${slug}.json`, import.meta.url), 'utf8'));
   const en = await englishFor(slug);
   console.log(`### ${slug} (${items.length})`);
   for (const i of items) {

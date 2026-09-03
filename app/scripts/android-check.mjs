@@ -18,7 +18,7 @@
  */
 import { chromium, devices } from 'playwright';
 
-const base = process.argv[2] ?? 'http://localhost:4300/0829_kos_basic_001/';
+const base = process.argv[2] ?? 'http://localhost:4300/0829_kos_basic_001/spain/';
 const browser = await chromium.launch({
   executablePath: process.env.PLAYWRIGHT_CHROMIUM ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
   args: ['--no-sandbox'],

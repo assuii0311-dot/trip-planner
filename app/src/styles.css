@@ -76,6 +76,22 @@ body {
 }
 
 .topbar h1 { font-size: 17px; margin: 0 0 2px; letter-spacing: -0.01em; }
+/*
+  나라 이름은 나라 고르는 곳으로 가는 링크이기도 하다.
+
+  글자 높이(20px)는 손가락에 작다 — 안드로이드 검사가 36px 아래를 잡는다.
+  그렇다고 머리줄을 키우면 목록이 보는 자리를 잃는다. 그래서 누르는 자리만
+  세로로 넓히고, 늘어난 만큼을 음수 여백으로 도로 접는다. 보이는 높이는
+  그대로이고 손가락이 닿는 자리는 44px 이 된다.
+*/
+.country-back {
+  display: inline-flex; align-items: center; gap: 5px;
+  min-height: 44px; margin: -12px 0;
+  color: inherit; text-decoration: none;
+}
+.country-back span { font-size: 11px; color: var(--muted); }
+.country-back:hover span, .country-back:focus-visible span { color: var(--accent); }
+.country-back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
 
 /*
   단계 표시는 눌러서 앞 단계로 돌아가는 버튼이기도 하다. 그런데 높이가
@@ -1417,3 +1433,99 @@ button.ghost { border: 1px solid var(--line); background: var(--surface); color:
   background: var(--surface); font-size: 13px; color: var(--muted);
 }
 .day-tally b { color: var(--text); }
+
+/* ─────────────────────────────────────────────────────────────
+   나라 고르는 곳
+
+   앱과 같은 토큰을 쓴다 — 고르고 들어갔을 때 다른 물건처럼 보이면 안 된다.
+   다만 여기는 단계 막대도 하단 버튼도 없는 한 장짜리라, 세로로 길게 흐르게
+   두고 카드를 크게 잡는다. 손가락으로 누르는 자리가 카드 전체다.
+   ───────────────────────────────────────────────────────────── */
+
+.landing {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 20px calc(40px + env(safe-area-inset-bottom));
+}
+
+.landing-kicker {
+  margin: 0 0 6px;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--accent); text-transform: uppercase;
+}
+.landing-head h1 { margin: 0 0 10px; font-size: 30px; line-height: 1.25; letter-spacing: -0.02em; }
+.landing-sub { margin: 0 0 28px; color: var(--muted); font-size: 15px; line-height: 1.65; }
+.landing-sub b { color: var(--text); font-weight: 600; }
+
+.pick-list { display: grid; gap: 12px; margin-bottom: 36px; }
+
+.pick {
+  --pick: var(--accent);
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 18px; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--surface); box-shadow: var(--shadow);
+  color: inherit; text-decoration: none;
+  transition: border-color 0.15s, transform 0.15s;
+}
+a.pick:hover, a.pick:focus-visible {
+  border-color: var(--pick);
+  transform: translateY(-1px);
+  outline: none;
+}
+a.pick:focus-visible { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pick) 35%, transparent); }
+a.pick:active { transform: none; }
+
+/* 아직 못 들어가는 나라. 흐리게 두되 무엇이 남았는지는 읽히게 한다. */
+.pick.is-soon { background: var(--surface-2); box-shadow: none; border-style: dashed; }
+.pick.is-soon .pick-flag { filter: grayscale(1); opacity: 0.55; }
+.pick.is-soon .pick-title, .pick.is-soon .pick-tagline { color: var(--muted); }
+
+.pick-flag { font-size: 34px; line-height: 1.1; }
+.pick-body { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.pick-title {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  font-size: 19px; font-weight: 700; letter-spacing: -0.01em;
+}
+.pick-en { font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: 0.02em; }
+.pick-soon {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px;
+}
+.pick-tagline { font-size: 13px; color: var(--pick); font-weight: 600; }
+.pick-blurb { font-size: 13.5px; color: var(--muted); line-height: 1.6; }
+.pick-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.pick-tag {
+  font-size: 11.5px; color: var(--muted);
+  background: var(--surface-2); border-radius: 999px; padding: 2px 9px;
+}
+.pick.is-soon .pick-tag { background: var(--surface); }
+.pick-resume {
+  margin-top: 8px; font-size: 12.5px; font-weight: 600; color: var(--pick);
+}
+.pick-go { margin-left: auto; align-self: center; font-size: 20px; color: var(--pick); }
+
+.landing-how {
+  border-top: 1px solid var(--line);
+  padding-top: 26px; margin-bottom: 30px;
+}
+.landing-how h2 { margin: 0 0 14px; font-size: 16px; }
+.landing-how ol { margin: 0; padding-left: 20px; display: grid; gap: 9px; }
+.landing-how li { font-size: 14px; color: var(--muted); line-height: 1.6; }
+.landing-how b { color: var(--text); font-weight: 600; }
+
+.landing-foot { border-top: 1px solid var(--line); padding-top: 20px; }
+.landing-foot p { margin: 0 0 10px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+.landing-src { font-size: 11.5px; }
+
+@media (max-width: 420px) {
+  .landing { padding: 28px 16px 40px; }
+  .landing-head h1 { font-size: 25px; }
+  .pick { padding: 15px; gap: 11px; }
+  .pick-flag { font-size: 28px; }
+}
+
+.primary-link {
+  display: inline-flex; align-items: center; min-height: 44px;
+  color: var(--accent); font-weight: 600; text-decoration: none;
+}
+.primary-link:hover, .primary-link:focus-visible { text-decoration: underline; }

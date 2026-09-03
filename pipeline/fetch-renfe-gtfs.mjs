@@ -230,7 +230,7 @@ const payload = {
   pairs: out,
 };
 
-const dest = new URL(`../app/public/data/${countrySlug}-rail.json`, import.meta.url);
+const dest = new URL(`../app/public/data/${countrySlug}/rail.json`, import.meta.url);
 await writeFile(dest, JSON.stringify(payload));
 const bytes = JSON.stringify(payload).length;
 console.log(`도시 쌍 ${Object.keys(out).length} · 편수 ${total} · ${(bytes / 1024).toFixed(0)}KB`);

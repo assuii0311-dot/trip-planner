@@ -19,7 +19,7 @@ function LinkRow({ label, note, url }: { label: string; note: string; url: strin
 
 /** 5단계 — 선택한 계획의 이동과 예약 방법을 안내한다. */
 export default function Step6Guide({
-  plan, cities, allItems, attribution, tripName, fileBase,
+  plan, cities, allItems, attribution, tripName, fileBase, country,
 }: {
   plan: Plan | null;
   cities: City[];
@@ -28,6 +28,8 @@ export default function Step6Guide({
   attribution: string[];
   tripName: string;
   fileBase: string;
+  /** 지도에 그릴 나라. 국경선과 범위가 나라마다 다르다. */
+  country: string;
 }) {
   if (!plan) {
     return <div className="empty">먼저 4단계에서 계획을 하나 선택해 주세요.</div>;
@@ -56,7 +58,7 @@ export default function Step6Guide({
           큰 점은 자는 곳, 작은 점은 당일치기입니다. 선 위의 아이콘이 그 구간에서 타는 것입니다.
         </p>
         <div className="card" style={{ padding: 12 }}>
-          <TripMap stops={mapData.stops} hops={mapData.hops} />
+          <TripMap stops={mapData.stops} hops={mapData.hops} country={country} />
           <TripMapLegend stops={mapData.stops} hops={mapData.hops} />
         </div>
       </section>

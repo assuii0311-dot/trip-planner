@@ -6,7 +6,7 @@
  * 짐을 끌고 공항으로 간다.
  */
 import { readFile } from 'node:fs/promises';
-const idx = JSON.parse(await readFile(new URL('../public/data/spain.json', import.meta.url), 'utf8'));
+const idx = JSON.parse(await readFile(new URL('../public/data/spain/index.json', import.meta.url), 'utf8'));
 const { AIRPORTS, airportOf } = await import('../src/lib/airports.ts');
 const { arrivalLeg, departureLeg, transferMin, tripWindow, parseHm, fmtHm } =
   await import('../src/lib/airporttime.ts');

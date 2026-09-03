@@ -4,7 +4,9 @@
 //   구형  옛 desc 한 줄만 있는 것 (다시 써야 함)
 //   미작성 영문 그대로인 것
 import { readFile, readdir } from 'node:fs/promises';
-const dir = new URL('../app/public/data/cities/', import.meta.url);
+/* 데이터는 나라마다 폴더가 따로다. 기본은 스페인, 첫 인자로 바꾼다. */
+const COUNTRY = process.argv.find((a) => /^--country=/.test(a))?.split('=')[1] ?? 'spain';
+const dir = new URL(`../app/public/data/${COUNTRY}/cities/`, import.meta.url);
 const koDir = new URL('./ko/spain/', import.meta.url);
 
 const ko = {};

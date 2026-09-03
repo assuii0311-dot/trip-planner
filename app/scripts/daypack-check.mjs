@@ -12,10 +12,10 @@ import { rankAll, RANK_FLOOR } from '../src/lib/rank.ts';
 import { packDays, pickTiming, MOVE_LABEL, MOVE_RULE, MIN_STAY_MIN } from '../src/lib/daypack.ts';
 
 const here = (p) => new URL(p, import.meta.url);
-const idx = JSON.parse(readFileSync(here('../public/data/spain.json'), 'utf8'));
+const idx = JSON.parse(readFileSync(here('../public/data/spain/index.json'), 'utf8'));
 setIslandRail(idx.islands ?? []);
 const cities = idx.cities;
-const itemsOf = (s) => { try { return JSON.parse(readFileSync(here(`../public/data/cities/${s}.json`), 'utf8')); } catch { return []; } };
+const itemsOf = (s) => { try { return JSON.parse(readFileSync(here(`../public/data/spain/cities/${s}.json`), 'utf8')); } catch { return []; } };
 const prefs = { themes:{history:2,art:2,landmark:2,nature:2,food:2,nightlife:1,activity:1,shopping:1},
   pace:3,budget:'mid',dayStart:'normal',nightlife:1,discovery:2,walkTolerance:3,companion:'couple',
   foodStyles:[],mobility:'normal',photo:2,transport:['walk','metro'],dayTripAppetite:2 };

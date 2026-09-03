@@ -8,7 +8,7 @@
  */
 import { readFile } from 'node:fs/promises';
 
-const index = JSON.parse(await readFile(new URL('../public/data/spain.json', import.meta.url), 'utf8'));
+const index = JSON.parse(await readFile(new URL('../public/data/spain/index.json', import.meta.url), 'utf8'));
 const cities = index.cities;
 const { inferThemes } = await import('../src/lib/taste.ts');
 const { THEMES } = await import('../src/lib/themes.ts');

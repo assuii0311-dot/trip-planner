@@ -5,8 +5,8 @@
  * 렌터카로 건너라는 안내가 나온다 — 실제로 그랬다.
  */
 import { readFile } from 'node:fs/promises';
-const idx = JSON.parse(await readFile(new URL('../public/data/spain.json', import.meta.url), 'utf8'));
-const load = async (s) => JSON.parse(await readFile(new URL(`../public/data/cities/${s}.json`, import.meta.url), 'utf8'));
+const idx = JSON.parse(await readFile(new URL('../public/data/spain/index.json', import.meta.url), 'utf8'));
+const load = async (s) => JSON.parse(await readFile(new URL(`../public/data/spain/cities/${s}.json`, import.meta.url), 'utf8'));
 const { servicesBetween, fmtDur } = await import('../src/lib/routing.ts');
 const { measuredTable } = await import('../src/lib/itinerary.ts');
 const { expandIslandScope, rehomeIslandItems } = await import('../src/lib/island.ts');

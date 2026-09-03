@@ -2,7 +2,39 @@ import type { Basics, Preferences, Priorities, ThemeId, TripState } from '../typ
 import { AIRPORTS } from './airports';
 import { addDays, todayISO } from './caldate';
 
-const KEY = 'trip-planner.v1';
+/**
+ * 저장 자리는 나라마다 따로다.
+ *
+ * 나라마다 주소가 다르지만 localStorage 는 출처(origin) 단위라 주소가 달라도
+ * 같은 서랍을 본다. 열쇠를 나누지 않으면 스페인 계획을 짜다 일본을 열었을 때
+ * 스페인 도시 slug 가 담긴 계획을 일본 데이터로 읽으려 든다.
+ *
+ *   trip-planner.v1.spain
+ *   trip-planner.v1.japan
+ *
+ * 예전 열쇠(`trip-planner.v1`)에 들어 있던 것은 스페인 계획이다. 나라를
+ * 쪼개기 전에는 스페인밖에 없었기 때문이다. 처음 읽을 때 한 번 옮긴다 —
+ * 쓰던 사람의 계획이 사라지면 안 된다.
+ */
+const OLD_KEY = 'trip-planner.v1';
+const keyOf = (country: string) => `${OLD_KEY}.${country}`;
+
+/** 이 페이지가 다루는 나라. 주소에서 정해져 들어온다. */
+let here = 'spain';
+export const setStoreCountry = (country: string): void => { here = country; };
+const KEY = () => keyOf(here);
+
+/** 예전 한 나라 시절의 저장분을 스페인 자리로 옮긴다. 한 번만. */
+function migrateSingleCountry(): void {
+  try {
+    const old = localStorage.getItem(OLD_KEY);
+    if (old === null) return;
+    if (localStorage.getItem(keyOf('spain')) === null) {
+      localStorage.setItem(keyOf('spain'), old);
+    }
+    localStorage.removeItem(OLD_KEY);
+  } catch { /* 저장이 막혀 있어도 앱은 돌아야 한다. */ }
+}
 
 export const DEFAULT_THEMES: Record<ThemeId, number> = {
   history: 2, art: 2, landmark: 2, nature: 2, food: 2, nightlife: 1, activity: 1, shopping: 1,
@@ -12,7 +44,7 @@ export function defaultState(): TripState {
   const start = addDays(todayISO(), 30);
   const end = addDays(start, 6);
   const basics: Basics = {
-    country: 'spain',
+    country: here,
     cities: [],
     startDate: start,
     endDate: end,
@@ -102,7 +134,8 @@ function migrate(parsed: TripState): TripState {
 /** localStorage 는 사파리 프라이빗 모드 등에서 던질 수 있으므로 항상 감싼다. */
 export function loadState(): TripState {
   try {
-    const raw = localStorage.getItem(KEY);
+    migrateSingleCountry();
+    const raw = localStorage.getItem(KEY());
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw) as TripState;
     if (!Array.isArray((parsed?.basics as Basics | undefined)?.cities)) return defaultState();
@@ -127,7 +160,7 @@ export type SaveResult =
 export function saveState(state: TripState): SaveResult {
   const at = Date.now();
   try {
-    localStorage.setItem(KEY, JSON.stringify({ ...state, savedAt: at }));
+    localStorage.setItem(KEY(), JSON.stringify({ ...state, savedAt: at }));
     return { ok: true, at };
   } catch (err) {
     const name = err instanceof Error ? err.name : '';
@@ -157,7 +190,7 @@ export function isInstalled(): boolean {
 }
 
 export function clearState(): void {
-  try { localStorage.removeItem(KEY); } catch { /* noop */ }
+  try { localStorage.removeItem(KEY()); } catch { /* noop */ }
 }
 
 /** 계획을 파일로 내보낸다. 아이패드 ↔ 폰 이동과 동행자 공유에 쓴다. */
