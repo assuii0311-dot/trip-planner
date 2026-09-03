@@ -6,6 +6,7 @@ import { rankItems } from './scoring';
 import { dailyMinutes, isMeal, itemMinutes } from './capacity';
 import { GRACE_MIN, packDays, type MoveTiming, type PackedDay } from './daypack';
 import { distanceKm, hasCoords, travelMinutes, walkKmOf } from './geo';
+import { addDays } from './caldate';
 
 const DAY_START: Record<Preferences['dayStart'], number> = { early: 8 * 60, normal: 9.5 * 60, late: 11 * 60 };
 
@@ -97,12 +98,6 @@ function fitsSlot(item: Item, slot: Slot): boolean {
   if (slot === 'night') return item.theme === 'nightlife';
   if (meal) return false;
   return item.bestSlots.length === 0 || item.bestSlots.includes(slot);
-}
-
-function addDays(iso: string, n: number): string {
-  const d = new Date(`${iso}T00:00:00`);
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
 }
 
 /**

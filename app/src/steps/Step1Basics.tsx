@@ -9,13 +9,9 @@ import { islandAsCity } from '../lib/island';
 import { AIRPORT_GROUPS, airportOf } from '../lib/airports';
 import { withJosa } from '../lib/korean';
 import { mark } from '../lib/diag';
+import { addDays, dayDiff } from '../lib/caldate';
 import { isOff } from '../lib/rendermode';
 import { arrivalLeg, departureLeg, fmtHm, parseHm, tripWindow } from '../lib/airporttime';
-
-
-const DAY_MS = 86400000;
-const iso = (t: number) => new Date(t).toISOString().slice(0, 10);
-const at = (d: string) => new Date(`${d}T00:00:00Z`).getTime();
 
 /**
  * 첫날을 옮긴다.
@@ -26,25 +22,23 @@ const at = (d: string) => new Date(`${d}T00:00:00Z`).getTime();
  */
 export function moveStart(basics: Basics, v: string): Partial<Basics> {
   if (!v) return {};
-  const span = Math.max(0, Math.round((at(basics.endDate) - at(basics.startDate)) / DAY_MS));
-  return at(v) > at(basics.endDate)
-    ? { startDate: v, endDate: iso(at(v) + span * DAY_MS) }
+  const span = Math.max(0, dayDiff(basics.startDate, basics.endDate));
+  return dayDiff(basics.endDate, v) > 0
+    ? { startDate: v, endDate: addDays(v, span) }
     : { startDate: v };
 }
 
 /** 마지막 날을 옮긴다. 첫날보다 앞이면 첫날을 같이 당긴다. */
 export function moveEnd(basics: Basics, v: string): Partial<Basics> {
   if (!v) return {};
-  const span = Math.max(0, Math.round((at(basics.endDate) - at(basics.startDate)) / DAY_MS));
-  return at(v) < at(basics.startDate)
-    ? { endDate: v, startDate: iso(at(v) - span * DAY_MS) }
+  const span = Math.max(0, dayDiff(basics.startDate, basics.endDate));
+  return dayDiff(basics.startDate, v) < 0
+    ? { endDate: v, startDate: addDays(v, -span) }
     : { endDate: v };
 }
 
 export function tripDays(basics: Basics): number {
-  const a = new Date(`${basics.startDate}T00:00:00`);
-  const b = new Date(`${basics.endDate}T00:00:00`);
-  const days = Math.round((b.getTime() - a.getTime()) / 86400000) + 1;
+  const days = dayDiff(basics.startDate, basics.endDate) + 1;
   return Number.isFinite(days) ? Math.max(1, Math.min(30, days)) : 1;
 }
 

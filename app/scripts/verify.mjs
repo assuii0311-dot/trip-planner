@@ -32,7 +32,20 @@ const browser = engine === webkit
     executablePath: process.env.PLAYWRIGHT_CHROMIUM ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
     args: ['--no-sandbox'],
   });
-console.log(`엔진: ${engine === webkit ? 'WebKit (사파리)' : 'Chromium'}`);
+
+/*
+  시간대도 갈아 끼울 수 있게 한다. 이 컨테이너는 UTC 라서, 한국(+9)에서만
+  나던 날짜 밀림(4/30 출발이 4/29 로 시작하던 일)을 여기서는 볼 수 없었다.
+  창을 여는 곳이 스무 군데라 하나씩 고치는 대신 newContext 를 감싼다.
+    VERIFY_TZ=Asia/Seoul npx tsx scripts/verify.mjs
+*/
+const tz = process.env.VERIFY_TZ ?? null;
+if (tz) {
+  const open = browser.newContext.bind(browser);
+  browser.newContext = (opts = {}) => open({ timezoneId: tz, locale: 'ko-KR', ...opts });
+}
+
+console.log(`엔진: ${engine === webkit ? 'WebKit (사파리)' : 'Chromium'}${tz ? ` · 시간대 ${tz}` : ''}`);
 
 const results = [];
 const check = (name, ok, detail = '') => {
@@ -655,6 +668,41 @@ console.log('\n■ 1-b. 날짜·시각 라벨이 서로 부딪히지 않는가')
     timeLabels.some((t) => /현지 착륙 시각/.test(t)) && timeLabels.some((t) => /현지 이륙 시각/.test(t)),
     timeLabels.filter((t) => /시각/.test(t)).join(' · '));
   await ctx.close();
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+console.log('\n■ 1-c. 시간대 — 넣은 날에서 일정이 시작하는가');
+{
+  /*
+   * 4월 30일 출발을 넣었는데 4단계 일정이 4월 29일부터 시작했다.
+   *
+   * 날짜를 '로컬 자정' 으로 파싱하고 'UTC 기준' 으로 되돌린 탓이다.
+   * UTC 보다 앞선 곳에서만 밀리는데, 이 검증 컨테이너가 UTC 라서
+   * 검사는 전부 통과하고 사용자만 겪었다. 한국(+9)뿐 아니라 여행지인
+   * 스페인(여름 +2)도 마찬가지였다.
+   *
+   * 그래서 창의 시간대를 바꿔 가며 같은 여행을 만든다. 검사를 돌리는
+   * 기계가 어디에 있든 이 셋 중 하나는 UTC 보다 앞서 있다.
+   */
+  for (const tz of ['UTC', 'Asia/Seoul', 'Europe/Madrid']) {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 900 }, timezoneId: tz, locale: 'ko-KR' });
+    const page = await ctx.newPage();
+    watch(page, allErrors, `[시간대 ${tz}]`);
+    const from = '2026-04-30';
+    const to = '2026-05-06';
+    const next = await build(page, {
+      cities: [['마드리드·중부', '마드리드'], ['안달루시아', '세비야']],
+      from, to, airports: ['MAD', 'MAD'], times: ['18:00', '12:00'],
+    });
+    await next();                                   // → 4단계
+    await page.waitForTimeout(1200);
+    const body = await page.locator('main').innerText();
+    const days = [...body.matchAll(/\d{4}-\d{2}-\d{2}/g)].map((m) => m[0]);
+    check(`${tz} — 일정이 넣은 날에서 시작한다`, days[0] === from, `${days[0] ?? '(날짜 없음)'} (넣은 값 ${from})`);
+    check(`${tz} — 일정이 넣은 날을 넘지 않는다`,
+      days.length > 0 && days[days.length - 1] <= to, `마지막 ${days[days.length - 1] ?? '없음'} (넣은 값 ${to})`);
+    await ctx.close();
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────
