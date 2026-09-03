@@ -654,6 +654,7 @@ export default function App() {
                 prefs={state.prefs} priorities={state.priorities}
                 courses={state.courses} cityDays={state.cityDays} days={days}
                 usableDays={airportWindow?.usableDays}
+                firstDayStart={airportWindow?.firstDayStart ?? null}
                 ui={state.ui ?? {}}
                 onSet={setPriority} onBulk={setPriorities} onCourse={chooseCourse}
                 onDays={setCityDays} onDropCity={dropCity}
@@ -673,7 +674,8 @@ export default function App() {
           <Step5Plans
             items={items} cities={index.cities} itinerary={itinerary!}
             days={days} prefs={state.prefs}
-            plans={plans} overflow={built?.overflow ?? []} needDays={built?.needDays ?? 0}
+            plans={plans} overflow={built?.overflow ?? []} unseen={built?.unseen}
+            needDays={built?.needDays ?? 0}
             chosen={chosenPlan.style} onChoose={choosePlan}
             onSwap={swapEntry} onMode={setMode} onTiming={setMoveTiming}
             onLodging={setLodging} onDropCity={dropCity}

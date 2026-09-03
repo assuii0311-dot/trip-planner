@@ -149,6 +149,17 @@ export function packDays(
   needMinOf: (slug: string) => number,
   budgetMin: number,
   timingOf: (from: string, to: string) => MoveTiming | undefined = () => undefined,
+  /**
+   * 첫날 실제로 쓸 수 있는 볼거리 시간(분). 비행기로 저녁에 내리면 하루가
+   * 아니라 두 시간이다.
+   *
+   * 이걸 몰랐을 때 무슨 일이 났는가 — 18시 착륙이면 첫날은 20:05 부터라
+   * 145분뿐인데, 여기서는 567분짜리 하루로 세고 마드리드 294분 + 톨레도
+   * 133분을 배정했다. 그리고 실제 일정을 짜는 쪽(buildDay)은 시각을 알기
+   * 때문에 들어가지 못한 것을 그냥 버렸다. 톨레도가 경로에는 있는데
+   * 상세 일정에는 한 곳도 안 나오는 일이 이렇게 벌어졌다.
+   */
+  firstDayMin: number | null = null,
 ): PackResult {
   const days: PackedDay[] = [];
   const given = new Map<string, number>();
@@ -180,7 +191,7 @@ export function packDays(
     const prev = i > 0 ? sleeping[i - 1] : null;
 
     if (!prev) {
-      cur = open(stop.city.slug);
+      cur = open(stop.city.slug, Math.max(0, Math.min(budgetMin, firstDayMin ?? budgetMin)));
     } else {
       const move = hopMin.get(`${prev.city.slug}>${stop.city.slug}`) ?? 0;
       /*
@@ -266,7 +277,34 @@ export function packDays(
        *    최소체류에 못 미치면 그만 간다 — 당일치기로 볼 수 있는 만큼이
        *    거기까지라는 뜻이고, 더 보고 싶으면 거점으로 잡아야 한다.
        */
-      while (!day.move && queue.length && day.left - queue[0].round >= MIN_STAY_MIN) {
+      /*
+       * 근교에 가면, 가는 데 쓴 시간보다는 오래 머문다.
+       *
+       * 예전에는 남은 자투리에 근교를 밀어 넣었다. 그래서 '마드리드 294분을
+       * 보고 남은 273분으로 톨레도(왕복 140분) 133분' 같은 날이 나왔다.
+       * 두 시간 이십 분을 길에 쓰고 담은 것의 3분의 1을 본다는 뜻이고,
+       * 나머지 251분은 '같은 근교는 하루만' 규칙에 걸려 조용히 버려졌다.
+       *
+       * 규칙은 하나다. **자를 거면 자를 이유가 있어야 한다.**
+       *
+       * 빈 날이면 오늘이 그 근교에 줄 수 있는 최선이다 — 다 못 봐도 가고,
+       * 남는 몫은 unseen 으로 알린다. 하지만 이미 다른 도시를 본 날에
+       * 얹으려면 담은 것을 오늘 안에 다 볼 수 있어야 한다. 그러지 못하면
+       * 빈 날을 하나 쓰는 편이 낫다 — 거기서는 다 볼 수 있기 때문이다.
+       *
+       * 여기서 '빈 날이면 무조건 간다' 를 빼면 안 된다. 왕복 6시간 50분짜리
+       * 세비야를 사용자가 손수 '짐 안 옮기기' 로 바꾼 경우, 하루를 다 써도
+       * 왕복을 못 이긴다. 그때 안 간다고 하면 사용자가 가겠다고 한 도시가
+       * 통째로 사라진다 — 잘라 가는 것보다 나쁘다.
+       */
+      const takes = (day: Open, t: { minutes: number; round: number }): boolean => {
+        const room = day.left - t.round;
+        if (room < MIN_STAY_MIN) return false;
+        if (day.legs.length === 0) return true;
+        return room >= t.minutes;
+      };
+
+      while (!day.move && queue.length && takes(day, queue[0])) {
         const t = queue[0];
         const room = day.left - t.round;
         const use = Math.min(t.minutes, room);

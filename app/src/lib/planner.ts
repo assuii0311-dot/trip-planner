@@ -349,6 +349,8 @@ export function scheduleFromItinerary(
   needMinOf: (slug: string) => number,
   budgetMin: number,
   timingOf: (from: string, to: string) => MoveTiming | undefined = () => undefined,
+  /** 첫날 실제로 쓸 수 있는 볼거리 시간(분). 저녁에 내리면 하루가 아니다. */
+  firstDayMin: number | null = null,
 ): {
   schedule: DayPlanSlot[];
   overflow: { city: string; name: string; days: number }[];
@@ -359,7 +361,7 @@ export function scheduleFromItinerary(
   /** 계획을 다 담는 데 필요한 날. 3단계도 이 값을 쓴다. */
   needDays: number;
 } {
-  const packed = packDays(itin, needMinOf, budgetMin, timingOf);
+  const packed = packDays(itin, needMinOf, budgetMin, timingOf, firstDayMin);
   const hopOf = new Map(itin.hops.map((h) => [`${h.from.slug}>${h.to.slug}`, h]));
   const cityOf = new Map(itin.stops.map((s) => [s.city.slug, s.city]));
 
@@ -455,7 +457,19 @@ export function scheduleFromItinerary(
     while (schedule.length < totalDays && blocks.length) {
       const [slug, at] = blocks[k % blocks.length];
       const src = schedule[Math.min(at, schedule.length - 1)];
-      schedule.splice(at + 1, 0, { ...src, travel: null, moveTiming: null, segments: [] });
+      /*
+       * 남는 날은 그 도시에서 쉬는 날이다.
+       *
+       * 예전에는 앞 날을 통째로 베끼고 구간만 비웠다. 그런데 앞 날이 근교
+       * 당일치기였으면 `city`·`isDayTrip`·`dayTripMode` 까지 따라와서, 남는
+       * 날이 **가는 길도 없는 두 번째 세고비아 당일치기**가 되었다. 짐을 둔
+       * 도시에서 쉬는 날이라고 말해야 할 자리에 안 가는 근교가 들어앉은 것이다.
+       */
+      schedule.splice(at + 1, 0, {
+        segments: [], sleepAt: src.sleepAt, travel: null, moveTiming: null,
+        city: src.sleepAt ?? src.city, isDayTrip: false,
+        returnTo: null, returnMinutes: 0, returnAfter: 'dinner',
+      });
       // 뒤 블록의 자리가 한 칸씩 밀린다.
       for (let j = 0; j < blocks.length; j++) if (blocks[j][1] > at) blocks[j][1] += 1;
       blocks[k % blocks.length][1] = at + 1;
@@ -497,10 +511,21 @@ export function buildPlans(input: PlanInput): {
     .filter((i) => i.city === slug && (input.priorities[i.id] ?? 0) > 0 && !isMeal(i))
     .reduce((a, i) => a + itemMinutes(i), 0);
 
+  /*
+   * 첫날은 착륙하고 입국심사·시내 이동·짐 풀기가 끝난 뒤에야 시작한다.
+   * 날을 나누는 쪽도 그것을 알아야 한다 — 모르면 못 들어갈 일정을 첫날에
+   * 얹고, 실제로 짜는 쪽이 그걸 말없이 버린다.
+   */
+  const dayEndMin = 22 * 60;
+  const firstDayMin = input.firstDayStart != null
+    ? Math.max(0, Math.min(dailyMinutes(input.prefs), dayEndMin - input.firstDayStart))
+    : null;
+
   const { schedule, overflow, spare, unseen, needDays } = scheduleFromItinerary(
     input.itinerary, input.days, DAY_START[input.prefs.dayStart],
     needMinOf, dailyMinutes(input.prefs),
     (from, to) => input.moveTiming?.[`${from}>${to}`],
+    firstDayMin,
   );
 
   const plans = STYLES.map((spec) => {

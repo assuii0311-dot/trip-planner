@@ -18,7 +18,7 @@ import { MOVE_LABEL, MOVE_TIMINGS, timingBlocked, whyTiming, type MoveTiming } f
 
 /** 4단계 — 담은 곳을 바탕으로 밀도가 다른 3가지 안을 만든다. */
 export default function Step5Plans({
-  items, cities, itinerary, days, prefs, plans, overflow, needDays, chosen, onTiming,
+  items, cities, itinerary, days, prefs, plans, overflow, unseen, needDays, chosen, onTiming,
   onChoose, onSwap, onMode, onLodging, onDropCity, onMoveCity, onMoveEntry, onDropItem,
   manualOrder, airport,
 }: {
@@ -30,6 +30,8 @@ export default function Step5Plans({
   /** 계획은 App 이 만든다. 어느 단계를 보고 있든 존재해야 하기 때문이다. */
   plans: Plan[];
   overflow: { city: string; name: string; days: number }[];
+  /** 당일치기로는 다 못 보고 남은 시간(분). 도시 slug → 분. */
+  unseen?: Map<string, number>;
   /** 담은 것으로 차는 날. 3단계와 같은 엔진이 센 값이다. */
   needDays: number;
   chosen: PlanStyle;
@@ -71,6 +73,15 @@ export default function Step5Plans({
    * 처럼 합이 맞지 않는 줄이 나왔다.
    */
   const shortfall = overflow.reduce((a, o) => a + o.days, 0);
+  /* 당일치기로 못 본 몫. 한 시간이 안 되는 자투리는 말할 값어치가 없다. */
+  const unseenList = [...(unseen ?? new Map())]
+    .filter(([, min]) => min >= 60)
+    .map(([city, min]) => ({
+      city, min,
+      name: cities.find((c) => c.slug === city)?.name ?? city,
+      hours: `${Math.round(min / 6) / 10}시간`,
+    }))
+    .sort((a, b) => b.min - a.min);
   const freeDays = Math.max(0, days - usedDays);
   const cityName = (slug: string) => cities.find((c) => c.slug === slug)?.name ?? slug;
 
@@ -133,6 +144,33 @@ export default function Step5Plans({
           <p className="help" style={{ margin: '8px 0 0' }}>
             도시를 빼는 대신 3단계에서 아이템을 줄이거나, 1단계에서 날짜를 늘려도 됩니다.
           </p>
+        </div>
+      )}
+
+      {/*
+        당일치기로 다 못 본 것은 말을 해 준다.
+
+        예전에는 조용히 버렸다. 톨레도를 담았는데 상세 일정에 한 곳도 없고,
+        왜 없는지도 화면 어디에도 없었다. 담은 것이 안 들어갔으면 그 사실이
+        화면에 남아야 한다 — 거점으로 바꾸면 다 볼 수 있다는 것까지.
+      */}
+      {unseenList.length > 0 && (
+        <div className="notice" style={{ marginBottom: 16 }}>
+          <p style={{ margin: '0 0 8px' }}>
+            <b>당일치기로는 여기까지입니다.</b>{' '}
+            아래는 담았지만 하루 안에 다 넣지 못한 몫입니다. 왕복 시간이 하루를
+            먹기 때문입니다. 더 보고 싶으면 그 도시에서 자는 편이 낫습니다.
+          </p>
+          <div className="chips">
+            {unseenList.map((u) => (
+              <button
+                key={u.city} type="button" className="chip"
+                onClick={() => onLodging(u.city, 'sleep')}
+              >
+                {u.name} {u.hours} 남음 — 여기서 자기
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
