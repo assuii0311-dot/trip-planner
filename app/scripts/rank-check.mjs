@@ -5,8 +5,8 @@
  * 못 박아 둔다.
  */
 import { readFile } from 'node:fs/promises';
-const idx = JSON.parse(await readFile(new URL('../public/data/spain.json', import.meta.url), 'utf8'));
-const load = async (s) => JSON.parse(await readFile(new URL(`../public/data/cities/${s}.json`, import.meta.url), 'utf8'));
+const idx = JSON.parse(await readFile(new URL('../public/data/spain/index.json', import.meta.url), 'utf8'));
+const load = async (s) => JSON.parse(await readFile(new URL(`../public/data/spain/cities/${s}.json`, import.meta.url), 'utf8'));
 const { rankAll, RANK_WEIGHTS, RANK_FLOOR, TIER_MAX_DAYS } = await import('../src/lib/rank.ts');
 const { coursesFor, cityWorthDays } = await import('../src/lib/course.ts');
 const { estimateDays, isMeal } = await import('../src/lib/capacity.ts');

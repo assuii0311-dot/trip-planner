@@ -22,13 +22,13 @@ import { buildPlans } from '../src/lib/planner.ts';
 import { setIslandRail } from '../src/lib/routing.ts';
 
 const here = (p) => new URL(p, import.meta.url);
-const idx = JSON.parse(readFileSync(here('../public/data/spain.json'), 'utf8'));
+const idx = JSON.parse(readFileSync(here('../public/data/spain/index.json'), 'utf8'));
 setIslandRail(idx.islands ?? []);
 const cities = idx.cities;
 const itemCache = new Map();
 const itemsOf = (slug) => {
   if (!itemCache.has(slug)) {
-    try { itemCache.set(slug, JSON.parse(readFileSync(here(`../public/data/cities/${slug}.json`), 'utf8'))); }
+    try { itemCache.set(slug, JSON.parse(readFileSync(here(`../public/data/spain/cities/${slug}.json`), 'utf8'))); }
     catch { itemCache.set(slug, []); }
   }
   return itemCache.get(slug);

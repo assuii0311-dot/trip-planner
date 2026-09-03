@@ -1,6 +1,6 @@
 /** 동선 엔진이 상식에 맞는 순서를 내는지. */
 import { readFile } from 'node:fs/promises';
-const index = JSON.parse(await readFile(new URL('../public/data/spain.json', import.meta.url), 'utf8'));
+const index = JSON.parse(await readFile(new URL('../public/data/spain/index.json', import.meta.url), 'utf8'));
 const C = (s) => index.cities.find((c) => c.slug === s);
 const { orderCities, measuredTable, assignLodging, buildHops } = await import('../src/lib/itinerary.ts');
 const { fmtDur, MODE_ICON } = await import('../src/lib/routing.ts');

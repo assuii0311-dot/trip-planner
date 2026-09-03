@@ -17,7 +17,9 @@ const WD = 'https://www.wikidata.org/w/api.php';
 const COMMONS = 'https://commons.wikimedia.org/w/api.php';
 const countrySlug = process.argv[2] ?? 'spain';
 
-const dir = new URL('../app/public/data/cities/', import.meta.url);
+/* 데이터는 나라마다 폴더가 따로다. 기본은 스페인, 첫 인자로 바꾼다. */
+const COUNTRY = process.argv.find((a) => /^--country=/.test(a))?.split('=')[1] ?? 'spain';
+const dir = new URL(`../app/public/data/${COUNTRY}/cities/`, import.meta.url);
 const items = [];
 for (const f of (await readdir(dir)).sort()) {
   if (f.endsWith('.json')) items.push(...JSON.parse(await readFile(new URL(f, dir), 'utf8')));

@@ -1,11 +1,11 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import type { City, Item, Plan, PlanEntry } from '../types';
-import { SPAIN_OUTLINE } from '../lib/spain-outline';
+import { frameOf, outlineOf } from '../lib/outlines';
 import { formatTime } from '../lib/planner';
 import { ItemPhoto } from './ItemPhoto';
 
 /**
- * 여행 전체를 스페인 지도 한 장에 그린다.
+ * 여행 전체를 지도 한 장에 그린다.
  *
  * SVG 로 직접 그린다. 지도 타일을 쓰면 오프라인에서 비고, 타일 제공자의
  * 약관과 저작자 표시가 따라붙는다. 국경선은 Natural Earth 퍼블릭 도메인
@@ -20,9 +20,6 @@ import { ItemPhoto } from './ItemPhoto';
  */
 
 const PAD = 16;
-/** 스페인 본토 경계에 맞춘 고정 범위. 여행마다 축척이 달라지면 비교가 안 된다. */
-const LON: [number, number] = [-9.6, 4.5];
-const LAT: [number, number] = [35.6, 44.2];
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 8;
@@ -48,10 +45,22 @@ export interface MapHop {
 }
 
 export function TripMap({
-  stops, hops, width = 340,
-}: { stops: MapStop[]; hops: MapHop[]; width?: number }) {
-  const mainland = useMemo(() => stops.filter((s) => s.city.lon > -12), [stops]);
-  const islands = useMemo(() => stops.filter((s) => s.city.lon <= -12), [stops]);
+  stops, hops, width = 340, country = 'spain',
+}: { stops: MapStop[]; hops: MapHop[]; width?: number; country?: string }) {
+  /*
+   * 지도는 나라마다 다른 범위와 국경선을 쓴다. 예전에는 스페인 좌표가
+   * 파일 맨 위에 상수로 박혀 있었다 — 나라가 둘이 되면 그 자리부터 막힌다.
+   */
+  const outline = useMemo(() => outlineOf(country), [country]);
+  const frame = useMemo(
+    () => frameOf(country, stops.map((s) => ({ lat: s.city.lat, lon: s.city.lon }))),
+    [country, stops],
+  );
+  const LON = frame.lon;
+  const LAT = frame.lat;
+  const far = frame.farLon ?? -Infinity;
+  const mainland = useMemo(() => stops.filter((s) => s.city.lon > far), [stops, far]);
+  const islands = useMemo(() => stops.filter((s) => s.city.lon <= far), [stops, far]);
 
   const w = width - PAD * 2;
   const h = Math.round(w * ((LAT[1] - LAT[0]) / (LON[1] - LON[0])) * 0.78);
@@ -194,7 +203,7 @@ export function TripMap({
         onTouchEnd={() => { pinch.current = null; }}
       >
         <g className="map-land">
-          {SPAIN_OUTLINE.map((poly, i) => (
+          {outline.map((poly, i) => (
             <path key={i} d={path(poly)} strokeWidth={0.8 * k} />
           ))}
         </g>
@@ -286,7 +295,7 @@ export function TripMap({
 
       {islands.length > 0 && (
         <p className="help" style={{ margin: '4px 0 0' }}>
-          ✈ 카나리아 제도: {islands.map((s) => `${s.city.name}(${s.sleep ? `${s.days}일` : '당일'})`).join(' · ')}
+          ✈ {frame.farLabel ?? '본토 밖'}: {islands.map((s) => `${s.city.name}(${s.sleep ? `${s.days}일` : '당일'})`).join(' · ')}
         </p>
       )}
 

@@ -25,6 +25,7 @@ import Step3Course from './steps/Step3Course';
 import Step5Plans from './steps/Step5Plans';
 import Step6Guide from './steps/Step6Guide';
 import { weekdayOf } from './lib/caldate';
+import { homeHref } from './lib/route';
 
 const STEP_TITLES = ['기초 정보', '취향 확인', '코스 선택', '계획 3안', '이동·예약'];
 const LAST_STEP = STEP_TITLES.length;
@@ -551,7 +552,18 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <h1>{index.name} 여행 계획</h1>
+        {/*
+          나라 이름을 눌러 나라 고르는 곳으로 돌아간다.
+
+          계획은 나라마다 따로 저장되므로 돌아갔다 와도 그대로 있다.
+          그래서 '나갔다가 잃는다' 는 걱정 없이 눌러도 되고, 그 사실을
+          작게 적어 둔다 — 안 적으면 아무도 안 누른다.
+        */}
+        <h1>
+          <a className="country-back" href={homeHref()} title="다른 나라 고르기">
+            {index.name} 여행 계획 <span aria-hidden="true">▾</span>
+          </a>
+        </h1>
         <div className="steps">
           {STEP_TITLES.map((t, i) => {
             const n = i + 1;
@@ -691,6 +703,7 @@ export default function App() {
         {state.step === 5 && (
           <Step6Guide
             plan={chosenPlan} cities={index.cities} allItems={items}
+            country={state.basics.country}
             attribution={index.attribution}
             tripName={`${index.name} ${state.basics.startDate}`}
             fileBase={`${state.basics.country}-${state.basics.startDate}`}

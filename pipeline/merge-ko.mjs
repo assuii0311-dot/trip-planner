@@ -6,12 +6,15 @@
 // name/theme/durationMin/energy/bestSlots 같은 기존 보정값은 그대로 둔다.
 import { readFile, writeFile } from 'node:fs/promises';
 
+/* 데이터는 나라마다 폴더가 따로다. 기본은 스페인, --country= 로 바꾼다. */
+const COUNTRY = process.argv.find((a) => /^--country=/.test(a))?.split('=')[1] ?? 'spain';
+
 const slug = process.argv[2];
 if (!slug) { console.error('usage: node pipeline/merge-ko.mjs <slug>'); process.exit(1); }
 
 const koPath = new URL(`./ko/spain/${slug}.json`, import.meta.url);
 const patchPath = new URL(`./ko-patch/${slug}.json`, import.meta.url);
-const items = JSON.parse(await readFile(new URL(`../app/public/data/cities/${slug}.json`, import.meta.url), 'utf8'));
+const items = JSON.parse(await readFile(new URL(`../app/public/data/${COUNTRY}/cities/${slug}.json`, import.meta.url), 'utf8'));
 
 let ko = {};
 try { ko = JSON.parse(await readFile(koPath, 'utf8')); } catch { /* 첫 작성 */ }

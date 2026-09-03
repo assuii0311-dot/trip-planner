@@ -1,6 +1,6 @@
 /** orderCities 가 정말 최소인지, 모든 순열을 다 세어 확인한다. */
 import { readFile } from 'node:fs/promises';
-const index = JSON.parse(await readFile(new URL('../public/data/spain.json', import.meta.url), 'utf8'));
+const index = JSON.parse(await readFile(new URL('../public/data/spain/index.json', import.meta.url), 'utf8'));
 const C = (s) => index.cities.find((c) => c.slug === s);
 const { orderCities, measuredTable } = await import('../src/lib/itinerary.ts');
 const { fastest, fmtDur } = await import('../src/lib/routing.ts');

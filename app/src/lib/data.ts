@@ -29,6 +29,28 @@ export interface Island {
 const base = import.meta.env.BASE_URL;
 const cache = new Map<string, unknown>();
 
+/**
+ * 나라마다 폴더가 따로다.
+ *
+ * 예전에는 `data/spain.json` 과 `data/cities/*.json` 이 한 곳에 있었다.
+ * 나라가 둘이 되면 도시 slug 가 부딪힌다 — `santiago`, `valencia`, `cordoba`
+ * 는 여러 나라에 있는 이름이다. 폴더로 갈라 두면 부딪힐 자리가 없다.
+ *
+ *   public/data/spain/index.json · spain/rail.json · spain/cities/<slug>.json
+ *   public/data/japan/index.json · japan/rail.json · japan/cities/<slug>.json
+ */
+const dir = (country: string) => `data/${country}`;
+
+/**
+ * 지금 페이지의 나라. 도시 아이템을 받을 때 쓴다.
+ *
+ * 앱은 한 주소에서 한 나라만 다룬다(`/trip-planner/spain/`). 그래서 전역에
+ * 하나만 두면 되고, 두면 부르는 쪽마다 나라를 들고 다니지 않아도 된다.
+ */
+let here = 'spain';
+export const setCountry = (country: string): void => { here = country; };
+export const getCountry = (): string => here;
+
 async function getJSON<T>(path: string): Promise<T> {
   if (cache.has(path)) return cache.get(path) as T;
   const res = await fetch(`${base}${path}`);
@@ -39,7 +61,8 @@ async function getJSON<T>(path: string): Promise<T> {
 }
 
 export async function loadCountry(country: string): Promise<CountryIndex> {
-  const idx = await getJSON<CountryIndex>(`data/${country}.json`);
+  setCountry(country);
+  const idx = await getJSON<CountryIndex>(`${dir(country)}/index.json`);
   // 어느 섬에 철도가 있는지 교통 엔진에 알린다. 모르면 섬에는 없다고 본다 —
   // 없는 열차를 지어내는 것보다 있는 열차를 놓치는 편이 낫다.
   setIslandRail(idx.islands ?? []);
@@ -56,7 +79,7 @@ export async function loadCountry(country: string): Promise<CountryIndex> {
  */
 export async function loadRail(country: string): Promise<RailTable | null> {
   try {
-    const t = await getJSON<RailTable>(`data/${country}-rail.json`);
+    const t = await getJSON<RailTable>(`${dir(country)}/rail.json`);
     setRailTable(t);
     return t;
   } catch {
@@ -65,7 +88,7 @@ export async function loadRail(country: string): Promise<RailTable | null> {
   }
 }
 
-export const loadCityItems = (slug: string) => getJSON<Item[]>(`data/cities/${slug}.json`);
+export const loadCityItems = (slug: string) => getJSON<Item[]>(`${dir(here)}/cities/${slug}.json`);
 
 /**
  * 계획에 쓸 도시들의 아이템을 가져온다.

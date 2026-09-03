@@ -439,9 +439,9 @@ for (const [i, city] of selected.entries()) {
   const themes = {};
   for (const it of finalItems) themes[it.theme] = (themes[it.theme] ?? 0) + 1;
 
-  await mkdir(new URL('../app/public/data/cities/', import.meta.url), { recursive: true });
+  await mkdir(new URL(`../app/public/data/${countrySlug}/cities/`, import.meta.url), { recursive: true });
   await writeFile(
-    new URL(`../app/public/data/cities/${city.slug}.json`, import.meta.url),
+    new URL(`../app/public/data/${countrySlug}/cities/${city.slug}.json`, import.meta.url),
     JSON.stringify(finalItems),
   );
 
@@ -494,7 +494,7 @@ process.stderr.write('\n');
  * 순서는 항상 레지스트리(CITIES) 순서로 맞춘다. 갈아 끼운 도시가 뒤로
  * 밀리면 앱의 권역별 목록 순서가 흐트러진다.
  */
-const indexPath = new URL(`../app/public/data/${countrySlug}.json`, import.meta.url);
+const indexPath = new URL(`../app/public/data/${countrySlug}/index.json`, import.meta.url);
 const partial = selected.length < CITIES.length;
 let cities = outCities;
 

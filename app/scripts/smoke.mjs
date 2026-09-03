@@ -5,7 +5,7 @@
 import { chromium } from 'playwright';
 import { mkdir, readFile } from 'node:fs/promises';
 
-const base = process.argv[2] ?? 'http://localhost:4174/0829_kos_basic_001/';
+const base = process.argv[2] ?? 'http://localhost:4174/0829_kos_basic_001/spain/';
 const outDir = new URL('../../pipeline/out/shots/', import.meta.url);
 await mkdir(outDir, { recursive: true });
 

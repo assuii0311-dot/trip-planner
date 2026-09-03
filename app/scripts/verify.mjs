@@ -22,7 +22,13 @@ const docPath = process.env.VERIFY_DOC ?? null;
 */
 const engine = process.env.VERIFY_ENGINE === 'webkit' ? webkit : chromium;
 
-const base = process.argv[2] ?? 'http://localhost:4300/0829_kos_basic_001/';
+const base = process.argv[2] ?? 'http://localhost:4300/0829_kos_basic_001/spain/';
+/*
+ * 나라 페이지의 주소는 `.../spain/` 이지만 데이터는 그 위에 있다
+ * (`.../data/spain/...`). 나라를 쪼개면서 둘이 갈라졌으므로 따로 둔다.
+ */
+const site = base.replace(/[^/]+\/$/, '');
+const country = (base.match(/([^/]+)\/$/) ?? [, 'spain'])[1];
 const shots = new URL('../../pipeline/out/shots/verify/', import.meta.url);
 await mkdir(shots, { recursive: true });
 
@@ -841,12 +847,12 @@ console.log('\n■ 5. 데이터 무결성');
   watch(page, allErrors, '[데이터]');
   await page.goto(base, { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('.city-card', { timeout: 25000 });
-  const probe = await page.evaluate(async (b) => {
-    const idx = await (await fetch(`${b}data/spain.json`)).json();
-    const rail = await (await fetch(`${b}data/spain-rail.json`)).json();
+  const probe = await page.evaluate(async ({ s: b, c }) => {
+    const idx = await (await fetch(`${b}data/${c}/index.json`)).json();
+    const rail = await (await fetch(`${b}data/${c}/rail.json`)).json();
     let items = 0; let noSummary = 0; let noWhy = 0; let badPrice = 0; let noCoord = 0;
-    for (const c of idx.cities.slice(0, 12)) {
-      const list = await (await fetch(`${b}data/cities/${c.slug}.json`)).json();
+    for (const city of idx.cities.slice(0, 12)) {
+      const list = await (await fetch(`${b}data/${c}/cities/${city.slug}.json`)).json();
       for (const i of list) {
         items += 1;
         if (!i.summary) noSummary += 1;
@@ -863,7 +869,7 @@ console.log('\n■ 5. 데이터 무결성');
       railExpired: today > rail.validTo,
       railValidTo: rail.validTo,
     };
-  }, base);
+  }, { s: site, c: country });
   check('도시 60곳', probe.cities === 60, `${probe.cities}곳`);
   check('아이템 요약이 모두 있다', probe.noSummary === 0, `표본 ${probe.items}개 중 ${probe.noSummary}개 누락`);
   check('아이템 설명이 모두 있다', probe.noWhy === 0, `${probe.noWhy}개 누락`);
@@ -1183,8 +1189,18 @@ console.log('\n■ 8-b. 진단 정보 — 사용자가 무슨 일이 났는지 �
   check('진단에 브라우저와 화면 크기가 담긴다',
     /브라우저 /.test(text) && /화면 {5}\d+x\d+/.test(text),
     (text.match(/화면 {5}[^\n]*/) ?? [''])[0]);
-  check('어느 판을 실행 중인지 담긴다', /실행판 {3}[^\n]*index-/.test(text),
+  /*
+   * 파일 이름을 박아 두지 않는다. 예전에는 `index-` 를 기대했는데, 나라를
+   * 쪼개며 번들이 나뉘자 이름이 `main-` 이 되었다. 이름을 검사하면 이름이
+   * 바뀔 때마다 검사가 깨지고, 코드가 이름을 박으면 알림이 말없이 꺼진다.
+   * 여기서 볼 것은 '해시 붙은 진입 파일 하나가 적혀 있는가' 다.
+   */
+  check('어느 판을 실행 중인지 담긴다',
+    /실행판 {3}[A-Za-z0-9_-]+-[A-Za-z0-9_-]{6,}\.js/.test(text),
     (text.match(/실행판 {3}[^\n]*/) ?? [''])[0]);
+  check('서버에 올라간 판도 함께 적힌다',
+    /화면판 {3}[A-Za-z0-9_-]+-[A-Za-z0-9_-]{6,}\.js/.test(text),
+    (text.match(/화면판 {3}[^\n]*/) ?? [''])[0]);
   check('워커와 캐시 상태가 담긴다', /워커 {5}/.test(text) && /캐시 {5}/.test(text),
     (text.match(/캐시 {5}[^\n]*/) ?? [''])[0]);
 
@@ -1287,7 +1303,7 @@ console.log('\n■ 9. 서비스 워커 — 낡은 데이터가 남지 않는가'
   if (sw) {
     /*
       캐시 이름이 고정이면 activate 의 청소가 아무것도 지우지 않는다. 한 번
-      받아 둔 data/spain.json 이 새 배포가 나가도 영원히 남아, 새 코드가 몇
+      받아 둔 data/spain/index.json 이 새 배포가 나가도 영원히 남아, 새 코드가 몇
       주 전 데이터를 읽는 상태가 된다.
     */
     check('워커 주소에 배포 판 번호가 붙는다', /[?&]v=\d{8,}/.test(sw.url),
@@ -1298,10 +1314,10 @@ console.log('\n■ 9. 서비스 워커 — 낡은 데이터가 남지 않는가'
     check('예전 캐시가 남아 있지 않다', sw.caches.length <= 1, `${sw.caches.length}개`);
 
     // 데이터는 망 우선인가 — 서버 쪽 파일을 바꾸면 다음 번에 새것을 읽어야 한다.
-    const fresh = await page.evaluate(async (b) => {
-      const r = await fetch(`${b}data/spain.json`, { cache: 'no-store' });
+    const fresh = await page.evaluate(async ({ s: b, c }) => {
+      const r = await fetch(`${b}data/${c}/index.json`, { cache: 'no-store' });
       return (await r.json()).cities.length;
-    }, base);
+    }, { s: site, c: country });
     check('데이터를 다시 읽을 수 있다', fresh > 0, `도시 ${fresh}곳`);
   } else {
     check('서비스 워커가 등록된다', false, '등록되지 않음 (개발 빌드일 수 있음)');
