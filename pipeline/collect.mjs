@@ -342,16 +342,31 @@ for (const [i, city] of selected.entries()) {
       }
       filled.set(city.slug, extra.length);
 
-      // 소도시는 반경 5km 안에 볼거리가 없을 수 있다.
-      // 포옌사처럼 여전히 모자라면 근처 마을까지 포함해 한 번 더 넓힌다.
+      /*
+       * 소도시는 반경 5km 안에 볼거리가 없을 수 있다.
+       * 포옌사처럼 여전히 모자라면 근처 마을까지 포함해 한 번 더 넓힌다.
+       *
+       * **이것도 캐시한다.** 예전에는 이 한 번만 캐시를 안 했다. 위키데이터
+       * 근접 검색은 돌릴 때마다 결과가 조금씩 달라지므로, 다시 수집할 때마다
+       * 소도시의 볼거리 목록이 소리 없이 바뀌었다. 순위를 손보는 중에
+       * 발밑이 흔들리면 무엇 때문에 성적이 변했는지 알 수 없다.
+       */
       if (enriched.filter(isSight).length < sightTarget) {
-        const wide = await fetchNearby(city, {
-          radiusKm: city.isHub ? 20 : 18,
-          minSitelinks: 2,
-          exclude: new Set(enriched.flatMap((e) => [e.nameEn, e.name])),
-          otherCities: cityNames(city.nameEn),
-          limit: sightTarget * 2,
-        });
+        const widePath = new URL(`./out/raw/${city.slug}-wide.json`, import.meta.url);
+        let wide;
+        if (!has('refresh')) {
+          try { wide = JSON.parse(await readFile(widePath, 'utf8')); } catch { /* 캐시 없음 */ }
+        }
+        if (!wide) {
+          wide = await fetchNearby(city, {
+            radiusKm: city.isHub ? 20 : 18,
+            minSitelinks: 2,
+            exclude: new Set(enriched.flatMap((e) => [e.nameEn, e.name])),
+            otherCities: cityNames(city.nameEn),
+            limit: sightTarget * 2,
+          });
+          await writeFile(widePath, JSON.stringify(wide));
+        }
         for (const it of wide) {
           const override = ko[it.id] ?? {};
           enriched.push({ ...it, ...override, city: city.slug });

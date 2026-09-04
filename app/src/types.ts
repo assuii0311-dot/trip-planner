@@ -88,7 +88,18 @@ export interface Item {
   /** 대표 사진. 없으면 null — 절반 남짓만 있다. */
   photo: Photo | null;
   wikidata: string | null;
-  source: 'wikivoyage' | 'osm' | 'manual';
+  /**
+   * 이 항목이 어디서 왔는가.
+   *
+   * `wikivoyage` 는 여행 작가가 목록에 적어 둔 것, `manual` 은 이 저장소에서
+   * 손으로 적은 것, `wikidata` 는 좌표 근접 검색으로 채운 것이다.
+   * 앞의 둘은 **사람이 고른** 것이고 `wikidata` 는 아니다 — 순위의 `guide`
+   * 가 그 차이를 본다.
+   *
+   * `wikidata` 는 실제 데이터의 32%인데 오랫동안 이 목록에 없었다.
+   * 타입이 데이터를 따라오지 못하고 있었다.
+   */
+  source: 'wikivoyage' | 'wikidata' | 'osm' | 'manual';
   attribution: string;
 }
 

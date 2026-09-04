@@ -151,9 +151,10 @@ const depthOf = (item: Item) => Math.max(0, Math.min(1, ((item.why ?? '').length
 /**
  * 이 언어판 수부터는 '어느 경로로 들어왔는가' 를 묻지 않는다.
  *
- * `guide`(위키보이지 등재)는 원래 **수집 경로**다. 위키보이지 목록은
- * 여행 작가가 손으로 고른 것이고, 위키데이터 근접 검색으로 채운 것은
- * 아무도 고르지 않은 것이다 — 그래서 무명 항목을 가릴 때는 쓸모가 있다.
+ * `guide` 가 재는 것은 **사람이 골라 적었는가**다. 위키보이지 목록은 여행
+ * 작가가 손으로 고른 것이고, `manual` 은 이 저장소에서 손으로 적은 것이다.
+ * 반대로 위키데이터 근접 검색(`wikidata`)으로 채운 것은 아무도 고르지
+ * 않았다 — 그래서 무명 항목을 가릴 때는 쓸모가 있다.
  *
  * 그런데 유명한 곳에서는 아무 말도 하지 못한다. 같은 도시 안에서
  * 언어판 수를 맞춰 놓고 대표 비율을 견줘 보면:
@@ -184,7 +185,7 @@ export function rankParts(item: Item, city: City | undefined): RankParts {
    * 항목은 130곳 중 7곳뿐이고, 그 일곱은 카를로스 5세 궁전·마에스트란사
    * 극장처럼 **이름만 안 옮겨졌을 뿐 진짜 볼거리**다.
    */
-  const guide = item.source === 'wikivoyage' || (item.sitelinks ?? 0) >= GUIDE_FREE ? 0.3 : 0;
+  const guide = item.source !== 'wikidata' || (item.sitelinks ?? 0) >= GUIDE_FREE ? 0.3 : 0;
   const fame = item.sitelinks === null || item.sitelinks === undefined
     ? UNKNOWN_FAME
     : Math.min(1, Math.log(1 + item.sitelinks) / FAME_TOP);

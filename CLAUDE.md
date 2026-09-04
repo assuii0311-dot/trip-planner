@@ -76,12 +76,20 @@ done
 node pipeline/popularity-check.mjs   # 명성을 한 곳에서 · 위키백과 언어판만 세는가
 ```
 
-데이터의 명성 값만 다시 받고 싶다면(장소 선정은 건드리지 않는다):
+수집기가 못 잡는 장소(거리·지구·산책로·곶)는 손으로 적는다.
+**전체 재수집은 하지 않는다** — 다시 돌리면 장소 선정까지 달라진다.
 
 ```bash
+node pipeline/verify-extras.mjs              # 손으로 적은 좌표가 실제와 맞는가 (망 필요)
+node pipeline/apply-manual.mjs               # manual-extras.mjs 를 데이터에 얹는다
+node pipeline/apply-islands.mjs              # 섬 항목도 같은 방식
 node pipeline/repopulate-popularity.mjs spain --dry   # 무엇이 바뀌는지만 본다
-node pipeline/repopulate-popularity.mjs spain
+node pipeline/repopulate-popularity.mjs spain         # 언어판 수를 받아 채운다
 ```
+
+새 장소를 넣거나 등록부의 `highlights` 를 고쳤으면 **반드시**
+`npx tsx scripts/rank-truth.mjs` 를 돌린다 — 등록부가 꼽은 대표가
+데이터에서 사라지지 않았는지 거기서 본다(지금 결손 0개).
 
 ### 화면
 
