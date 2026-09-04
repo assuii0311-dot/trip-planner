@@ -76,6 +76,13 @@ done
 node pipeline/popularity-check.mjs   # 명성을 한 곳에서 · 위키백과 언어판만 세는가
 ```
 
+데이터의 명성 값만 다시 받고 싶다면(장소 선정은 건드리지 않는다):
+
+```bash
+node pipeline/repopulate-popularity.mjs spain --dry   # 무엇이 바뀌는지만 본다
+node pipeline/repopulate-popularity.mjs spain
+```
+
 ### 화면
 
 ```bash

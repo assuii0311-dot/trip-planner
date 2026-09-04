@@ -347,12 +347,21 @@ function CityPanel({
     [city, cityItems, prefs, cities],
   );
   /*
-   * 조절기는 0.5 단위인데 값어치는 2.7일처럼 떨어진다. 그대로 비교하면
-   * 2.5 < 2.7 이라 ＋ 가 열려 있는데 눌러도 담을 것이 없다. 0.5 단위로
-   * 내림한 값을 천장으로 삼아, 열려 있는 버튼은 반드시 무언가를 바꾼다.
+   * ＋ 의 천장 — 값어치를 담을 수 있는 **가장 가까운 윗 눈금**.
+   *
+   * 예전에는 아래 눈금으로 내림했다(값어치 2.7일 → 천장 2.6). 눌러도 안
+   * 늘어나는 ＋ 를 막으려던 것인데, 값어치가 눈금에 안 떨어지면 **꼭대기에
+   * 갔다가 돌아올 수 없었다.** 그라나다 값어치가 3.1일이 되자 천장은 3.0 인데
+   * 코스를 고르면 3.2일치가 담겨, − 로 3.0 에 내려가면 ＋ 가 잠겨 3.2 로 못
+   * 돌아왔다. 3.0 은 15곳 · 3.2 는 16곳이라 실제로 다른 상태였는데도 그랬다.
+   *
+   * 올림으로 바꾸면 담긴 것이 늘 천장 안에 들어와 왕복이 된다. 대신 값어치가
+   * 눈금 바로 위일 때 마지막 한 번이 헛눌림일 수 있는데, 옆에 곳 수가 함께
+   * 적혀 있어 바뀌지 않은 것이 보인다 — 돌아가지 못하는 쪽이 더 나쁘다.
    */
-  const capDays = Math.max(STEP, Math.floor(worth / STEP) * STEP);
-  const atCeiling = wantDays >= capDays;
+  const capDays = Math.ceil(worth / STEP - 0.001) * STEP;
+  const atCeiling = wantDays >= capDays - 0.001;
+  const shownCount = itemsForDays(city, cityItems, prefs, wantDays, course, cities).length;
   const pickedIds = new Set(cityItems.filter((i) => (priorities[i.id] ?? 0) > 0).map((i) => i.id));
   const pickedDays = estimateDays(cityItems.filter((i) => pickedIds.has(i.id)), prefs);
 
@@ -462,7 +471,7 @@ function CityPanel({
           */}
           <span className="days-value">
             {fmtDays(wantDays)}
-            <span className="days-count"> ≈ {itemsForDays(city, cityItems, prefs, wantDays, course, cities).length}곳</span>
+            <span className="days-count"> ≈ {shownCount}곳</span>
           </span>
           <button
             type="button" aria-label="조금 늘리기" disabled={wantDays >= 7 || atCeiling}

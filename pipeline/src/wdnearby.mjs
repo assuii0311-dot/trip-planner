@@ -5,7 +5,7 @@
 // have its own item, it carries Korean labels where they exist, and it is CC0 —
 // no share-alike obligation, unlike OSM's ODbL.
 import { THEMES } from './extract.mjs';
-import { popularityByWikidata } from './enrich.mjs';
+import { sitelinksByWikidata, popularityOf } from './enrich.mjs';
 
 const SPARQL = 'https://query.wikidata.org/sparql';
 const UA = 'trip-planner-pipeline/1.0';
@@ -126,6 +126,7 @@ export async function fetchNearby(city, { radiusKm = 4, minSitelinks = 4, exclud
       indoor: !['nature', 'landmark', 'activity'].includes(theme),
       // 아래에서 위키보이지 경로와 같은 함수로 다시 매긴다. 여기 값은 조회가
       // 실패했을 때만 남는 임시값이다.
+      sitelinks: null,
       popularity: 2,
       energy: theme === 'activity' ? 4 : theme === 'nature' ? 3 : 2,
       tags: [],
@@ -149,8 +150,12 @@ export async function fetchNearby(city, { radiusKm = 4, minSitelinks = 4, exclud
    * 산봉우리 규칙). 실제 등급은 위키백과 언어판만 세어 정한다.
    */
   try {
-    const pop = await popularityByWikidata(items.map((i) => i.wikidata));
-    for (const it of items) it.popularity = pop[it.wikidata] ?? 2;
+    const n = await sitelinksByWikidata(items.map((i) => i.wikidata));
+    for (const it of items) {
+      if (n[it.wikidata] === undefined) continue;
+      it.sitelinks = n[it.wikidata];
+      it.popularity = popularityOf(it.sitelinks);
+    }
   } catch (err) {
     console.error(`  ${city.name}: 언어판 수 조회 실패, 임시값 2 로 둔다 (${err.message})`);
   }

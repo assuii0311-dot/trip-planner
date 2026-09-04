@@ -40,15 +40,22 @@ export const wikipediaEditions = (keys) =>
  */
 export const popularityOf = (n) => (n >= 40 ? 5 : n >= 18 ? 4 : n >= 7 ? 3 : n >= 3 ? 2 : 1);
 
-/** 위키데이터 id → popularity. 없는 항목은 넣지 않는다(호출부가 기본값을 정한다). */
-export async function popularityByWikidata(ids) {
+/**
+ * 위키데이터 id → 위키백과 언어판 수(원값). 없는 항목은 넣지 않는다.
+ *
+ * **등급이 아니라 원값을 돌려준다.** 5칸 버킷은 `pop=2` 한 칸에 볼거리의
+ * 절반을 몰아넣어 순위를 못 가르게 만들었다. 원값을 함께 저장해 두면
+ * 앱이 로그로 펴서 쓴다(`rank.ts` 의 `fame`). 등급(`popularity`)은 사진
+ * 선별·수집 균형처럼 '대충 몇 급인가' 만 필요한 곳에서 계속 쓴다.
+ */
+export async function sitelinksByWikidata(ids) {
   const out = {};
   for (let i = 0; i < ids.length; i += 50) {
     const batch = ids.slice(i, i + 50);
     const data = await getJSON(WD_API, { action: 'wbgetentities', ids: batch.join('|'), props: 'sitelinks' });
     for (const [id, ent] of Object.entries(data.entities ?? {})) {
       if (ent.missing !== undefined) continue;
-      out[id] = popularityOf(wikipediaEditions(Object.keys(ent.sitelinks ?? {})));
+      out[id] = wikipediaEditions(Object.keys(ent.sitelinks ?? {}));
     }
   }
   return out;
@@ -81,7 +88,7 @@ function duration(item) {
   return item.durationMin;
 }
 
-export function enrichItem(item, popularity) {
+export function enrichItem(item, sitelinks) {
   const text = `${item.name} ${item.descEn}`;
   let energy = OUTDOOR_THEMES.has(item.theme) ? 3 : 2;
   if (HIGH_ENERGY.test(text)) energy = 5;
@@ -89,7 +96,13 @@ export function enrichItem(item, popularity) {
 
   return {
     ...item,
-    popularity: item.wikidata ? popularity[item.wikidata] ?? 2 : 2,
+    /*
+     * 연결이 없으면 언어판 수를 '모른다'(null)로 두고 등급만 기본값 2 를 준다.
+     * 0 이 아니다 — 0 은 '찾아봤더니 없다' 는 뜻이라 아주 다르다.
+     */
+    sitelinks: item.wikidata ? sitelinks[item.wikidata] ?? null : null,
+    popularity: item.wikidata && sitelinks[item.wikidata] !== undefined
+      ? popularityOf(sitelinks[item.wikidata]) : 2,
     energy,
     indoor: !OUTDOOR_THEMES.has(item.theme),
     bestSlots: bestSlots(item),

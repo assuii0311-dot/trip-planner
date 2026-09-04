@@ -42,7 +42,7 @@ check('등급표가 경계에서 맞는다', table.every(([n, want]) => populari
 /* ③ 표가 하나뿐인가 — 예전에 갈라졌던 자리를 글자로 확인한다. */
 const wd = readFileSync(new URL('./src/wdnearby.mjs', import.meta.url), 'utf8');
 check('위키데이터 경로가 자기 등급표를 갖고 있지 않다', !/>=?\s*40\s*\?\s*5/.test(wd));
-check('위키데이터 경로가 같은 함수를 쓴다', /popularityByWikidata/.test(wd));
+check('위키데이터 경로가 같은 함수를 쓴다', /sitelinksByWikidata/.test(wd) && /popularityOf/.test(wd));
 
 const bad = results.filter((r) => !r).length;
 console.log(bad ? `\n✗ ${bad}건 어긋남` : '\n✓ 명성 규칙 정상 — 한 곳에서 위키백과 언어판만 센다');

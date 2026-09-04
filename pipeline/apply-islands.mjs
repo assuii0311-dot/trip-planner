@@ -43,7 +43,9 @@ for (const [slug, extras] of byCity) {
     });
     added++;
   }
-  await writeFile(f, `${JSON.stringify(items, null, 1)}\n`);
+  // collect.mjs 와 같은 모양으로 쓴다. 여기만 들여쓰기를 하면 섬 6곳만
+  // 파일 모양이 달라져, 값 하나만 고쳐도 diff 가 수천 줄로 보인다.
+  await writeFile(f, JSON.stringify(items));
   // 인덱스의 개수·테마 집계도 맞춘다.
   const city = idx.cities.find((c) => c.slug === slug);
   if (city) {

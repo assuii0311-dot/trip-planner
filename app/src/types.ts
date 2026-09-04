@@ -74,7 +74,12 @@ export interface Item {
   /** 이 활동이 가장 잘 맞는 시간대. */
   bestSlots: Slot[];
   indoor: boolean;
-  /** 1 = 잘 안 알려진 곳, 5 = 누구나 아는 대표 명소. */
+  /**
+   * 위키백과 언어판 수. 모르면 null — **0 이 아니다.**
+   * 연결이 없어 찾아보지 못한 것과, 찾아봤더니 하나도 없는 것은 다르다.
+   */
+  sitelinks: number | null;
+  /** 1 = 잘 안 알려진 곳, 5 = 누구나 아는 대표 명소. `sitelinks` 를 5칸으로 나눈 값이다. */
   popularity: number;
   /** 1 = 앉아서 즐김, 5 = 체력 소모가 큼. */
   energy: number;
