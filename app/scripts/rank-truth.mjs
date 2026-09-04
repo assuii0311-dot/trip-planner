@@ -141,6 +141,32 @@ const noWd = (arr) => Math.round((arr.filter((h) => !h.item.wikidata).length / M
 console.log(`     위키데이터 없음 ${noWd(found)}% → ${noWd(missed)}%`);
 
 /*
+ * 어느 명성 구간에서 실패하는가.
+ *
+ * 2단계(docs/26)에서 밝힌 것이다. `fame` 이 3 이상이면 대표를 한 곳도
+ * 놓치지 않는다. **실패는 전부 `fame<=2` 덩어리 안에서 일어난다** —
+ * 볼거리의 69%(1,137곳)가 거기 있고, 그 안에서 `fame` 은 순위를 전혀
+ * 가르지 못해 사실상 동전 던지기가 된다.
+ *
+ * 함께 적는 '열린 공간' 줄은 **기각된 가설의 묘비**다. 밀린 곳이
+ * 성벽·해변·전망대처럼 보여 '무료로 열려 있는 공간을 fame 이 깎는다'
+ * 고 의심했는데, 같은 덩어리 안에서 갈라 보면 차이가 없다. 열린 공간이
+ * 많아 보이는 것은 그저 그것들이 fame<=2 에 몰려 있기 때문이다.
+ * 여기에 보정을 걸면 성적이 오히려 내려간다(49→45~48%). 다시 하지 않는다.
+ */
+const openSpace = (i) => !i.indoor && !i.hours && (i.priceEur === null || i.priceEur === 0);
+console.log('\n   어느 명성 구간에서 실패하는가');
+for (let p = 1; p <= 5; p++) {
+  const g = hits.filter((h) => h.item.popularity === p);
+  if (!g.length) continue;
+  const m = g.filter((h) => h.pct > 0.5).length;
+  console.log(`     pop ${p}  대표 ${String(g.length).padStart(3)}곳 → 못 알아봄 ${String(m).padStart(2)}곳 (${Math.round((m / g.length) * 100)}%)`);
+}
+const mass = hits.filter((h) => h.item.popularity <= 2);
+const share = (f) => { const g = mass.filter(f); const m = g.filter((h) => h.pct > 0.5).length; return `${g.length}곳 중 ${m}곳 (${g.length ? Math.round((m / g.length) * 100) : 0}%)`; };
+console.log(`     └ 그 덩어리 안에서 '열린 공간' 은 따로 불리하지 않다 — 열린 공간 ${share((h) => openSpace(h.item))} · 그 밖 ${share((h) => !openSpace(h.item))}`);
+
+/*
  * 점수가 계단인가 — 판정하지 않고 적기만 한다.
  *
  * 값의 가짓수가 적으면 1,640곳이 열 몇 개 값에 뭉치고, 기준선이 그
