@@ -56,7 +56,7 @@ PLAYWRIGHT_BROWSERS_PATH=/tmp/pw npx playwright install webkit
 
 ```bash
 cd app
-for s in planner-check daypack-check date-check order-verify rank-check \
+for s in planner-check daypack-check date-check order-verify rank-check rank-truth \
          basing-check taste-check airport-check island-check routing-check itinerary-check; do
   npx tsx scripts/$s.mjs
 done
@@ -67,6 +67,7 @@ done
 | `planner-check` | 계획 생성이 **반드시 끝난다**(400ms 예산). 담은 것이 말없이 사라지지 않는다. 타는 구간은 모두 안내된다 |
 | `daypack-check` | 하루가 칸이 아니라 예산으로 돈다 |
 | `date-check` | 시간대를 바꿔도 달력이 안 흔들린다 (컨테이너가 UTC 라 이게 없으면 못 잡는다) |
+| `rank-truth` | **순위가 사람의 판단과 맞는가.** 등록부 `highlights` 를 정답지로, `must` 를 빼고 잰다 — 순위 작업의 판정 기준이다 |
 | 나머지 | 순서·순위·거점·취향·공항·섬·교통 |
 
 ### 화면
