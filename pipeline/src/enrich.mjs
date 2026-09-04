@@ -4,11 +4,43 @@ import { getJSON } from './wv.mjs';
 const WD_API = 'https://www.wikidata.org/w/api.php';
 
 /**
- * Popularity proxy: how many Wikipedia language editions cover the place.
- * A cathedral written up in 40 languages is a headline sight; one in two is a
- * local find. This is Wikidata sitelink data (CC0), so it is safe to store —
- * unlike a review platform's rating, which is not.
+ * 위키백과 언어판만 센다.
+ *
+ * 위키데이터의 sitelink 에는 위키백과 말고도 커먼즈·위키보이지·위키인용집·
+ * 위키뉴스가 섞여 있다. 전부 세면 '몇 개 언어의 백과사전이 이 곳을
+ * 다루는가' 가 아니라 '위키미디어 어딘가에 페이지가 있는가' 가 된다.
+ *
+ * 전부 세던 때를 실측했다(스페인 볼거리 1,064곳):
+ *
+ *   - **917곳(86%)이 커먼즈 하나 때문에 정확히 +1** 이었다
+ *   - 등급이 한 칸 부풀어 있던 것 256곳(24%). 그중 198곳은 언어판이
+ *     2개인데 3으로 세어져 pop 1 대신 2 를 받았다
+ *
+ * 위키보이지가 섞이는 것은 특히 나쁘다. 이 앱의 원자료가 위키보이지라,
+ * **자기가 읽은 가이드에 실렸다는 이유로 명성을 한 칸 얹어 주는 셈**이다.
+ *
+ * 주의 — 이 함수를 고친 시점에 `app/public/data/` 의 값은 옛 셈법으로
+ * 만들어진 것이다. 다시 수집하면 24%의 등급이 한 칸 내려가고 기준선
+ * `RANK_FLOOR` 을 넘는 볼거리가 420 → 400곳이 된다. 재수집은 기준선을
+ * 다시 실측하는 일과 함께 해야 한다(docs/26 3단계).
  */
+const NOT_ENCYCLOPEDIA = /^(commons|species|meta|wikidata|mediawiki|incubator|outreach)wiki$/;
+export const wikipediaEditions = (keys) =>
+  keys.filter((k) => /wiki$/.test(k) && !NOT_ENCYCLOPEDIA.test(k)).length;
+
+/**
+ * 언어판 수 → 1~5.
+ *
+ * 40개 언어로 쓰인 대성당은 대표 명소이고, 두 개짜리는 동네 발견이다.
+ * 위키데이터 sitelink 는 CC0 라 저장해도 된다 — 후기 사이트의 평점과 달리.
+ *
+ * **표는 여기 한 곳에만 둔다.** 예전에는 `wdnearby.mjs` 가 자기 표를
+ * 따로 갖고 있었고, 그 표에는 1 등급이 아예 없어서(`... : 7→3 : 그 외 2`)
+ * 언어판이 하나뿐인 곳이 수집 경로에 따라 1 이 되기도 2 가 되기도 했다.
+ */
+export const popularityOf = (n) => (n >= 40 ? 5 : n >= 18 ? 4 : n >= 7 ? 3 : n >= 3 ? 2 : 1);
+
+/** 위키데이터 id → popularity. 없는 항목은 넣지 않는다(호출부가 기본값을 정한다). */
 export async function popularityByWikidata(ids) {
   const out = {};
   for (let i = 0; i < ids.length; i += 50) {
@@ -16,8 +48,7 @@ export async function popularityByWikidata(ids) {
     const data = await getJSON(WD_API, { action: 'wbgetentities', ids: batch.join('|'), props: 'sitelinks' });
     for (const [id, ent] of Object.entries(data.entities ?? {})) {
       if (ent.missing !== undefined) continue;
-      const n = Object.keys(ent.sitelinks ?? {}).length;
-      out[id] = n >= 40 ? 5 : n >= 18 ? 4 : n >= 7 ? 3 : n >= 3 ? 2 : 1;
+      out[id] = popularityOf(wikipediaEditions(Object.keys(ent.sitelinks ?? {})));
     }
   }
   return out;

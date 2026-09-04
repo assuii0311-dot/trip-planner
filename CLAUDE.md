@@ -70,6 +70,12 @@ done
 | `rank-truth` | **순위가 사람의 판단과 맞는가.** 등록부 `highlights` 를 정답지로, `must` 를 빼고 잰다 — 순위 작업의 판정 기준이다 |
 | 나머지 | 순서·순위·거점·취향·공항·섬·교통 |
 
+수집기(`pipeline/`)를 고쳤으면 한 가지 더. 망이 필요 없다.
+
+```bash
+node pipeline/popularity-check.mjs   # 명성을 한 곳에서 · 위키백과 언어판만 세는가
+```
+
 ### 화면
 
 ```bash
