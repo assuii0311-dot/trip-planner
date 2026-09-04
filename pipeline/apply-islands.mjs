@@ -12,7 +12,7 @@ import { ISLAND_EXTRAS } from './island-extras.mjs';
 /* 데이터는 나라마다 폴더가 따로다. 기본은 스페인, 첫 인자로 바꾼다. */
 const COUNTRY = process.argv.find((a) => /^--country=/.test(a))?.split('=')[1] ?? 'spain';
 const root = new URL(`../app/public/data/${COUNTRY}/`, import.meta.url);
-const idx = JSON.parse(await readFile(new URL('spain.json', root), 'utf8'));
+const idx = JSON.parse(await readFile(new URL('index.json', root), 'utf8'));
 
 idx.islands = ISLANDS;
 for (const c of idx.cities) c.island = ISLAND_OF[c.slug] ?? null;
@@ -55,5 +55,5 @@ for (const [slug, extras] of byCity) {
   console.log(`  ${slug.padEnd(22)} +${added}곳 → ${items.length}곳`);
 }
 
-await writeFile(new URL('spain.json', root), `${JSON.stringify(idx, null, 1)}\n`);
+await writeFile(new URL('index.json', root), `${JSON.stringify(idx, null, 1)}\n`);
 console.log(`\n섬 ${ISLANDS.length}개 · 도시 ${idx.cities.filter((c) => c.island).length}곳에 island 부여`);
