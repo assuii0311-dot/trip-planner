@@ -95,7 +95,7 @@ node pipeline/repopulate-popularity.mjs spain         # 언어판 수를 받아 
 
 ```bash
 cd app
-npx tsx scripts/verify.mjs        # 197건. 가장 넓다
+npx tsx scripts/verify.mjs        # 228건. 가장 넓다
 npx tsx scripts/country-check.mjs # 나라가 서로 안 섞이는가
 npx tsx scripts/smoke.mjs         # 1~5단계 한 바퀴
 npx tsx scripts/edge.mjs          # 경계값

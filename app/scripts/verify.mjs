@@ -11,12 +11,6 @@ import { chromium, webkit } from 'playwright';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
 /*
-  검증용으로 띄운 문서 파일. '새 판이 올라왔다' 는 상황을 만들려면 이것을
-  잠깐 고쳐야 한다. 경로를 모르면 그 검사만 건너뛴다.
-*/
-const docPath = process.env.VERIFY_DOC ?? null;
-
-/*
   엔진을 고를 수 있게 한다. 아이패드에서만 나는 문제를 크로미움으로만
   돌려서는 영영 못 본다.  VERIFY_ENGINE=webkit node scripts/verify.mjs
 */
@@ -1531,22 +1525,75 @@ console.log('\n■ 9. 서비스 워커 — 낡은 데이터가 남지 않는가'
    * 아이패드 사파리는 탭을 그대로 되살리므로 '다시 열어도' 새로 받아오는
    * 항해가 일어나지 않는다. 본인은 알 길이 없으니 앱이 말해야 한다.
    */
-  if (docPath) {
-    const original = await readFile(docPath, 'utf8');
-    try {
-      check('평소에는 새 판 알림이 없다', (await page.locator('.update-bar').count()) === 0);
-      // 서버에 새 판이 올라간 상황을 만든다.
-      await writeFile(docPath, original.replace(/index-[A-Za-z0-9_-]+\.js/, 'index-NEWBUILD00.js'));
-      await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
-      await page.waitForTimeout(1500);
-      check('낡은 판을 쓰고 있으면 알린다', (await page.locator('.update-bar').count()) === 1,
-        (await page.locator('.update-bar b').innerText().catch(() => '')) || '알림 없음');
-      const btns = await page.locator('.update-bar button').allInnerTexts();
-      check('새로 받는 길을 함께 준다', btns.some((t) => /새 판으로 받기/.test(t)), btns.join(' / '));
-    } finally {
-      await writeFile(docPath, original);
-    }
+  /*
+   * 서버 글을 가로채 '판이 이렇게 보인다' 를 마음대로 만든다.
+   *
+   * 예전에는 띄워 둔 파일을 직접 고쳤고, 그 경로를 VERIFY_DOC 으로 준
+   * 사람만 이 검사를 돌릴 수 있었다. 아무도 주지 않았으므로 **이 안전망은
+   * 검사 없이 지냈다** — 그 사이 검사 안의 `index-*.js` 가 낡아, 준다 해도
+   * 아무것도 바꾸지 못하는 글자가 되어 있었다. 이제 파일을 건드리지 않고
+   * 늘 돌린다.
+   *
+   * 알림이 한 번 뜨면 App 은 그것을 내리지 않는다. 그래서 경우마다 새
+   * 페이지를 연다.
+   */
+  const realDoc = await (await fetch(base)).text();
+  const docPathname = new URL(base).pathname;
+
+  /** 서버가 이 글을 내놓는다고 할 때, 낡은 판 알림이 뜨는가. */
+  async function noticeWith(served) {
+    const c = await browser.newContext({ viewport: { width: 390, height: 900 } });
+    const pg = await c.newPage();
+    // newerBuild 는 `?v=<시각>` 을 붙여 캐시를 피해 묻는다. 그것만 가로챈다.
+    await pg.route(
+      (u) => u.pathname === docPathname && u.search.startsWith('?v='),
+      (route) => route.fulfill({ status: 200, contentType: 'text/html', body: served }),
+    );
+    await pg.goto(base, { waitUntil: 'domcontentloaded' });
+    await pg.waitForSelector('.city-card', { timeout: 25000 });
+    await pg.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+    await pg.waitForTimeout(1500);
+    const n = await pg.locator('.update-bar').count();
+    const btns = n ? await pg.locator('.update-bar button').allInnerTexts() : [];
+    await c.close();
+    return { n, btns };
   }
+
+  check('평소에는 새 판 알림이 없다', (await noticeWith(realDoc)).n === 0);
+
+  /*
+   * 호텔·공항 와이파이의 로그인 페이지도 200 으로 온다. 그것을 보고 '새 판'
+   * 이라 하면, 망이 없는 곳에서 쓰라고 만든 앱이 하필 거기서 거짓말을 한다.
+   */
+  const portal = '<!doctype html><html><body><h1>Wi-Fi 로그인</h1></body></html>';
+  check('로그인 페이지를 새 판으로 착각하지 않는다', (await noticeWith(portal)).n === 0);
+
+  /*
+   * 낡은 판을 쓰고 있으면 알려 주는가.
+   *
+   * 사용자 진단에 이렇게 찍혔다 — 화면판 index-DvezZlkA.js / 실행판
+   * index-Ck8APwe9.js. 두 판 뒤진 것을 쓰면서 같은 문제를 계속 겪고 있었다.
+   * 아이패드 사파리는 탭을 그대로 되살리므로 '다시 열어도' 새로 받아오는
+   * 항해가 일어나지 않는다. 본인은 알 길이 없으니 앱이 말해야 한다.
+   */
+  const renamed = realDoc.replace(/-[A-Za-z0-9_-]+\.js/g, '-NEWBUILD00.js');
+  const r1 = await noticeWith(renamed);
+  check('낡은 판을 쓰고 있으면 알린다', r1.n === 1, `알림 ${r1.n}개`);
+  check('새로 받는 길을 함께 준다', r1.btns.some((t) => /새 판으로 받기/.test(t)), r1.btns.join(' / '));
+
+  /*
+   * 이름을 못 읽었을 때가 진짜 물린 자리다.
+   *
+   * 나라를 쪼개기 전 판은 서버 글에서 `index-*.js` 를 찾았는데, 쪼갠 뒤로는
+   * 어떤 배포도 그 이름을 내놓지 않았다. 못 찾으니 null, null 이니 조용 —
+   * 사파리가 되살린 탭은 몇 주 전 판을 그대로 들고 있었고, 폰과 아이패드
+   * 둘 다 새 기능이 하나도 보이지 않았다. 우리 페이지인데 진입 스크립트를
+   * 하나도 못 뽑았다면 '모르겠다' 가 아니라 '모양이 바뀌었다' 로 읽는다.
+   */
+  const shapeless = realDoc.replace(/<script\b[^>]*type=["']module["'][^>]*>\s*<\/script>/gi, '');
+  const r2 = await noticeWith(shapeless);
+  check('진입 스크립트를 못 읽어도 낡은 판으로 본다', r2.n === 1, `알림 ${r2.n}개`);
+
   await ctx.close();
 }
 

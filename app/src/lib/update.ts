@@ -58,26 +58,49 @@ export function entrySrcs(html: string): string[] {
   return out;
 }
 
-/** 서버에 올라가 있는 번들 파일 이름들. */
-async function servedBundle(): Promise<string | null> {
-  // 캐시를 건너뛴다. 이 확인만큼은 반드시 서버에 물어야 한다.
-  const res = await fetch(`${location.pathname}?v=${Date.now()}`, { cache: 'no-store' });
-  if (!res.ok) return null;
-  return joinNames(entrySrcs(await res.text()));
-}
+/**
+ * 이 글이 이 앱의 페이지인가.
+ *
+ * 캐시를 피해 받아 온 것이 늘 우리 페이지인 것은 아니다 — 호텔이나 공항
+ * 와이파이의 로그인 페이지도 200 으로 온다. 그런 글을 보고 '새 판이 나왔다'
+ * 고 말하면, 망 없는 곳에서 쓰라고 만든 앱이 하필 그곳에서 거짓말을 한다.
+ *
+ * `id="root"` 는 앱이 스스로 붙는 자리다. 이것이 없는 글은 우리 페이지가
+ * 아니거나, 있어도 앱이 뜨지 않는다.
+ */
+const isOurPage = (html: string): boolean => /id=["']root["']/.test(html);
 
 /**
  * 새 판이 올라와 있으면 그 이름을 돌려준다. 같거나 확인할 수 없으면 null.
  *
  * 확인에 실패했다고 경고를 띄우지는 않는다 — 비행기 안에서 쓰는 사람에게
  * '확인 실패' 를 들이밀 이유가 없다.
+ *
+ * ## 이름을 못 읽었을 때
+ *
+ * 우리 페이지인데 진입 스크립트를 하나도 못 뽑았다면 '모르겠다' 가 아니라
+ * **판의 모양이 바뀌었다** 로 읽는다. 이 자리에서 잠자코 있으면 낡은 판은
+ * 스스로 낡았다는 것을 영영 모른다.
+ *
+ * 실제로 그렇게 됐다. 나라를 쪼개기 전 판은 서버 글에서 `index-*.js` 를
+ * 찾았는데, 쪼갠 뒤로는 어떤 배포도 그 이름을 내놓지 않는다 — 찾지 못하니
+ * null, null 이니 조용, 조용하니 사파리가 되살린 탭은 몇 주 전 판을 그대로
+ * 들고 있었다. 폰과 아이패드 둘 다에서 새 기능이 하나도 보이지 않던 것이
+ * 이것이다. 낡은 판을 이제 와 고칠 수는 없지만, 다음번에 모양을 바꿀 때
+ * 같은 일이 되풀이되지는 않게 한다.
  */
 export async function newerBuild(): Promise<string | null> {
   try {
     const mine = runningBundle();
     if (!mine) return null;
-    const theirs = await servedBundle();
-    return theirs && theirs !== mine ? theirs : null;
+    // 캐시를 건너뛴다. 이 확인만큼은 반드시 서버에 물어야 한다.
+    const res = await fetch(`${location.pathname}?v=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    const html = await res.text();
+    if (!isOurPage(html)) return null;
+    const theirs = joinNames(entrySrcs(html));
+    if (!theirs) return '(이름을 읽지 못한 새 판)';
+    return theirs !== mine ? theirs : null;
   } catch {
     return null;
   }
