@@ -1,5 +1,6 @@
 import type { Basics, Preferences, Priorities, ThemeId, TripState } from '../types';
 import { AIRPORTS } from './airports';
+import { COUNTRIES } from './countries';
 import { addDays, todayISO } from './caldate';
 import { DAY_START_DEFAULT, clampDayStart } from './capacity';
 
@@ -24,6 +25,9 @@ const keyOf = (country: string) => `${OLD_KEY}.${country}`;
 let here = 'spain';
 export const setStoreCountry = (country: string): void => { here = country; };
 const KEY = () => keyOf(here);
+
+/** 사람에게 보일 나라 이름. 모르는 slug 는 그대로 쓴다. */
+const countryName = (slug: string) => COUNTRIES.find((c) => c.slug === slug)?.name ?? slug;
 
 /** 예전 한 나라 시절의 저장분을 스페인 자리로 옮긴다. 한 번만. */
 function migrateSingleCountry(): void {
@@ -213,7 +217,16 @@ export function clearState(): void {
   try { localStorage.removeItem(KEY()); } catch { /* noop */ }
 }
 
-/** 계획을 파일로 내보낸다. 아이패드 ↔ 폰 이동과 동행자 공유에 쓴다. */
+/**
+ * 계획을 파일로 내보낸다. 아이패드 ↔ 폰 이동과 동행자 공유에 쓴다.
+ *
+ * 이 앱에는 서버도 계정도 없다. 저장분은 `localStorage` 에 있고 그것은
+ * **기기·브라우저마다 따로**다. 그래서 기기를 옮기는 유일한 길이 이 파일이다.
+ *
+ * 파일 이름은 반드시 ASCII 여야 한다. 브라우저는 `<a download>` 에 한글이
+ * 들어가면 이름을 통째로 버리고 'download' 로 저장한다 — 확장자까지
+ * 사라져서 가져오기가 파일을 못 알아본다(내 지도 KML 에서 실제로 겪었다).
+ */
 export function exportState(state: TripState): void {
   const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -226,13 +239,34 @@ export function exportState(state: TripState): void {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+/**
+ * 파일에서 계획을 읽는다.
+ *
+ * **나라가 다르면 받지 않는다.** 계획은 도시 slug 로 이루어져 있고 그 slug 는
+ * 나라 안에서만 뜻이 있다. 스페인 계획을 일본 페이지에서 열면 없는 도시를
+ * 가리키는 계획이 되고, 게다가 저장은 지금 페이지의 열쇠(`trip-planner.v1.japan`)
+ * 로 들어가 두 나라가 한 서랍에서 섞인다. 나라를 쪼갠 이유가 그것이었다.
+ *
+ * 알아볼 수 없는 파일은 **던진다.** 부르는 쪽이 화면에 말해 주어야 한다 —
+ * 아무 일도 안 일어나는 것이 이 앱에서 가장 나쁜 실패다.
+ */
 export async function importState(file: File): Promise<TripState> {
-  const text = await file.text();
-  const parsed = JSON.parse(text) as TripState;
+  let parsed: TripState;
+  try {
+    parsed = JSON.parse(await file.text()) as TripState;
+  } catch {
+    throw new Error('파일을 읽지 못했습니다. 이 앱에서 내보낸 .json 파일인지 확인해 주세요.');
+  }
   if (!parsed?.basics || !Array.isArray(parsed.basics.cities)) {
     throw new Error('여행 계획 파일 형식이 아닙니다.');
   }
-  return migrate(parsed);
+  const from = parsed.basics.country;
+  if (from && from !== here) {
+    throw new Error(`${countryName(from)} 계획 파일입니다. 지금 화면은 ${countryName(here)} 이라`
+      + ' 그대로 열 수 없습니다 — 위의 나라 이름을 눌러 그 나라로 옮긴 뒤 다시 가져와 주세요.');
+  }
+  // 파일에 나라가 없던 옛 판은 지금 페이지의 나라로 본다(쪼개기 전에는 스페인뿐이었다).
+  return migrate({ ...parsed, basics: { ...parsed.basics, country: here } });
 }
 
 export type { Priorities };

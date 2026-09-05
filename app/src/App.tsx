@@ -35,6 +35,8 @@ export default function App() {
   const [index, setIndex] = useState<CountryIndex | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [error, setError] = useState<string | null>(null);
+  /** 가져오기 결과. 성공도 실패도 화면에 남긴다. */
+  const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null);
   /** 도시 아이템 받기 실패. 나라 데이터 실패(error)와 달리 화면은 살아 있다. */
   const [itemsError, setItemsError] = useState<string | null>(null);
   /** 서버에 더 새 판이 올라와 있는가. 있으면 지금 화면은 낡은 것이다. */
@@ -536,9 +538,28 @@ export default function App() {
       return { ...s, priorities: next, courses: { ...s.courses, [city]: course }, cityDays };
     });
 
+  /**
+   * 파일에서 계획을 가져온다.
+   *
+   * 두 가지를 지킨다.
+   *
+   *  - **덮어쓰기 전에 묻는다.** 가져오기는 지금 계획을 통째로 갈아엎는다.
+   *    2천 개에서 골라 둔 것이 한 번의 잘못 누름으로 사라지면 안 된다.
+   *  - **실패를 화면에 말한다.** 예전에는 `error` 에만 적었는데 그 자리는
+   *    나라 데이터를 못 받았을 때(`!index`)만 그려진다. 앱이 떠 있는 동안의
+   *    가져오기 실패는 **아무 데도 안 나왔다** — 파일을 골랐는데 아무 일도
+   *    안 일어나는 것이 이 앱에서 가장 나쁜 실패다.
+   */
   const onImport = async (file: File) => {
-    try { setState(await importState(file)); }
-    catch (e) { setError((e as Error).message); }
+    setImportMsg(null);
+    const hasWork = state.step > 1 || state.basics.cities.length > 0;
+    if (hasWork && !confirm('가져오면 지금 계획을 덮어씁니다. 계속할까요?\n\n지금 것을 남기려면 먼저 「계획 내보내기」 를 눌러 두세요.')) return;
+    try {
+      setState(await importState(file));
+      setImportMsg({ ok: true, text: '계획을 가져왔습니다.' });
+    } catch (e) {
+      setImportMsg({ ok: false, text: (e as Error).message });
+    }
   };
 
   if (error && !index) {
@@ -724,9 +745,42 @@ export default function App() {
           />
         )}
 
+        {/*
+          기기를 옮기는 유일한 길.
+
+          서버도 계정도 없어 저장분이 기기·브라우저마다 따로 논다. 그런데
+          예전에는 단추 두 개만 덩그러니 있어서, 이것이 '기기 간 옮기기' 라는
+          것을 아무도 몰랐다 — 쓰는 사람이 "기기마다 연동이 안 되는 구조냐"
+          고 물어서야 알았다. 무엇에 쓰는 것인지 한 줄로 적어 둔다.
+        */}
+        <details className="guide" style={{ marginBottom: 14 }}>
+          <summary>다른 기기로 옮기기 · 동행자와 나누기</summary>
+          <div className="inner" style={{ padding: 14 }}>
+          <p className="help" style={{ margin: '0 0 10px' }}>
+            이 앱은 계획을 <b>기기 안에만</b> 저장합니다(서버도 로그인도 없습니다).
+            아이패드에서 짜고 폰으로 들고 나가려면 <b>내보내기</b> 로 파일을 받아
+            에어드롭·메신저로 보낸 뒤, 그 기기에서 <b>가져오기</b> 로 여세요.
+            동행자와 나눌 때도 같습니다.
+          </p>
+          {importMsg && (
+            <div className={`transfer-msg ${importMsg.ok ? 'card' : 'notice'}`} style={{ padding: 10, marginBottom: 10 }}>
+              {importMsg.text}
+              <button
+                type="button" className="tag" style={{ marginLeft: 8 }}
+                onClick={() => setImportMsg(null)}
+              >
+                닫기
+              </button>
+            </div>
+          )}
+          <div className="toolbar" style={{ marginTop: 0, marginBottom: 0 }}>
+            <button type="button" onClick={() => exportState(state)}>계획 내보내기</button>
+            <button type="button" onClick={() => fileRef.current?.click()}>가져오기</button>
+          </div>
+          </div>
+        </details>
+
         <div className="toolbar">
-          <button type="button" onClick={() => exportState(state)}>계획 내보내기</button>
-          <button type="button" onClick={() => fileRef.current?.click()}>가져오기</button>
           <button
             type="button"
             onClick={() => { if (confirm('처음부터 다시 시작할까요? 지금 계획은 사라집니다.')) { clearState(); setState(defaultState()); } }}
