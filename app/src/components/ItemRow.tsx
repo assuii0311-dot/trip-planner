@@ -88,7 +88,14 @@ export function ItemRow({
             ))}
           </div>
         )}
-        <div style={{ marginTop: 8 }}>
+        {/*
+          단추 세 개가 한 줄에 안 들어간다.
+
+          '고민 중으로 표시' 를 넣자 390px 폰에서 '블로그 후기 ↗' 의 화살표가
+          다음 줄로 떨어져 나갔다. inline 요소를 그냥 늘어놓고 있어서 줄바꿈이
+          단추 안쪽에서 일어난 것이다. 줄 단위로 접히게 flex 로 감싼다.
+        */}
+        <div className="item-links">
           {/*
             고민 중 — 담지도 버리지도 않은 것을 붙잡아 두는 자리.
             담아 두면 계획 일수가 부풀고, 안 담으면 2천 개 목록에서 다시
@@ -104,12 +111,12 @@ export function ItemRow({
               {pondering ? '🤔 고민 중' : '고민 중으로 표시'}
             </button>
           )}
-          <a className="tag" style={{ textDecoration: 'none', marginLeft: onPonder ? 6 : 0 }} href={mapsPlaceUrl(item, city)} target="_blank" rel="noreferrer">
+          <a className="tag" style={{ textDecoration: 'none' }} href={mapsPlaceUrl(item, city)} target="_blank" rel="noreferrer">
             지도에서 보기 ↗
           </a>
           {/* 후기 본문은 저장하지 않는다. 저작권·약관 때문이기도 하고,
               굳은 요약본보다 지금 올라온 글이 낫기 때문이기도 하다. */}
-          <a className="tag" style={{ textDecoration: 'none', marginLeft: 6 }} href={blogSearchUrl(item, city)} target="_blank" rel="noreferrer">
+          <a className="tag" style={{ textDecoration: 'none' }} href={blogSearchUrl(item, city)} target="_blank" rel="noreferrer">
             블로그 후기 ↗
           </a>
         </div>
