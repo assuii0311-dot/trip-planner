@@ -1538,10 +1538,20 @@ a.pick:active { transform: none; }
 */
 /* 왼쪽 띠는 inset 그림자로 그린다. border 로 그리면 줄 전체가 3px 밀린다. */
 .item.is-pondering { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+/*
+  줄 아래 단추들. 폰에서는 세 개가 한 줄에 안 들어가므로 줄 단위로 접는다 —
+  감싸지 않으면 '블로그 후기 ↗' 의 화살표만 다음 줄로 떨어져 나간다.
+*/
+.item-links {
+  margin-top: 8px; display: flex; flex-wrap: wrap;
+  align-items: center; gap: 6px;
+}
+.item-links > * { white-space: nowrap; }
+
 .ponder-btn {
   border: 1px solid var(--line); background: var(--surface); color: var(--muted);
   cursor: pointer; font-family: inherit;
-  min-height: 44px; padding: 0 12px; margin: -11px 0;
+  min-height: 44px; padding: 0 12px;
 }
 .ponder-btn.is-on { background: var(--accent); border-color: var(--accent); color: #fff; }
 
