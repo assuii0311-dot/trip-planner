@@ -2,10 +2,10 @@
 //
 // Overpass was the original plan, but Wikidata's own geospatial search turns
 // out to be the better source here: everything it returns is notable enough to
-// have its own item, it carries Korean labels where they exist, it hands back
-// the sitelink count the popularity score already uses, and it is CC0 — no
-// share-alike obligation, unlike OSM's ODbL.
+// have its own item, it carries Korean labels where they exist, and it is CC0 —
+// no share-alike obligation, unlike OSM's ODbL.
 import { THEMES } from './extract.mjs';
+import { sitelinksByWikidata, popularityOf } from './enrich.mjs';
 
 const SPARQL = 'https://query.wikidata.org/sparql';
 const UA = 'trip-planner-pipeline/1.0';
@@ -124,7 +124,10 @@ export async function fetchNearby(city, { radiusKm = 4, minSitelinks = 4, exclud
         : theme === 'nightlife' ? ['evening', 'night']
         : ['morning', 'afternoon'],
       indoor: !['nature', 'landmark', 'activity'].includes(theme),
-      popularity: sitelinks >= 40 ? 5 : sitelinks >= 18 ? 4 : sitelinks >= 7 ? 3 : 2,
+      // 아래에서 위키보이지 경로와 같은 함수로 다시 매긴다. 여기 값은 조회가
+      // 실패했을 때만 남는 임시값이다.
+      sitelinks: null,
+      popularity: 2,
       energy: theme === 'activity' ? 4 : theme === 'nature' ? 3 : 2,
       tags: [],
       url: null,
@@ -133,6 +136,28 @@ export async function fetchNearby(city, { radiusKm = 4, minSitelinks = 4, exclud
       attribution: 'Wikidata, CC0',
     });
     if (items.length >= limit) break;
+  }
+
+  /*
+   * popularity 는 여기서 매기지 않고 위키보이지 경로와 **같은 함수**로 받는다.
+   *
+   * 예전에는 이 파일이 자기 등급표를 갖고 있었는데 그 표에는 1 등급이 없어
+   * (`40→5 : 18→4 : 7→3 : 그 외 2`), 언어판이 한둘뿐인 곳이 수집 경로에
+   * 따라 1 이 되기도 2 가 되기도 했다. 게다가 SPARQL 의 `wikibase:sitelinks`
+   * 는 커먼즈·위키보이지까지 세는 값이라 위쪽 칸막이도 헐거웠다.
+   *
+   * SPARQL 의 sitelinks 는 이제 **싼 1차 거르개로만** 쓴다(위 FILTER 와
+   * 산봉우리 규칙). 실제 등급은 위키백과 언어판만 세어 정한다.
+   */
+  try {
+    const n = await sitelinksByWikidata(items.map((i) => i.wikidata));
+    for (const it of items) {
+      if (n[it.wikidata] === undefined) continue;
+      it.sitelinks = n[it.wikidata];
+      it.popularity = popularityOf(it.sitelinks);
+    }
+  } catch (err) {
+    console.error(`  ${city.name}: 언어판 수 조회 실패, 임시값 2 로 둔다 (${err.message})`);
   }
   return items;
 }

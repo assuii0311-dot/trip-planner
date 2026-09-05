@@ -2,6 +2,16 @@ import type { City, Companion, Preferences, ThemeId } from '../types';
 import { Block, Chips, Field, Scale, Segmented } from '../components/Controls';
 import { THEMES } from '../lib/themes';
 import { describeTaste } from '../lib/taste';
+import { DAY_START_MAX, DAY_START_MIN, DAY_START_STEP, dailyMinutes } from '../lib/capacity';
+
+/** 고를 수 있는 아침 시각. 30분 눈금. */
+const DAY_START_CHOICES = Array.from(
+  { length: Math.round((DAY_START_MAX - DAY_START_MIN) / DAY_START_STEP) + 1 },
+  (_, i) => DAY_START_MIN + i * DAY_START_STEP,
+);
+const hhmm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+const fmtHours = (m: number) => (m % 60 === 0 ? `${m / 60}시간` : `${Math.floor(m / 60)}시간 ${m % 60}분`);
+
 
 const FOOD_STYLES = [
   { value: 'local', label: '현지 가정식' },
@@ -146,13 +156,22 @@ export default function Step2Preferences({
             </Field>
           </Block>
           <Block title="하루 시작 시각">
-            <Segmented
-              value={prefs.dayStart}
-              options={[
-                { value: 'early', label: '08:00' }, { value: 'normal', label: '09:30' }, { value: 'late', label: '11:00' },
-              ]}
-              onChange={(v) => onChange({ dayStart: v })}
-            />
+            {/*
+              예전에는 08:00 · 09:30 · 11:00 세 칸뿐이었다. 간격이 1시간
+              30분이라 '9시에 나선다' 를 고를 수가 없었고, 어느 쪽을 골라도
+              실제와 한 시간 가까이 어긋났다. 30분 눈금으로 바꿨다.
+            */}
+            <Field label="숙소에서 나서는 시각" hint={`이 시각 기준으로 하루 활동 ${fmtHours(dailyMinutes(prefs))}을 잡습니다`}>
+              <select
+                value={prefs.dayStart}
+                aria-label="하루 시작 시각"
+                onChange={(e) => onChange({ dayStart: Number(e.target.value) })}
+              >
+                {DAY_START_CHOICES.map((m) => (
+                  <option key={m} value={m}>{hhmm(m)}</option>
+                ))}
+              </select>
+            </Field>
           </Block>
           <Block title="이동 반경">
             <Field label="이동 감내도" hint={['한 동네에서', '가까운 곳 위주', '보통', '넓게 돌아도 좋음', '이동은 상관없음'][prefs.walkTolerance - 1]}>

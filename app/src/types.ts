@@ -74,7 +74,12 @@ export interface Item {
   /** 이 활동이 가장 잘 맞는 시간대. */
   bestSlots: Slot[];
   indoor: boolean;
-  /** 1 = 잘 안 알려진 곳, 5 = 누구나 아는 대표 명소. */
+  /**
+   * 위키백과 언어판 수. 모르면 null — **0 이 아니다.**
+   * 연결이 없어 찾아보지 못한 것과, 찾아봤더니 하나도 없는 것은 다르다.
+   */
+  sitelinks: number | null;
+  /** 1 = 잘 안 알려진 곳, 5 = 누구나 아는 대표 명소. `sitelinks` 를 5칸으로 나눈 값이다. */
   popularity: number;
   /** 1 = 앉아서 즐김, 5 = 체력 소모가 큼. */
   energy: number;
@@ -83,7 +88,18 @@ export interface Item {
   /** 대표 사진. 없으면 null — 절반 남짓만 있다. */
   photo: Photo | null;
   wikidata: string | null;
-  source: 'wikivoyage' | 'osm' | 'manual';
+  /**
+   * 이 항목이 어디서 왔는가.
+   *
+   * `wikivoyage` 는 여행 작가가 목록에 적어 둔 것, `manual` 은 이 저장소에서
+   * 손으로 적은 것, `wikidata` 는 좌표 근접 검색으로 채운 것이다.
+   * 앞의 둘은 **사람이 고른** 것이고 `wikidata` 는 아니다 — 순위의 `guide`
+   * 가 그 차이를 본다.
+   *
+   * `wikidata` 는 실제 데이터의 32%인데 오랫동안 이 목록에 없었다.
+   * 타입이 데이터를 따라오지 못하고 있었다.
+   */
+  source: 'wikivoyage' | 'wikidata' | 'osm' | 'manual';
   attribution: string;
 }
 
@@ -181,7 +197,14 @@ export interface Preferences {
   themes: Record<ThemeId, number>;
   pace: number;
   budget: Budget;
-  dayStart: 'early' | 'normal' | 'late';
+  /**
+   * 하루를 시작하는 시각(0시부터의 분). 30분 눈금.
+   *
+   * 예전에는 `'early' | 'normal' | 'late'` 세 칸이었다. 08:00 · 09:30 ·
+   * 11:00 뿐이라 '9시에 나선다' 를 고를 수가 없었다 — 세 칸의 간격이
+   * 1시간 30분이라 어느 쪽을 골라도 실제와 한 시간 가까이 어긋났다.
+   */
+  dayStart: number;
   nightlife: number;
   discovery: number;
   walkTolerance: number;
@@ -332,6 +355,16 @@ export interface TripState {
    * 특수한 사정(예약 시각, 누구와 만나기로 한 시각)은 앱이 알 수 없다.
    */
   dayOrder: Record<string, string[]>;
+  /**
+   * 3단계에서 '고민 중' 으로 표시해 둔 것.
+   *
+   * **아무 데도 영향을 주지 않는다.** 순위·계획·일수 어디에도 들어가지
+   * 않고, 목록에서 다시 찾기 위한 표시일 뿐이다. 담을지 말지 정하지 못한
+   * 것을 붙잡아 두는 자리다 — 담아 두면 계획이 부풀고, 안 담으면 2천 개
+   * 목록에서 다시 찾아야 한다.
+   */
+  pondering?: Record<string, true>;
+
   /**
    * 사용자가 정한 도시 간 이동 시점. `"출발도시>도착도시"` → 아침/오후/저녁.
    * 비어 있으면 규칙대로 자동으로 고른다.

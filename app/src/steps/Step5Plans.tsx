@@ -15,6 +15,7 @@ import type { Alternative } from '../lib/alternatives';
 import { THEME_ICON, THEME_LABEL } from '../lib/themes';
 import { josa } from '../lib/korean';
 import { MOVE_LABEL, MOVE_TIMINGS, timingBlocked, whyTiming, type MoveTiming } from '../lib/daypack';
+import { MapsSaveList } from '../components/MapsSaveList';
 
 /** 4단계 — 담은 곳을 바탕으로 밀도가 다른 3가지 안을 만든다. */
 export default function Step5Plans({
@@ -221,6 +222,15 @@ export default function Step5Plans({
             </span>
           ))}
       </div>
+
+      {/*
+        고른 계획을 구글 지도 목록에 담기.
+
+        일자별 상세 바로 위에 둔다 — 계획을 다 보고 '이대로 가자' 가 된
+        자리가 저장하는 자리다. 5단계(이동·예약)의 KML 은 내 지도용이고
+        지도 앱의 목록과 섞이지 않으므로, 목록을 쓰는 사람에게는 여기가 답이다.
+      */}
+      <MapsSaveList plan={active} cities={cities} />
 
       {active.days.map((day, i) => (
         <Day

@@ -28,6 +28,7 @@ export default function Step3Course({
   items, cities, itinerary, prefs, priorities, courses, cityDays, days, usableDays,
   firstDayStart = null, ui,
   onSet, onBulk, onCourse, onDays, onDropCity, onCourseAll, onUi,
+  pondering, onPonder,
 }: {
   items: Item[];
   cities: City[];
@@ -43,7 +44,10 @@ export default function Step3Course({
   /** 도시 slug → 사용자가 정한 일수. 없으면 도시 권장 일수를 쓴다. */
   cityDays: Record<string, number>;
   days: number;
-  ui: { openCity?: string | null; openTheme?: ThemeId | null; onlyPicked?: boolean };
+  ui: { openCity?: string | null; openTheme?: ThemeId | null; onlyPicked?: boolean; onlyPondering?: boolean };
+  /** 고민 중 표시. 계획에는 영향이 없다. */
+  pondering: Record<string, true>;
+  onPonder: (id: string) => void;
   onSet: (id: string, v: 0 | 1 | 2 | 3) => void;
   onBulk: (next: Priorities) => void;
   onCourse: (city: string, course: CourseId, items: Item[]) => void;
@@ -53,7 +57,7 @@ export default function Step3Course({
   onDropCity: (city: string) => void;
   /** 도시별 코스 선택을 한 번에 기록한다. 일괄 적용에 쓴다. */
   onCourseAll: (next: Record<string, CourseId>) => void;
-  onUi: (next: { openCity?: string | null; openTheme?: ThemeId | null; onlyPicked?: boolean }) => void;
+  onUi: (next: { openCity?: string | null; openTheme?: ThemeId | null; onlyPicked?: boolean; onlyPondering?: boolean }) => void;
 }) {
   /**
    * 방문 순서대로. 도시마다 '며칠 쓸 것인가' 가 코스 분량을 정한다.
@@ -85,6 +89,7 @@ export default function Step3Course({
 
   const openCity = ui.openCity === undefined ? (stops[0]?.city.slug ?? null) : ui.openCity;
   const onlyPicked = ui.onlyPicked ?? false;
+  const onlyPondering = ui.onlyPondering ?? false;
 
   const itemsOf = useMemo(() => {
     const m = new Map<string, Item[]>();
@@ -263,6 +268,7 @@ export default function Step3Course({
               <CityPanel
                 city={city} cityItems={cityItems} wantDays={wantDays} prefs={prefs}
                 priorities={priorities} course={courses[city.slug]} onlyPicked={onlyPicked}
+                pondering={pondering} onPonder={onPonder} onlyPondering={onlyPondering}
                 onSet={onSet} onBulk={onBulk} onCourse={onCourse} onUi={onUi}
                 onDays={onDays} cities={cities}
               />
@@ -314,6 +320,7 @@ function fmtDays(d: number): string {
 /** 한 도시의 코스 카드 세 장과, 그 아래 전체 아이템 목록. */
 function CityPanel({
   city, cityItems, wantDays, prefs, priorities, course, onlyPicked,
+  pondering, onPonder, onlyPondering,
   cities, onSet, onBulk, onCourse, onDays, onUi,
 }: {
   city: City;
@@ -324,12 +331,16 @@ function CityPanel({
   priorities: Priorities;
   course: CourseId | undefined;
   onlyPicked: boolean;
+  /** 고민 중 표시. 목록에서 다시 찾기 위한 것일 뿐 계획에는 영향이 없다. */
+  pondering: Record<string, true>;
+  onPonder: (id: string) => void;
+  onlyPondering: boolean;
   cities: City[];
   onSet: (id: string, v: 0 | 1 | 2 | 3) => void;
   onBulk: (next: Priorities) => void;
   onCourse: (city: string, course: CourseId, items: Item[]) => void;
   onDays: (city: string, days: number, items: Item[]) => void;
-  onUi: (next: { openTheme?: ThemeId | null; onlyPicked?: boolean }) => void;
+  onUi: (next: { openTheme?: ThemeId | null; onlyPicked?: boolean; onlyPondering?: boolean }) => void;
 }) {
   const courses = useMemo(
     () => coursesFor(city, cityItems, prefs, cities),
@@ -347,13 +358,23 @@ function CityPanel({
     [city, cityItems, prefs, cities],
   );
   /*
-   * 조절기는 0.5 단위인데 값어치는 2.7일처럼 떨어진다. 그대로 비교하면
-   * 2.5 < 2.7 이라 ＋ 가 열려 있는데 눌러도 담을 것이 없다. 0.5 단위로
-   * 내림한 값을 천장으로 삼아, 열려 있는 버튼은 반드시 무언가를 바꾼다.
+   * ＋ 의 천장 — 값어치를 담을 수 있는 **가장 가까운 윗 눈금**.
+   *
+   * 예전에는 아래 눈금으로 내림했다(값어치 2.7일 → 천장 2.6). 눌러도 안
+   * 늘어나는 ＋ 를 막으려던 것인데, 값어치가 눈금에 안 떨어지면 **꼭대기에
+   * 갔다가 돌아올 수 없었다.** 그라나다 값어치가 3.1일이 되자 천장은 3.0 인데
+   * 코스를 고르면 3.2일치가 담겨, − 로 3.0 에 내려가면 ＋ 가 잠겨 3.2 로 못
+   * 돌아왔다. 3.0 은 15곳 · 3.2 는 16곳이라 실제로 다른 상태였는데도 그랬다.
+   *
+   * 올림으로 바꾸면 담긴 것이 늘 천장 안에 들어와 왕복이 된다. 대신 값어치가
+   * 눈금 바로 위일 때 마지막 한 번이 헛눌림일 수 있는데, 옆에 곳 수가 함께
+   * 적혀 있어 바뀌지 않은 것이 보인다 — 돌아가지 못하는 쪽이 더 나쁘다.
    */
-  const capDays = Math.max(STEP, Math.floor(worth / STEP) * STEP);
-  const atCeiling = wantDays >= capDays;
+  const capDays = Math.ceil(worth / STEP - 0.001) * STEP;
+  const atCeiling = wantDays >= capDays - 0.001;
+  const shownCount = itemsForDays(city, cityItems, prefs, wantDays, course, cities).length;
   const pickedIds = new Set(cityItems.filter((i) => (priorities[i.id] ?? 0) > 0).map((i) => i.id));
+  const ponderCount = cityItems.filter((i) => pondering[i.id]).length;
   const pickedDays = estimateDays(cityItems.filter((i) => pickedIds.has(i.id)), prefs);
 
   /**
@@ -367,8 +388,10 @@ function CityPanel({
     const all = rankItems(cityItems, prefs, priorities)
       .map((r) => r.item)
       .filter((i) => i.theme !== 'food');
-    return onlyPicked ? all.filter((i) => pickedIds.has(i.id)) : all;
-  }, [cityItems, prefs, priorities, onlyPicked, pickedIds]);
+    const shown = onlyPicked ? all.filter((i) => pickedIds.has(i.id)) : all;
+    // 고민 중 거르기는 담기와 별개다. 표시만 보고 다시 훑을 수 있어야 한다.
+    return onlyPondering ? shown.filter((i) => pondering[i.id]) : shown;
+  }, [cityItems, prefs, priorities, onlyPicked, pickedIds, onlyPondering, pondering]);
 
   const cityOf = (slug: string) => cities.find((c) => c.slug === slug);
 
@@ -462,7 +485,7 @@ function CityPanel({
           */}
           <span className="days-value">
             {fmtDays(wantDays)}
-            <span className="days-count"> ≈ {itemsForDays(city, cityItems, prefs, wantDays, course, cities).length}곳</span>
+            <span className="days-count"> ≈ {shownCount}곳</span>
           </span>
           <button
             type="button" aria-label="조금 늘리기" disabled={wantDays >= 7 || atCeiling}
@@ -496,6 +519,11 @@ function CityPanel({
         <button type="button" onClick={() => onUi({ onlyPicked: !onlyPicked })}>
           {onlyPicked ? '전체 보기' : '담은 것만 보기'}
         </button>
+        {ponderCount > 0 && (
+          <button type="button" onClick={() => onUi({ onlyPondering: !onlyPondering })}>
+            {onlyPondering ? '고민 중 해제' : `고민 중만 보기 (${ponderCount})`}
+          </button>
+        )}
         {pickedIds.size > 0 && (
           <button
             type="button"
@@ -587,6 +615,7 @@ function CityPanel({
             <ItemRow
               key={item.id} item={item} city={cityOf(item.city)}
               priorities={priorities} onSet={onSet} selectable
+              pondering={Boolean(pondering[item.id])} onPonder={onPonder}
             />
           ))}
         </details>
@@ -614,6 +643,7 @@ function CityPanel({
             <ItemRow
               key={item.id} item={item} city={cityOf(item.city)}
               priorities={priorities} onSet={onSet} selectable
+              pondering={Boolean(pondering[item.id])} onPonder={onPonder}
               badge={`${THEME_ICON[item.theme]} ${THEME_LABEL[item.theme]}`}
             />
           ))

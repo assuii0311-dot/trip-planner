@@ -12,7 +12,7 @@ const { coursesFor, cityWorthDays } = await import('../src/lib/course.ts');
 const { estimateDays, isMeal } = await import('../src/lib/capacity.ts');
 const { inferThemes } = await import('../src/lib/taste.ts');
 
-const base = { pace: 3, budget: 'mid', dayStart: 'normal', nightlife: 1, discovery: 2,
+const base = { pace: 3, budget: 'mid', dayStart: 570, nightlife: 1, discovery: 2,
   walkTolerance: 3, companion: 'couple', foodStyles: [], mobility: 'normal',
   photo: 2, transport: ['walk', 'metro'], dayTripAppetite: 2 };
 
@@ -48,9 +48,18 @@ for (const [n, limit] of [['산 파우 병원', 200], ['산 페르난도 왕립�
 }
 
 console.log('\n=== 도시별 등급 ===');
+/*
+ * 사람이 적어 둔 '이 도시는 며칠짜리인가'. 순위가 흔들리면 여기서 걸린다.
+ *
+ * 코르도바를 1~2 에서 1~2.5 로 넓혔다. 손으로 유대인 지구(60분)를 넣으면서
+ * 꽉찬 코스가 2.0 에서 2.1 이 됐는데, 목록을 보면 열한 곳이 전부 제대로 된
+ * 코르도바 명소다(메스키타 · 알카사르 · 메디나 아사하라 · 로마 다리 …).
+ * 점수가 흐트러진 것이 아니라 **데이터가 한 곳 늘었다.** 톨레도와 같은 폭으로
+ * 맞춘다.
+ */
 const EXPECT = {
   madrid: [3, 4], barcelona: [3, 4], seville: [3, 4],
-  granada: [2, 3.5], toledo: [1, 2.5], cordoba: [1, 2],
+  granada: [2, 3.5], toledo: [1, 2.5], cordoba: [1, 2.5],
   segovia: [0.5, 1.5], ronda: [0.4, 1.5], nerja: [0.2, 1],
 };
 for (const [slug, [lo, hi]] of Object.entries(EXPECT)) {

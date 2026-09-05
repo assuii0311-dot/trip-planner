@@ -1,13 +1,55 @@
 import type { Item, Preferences } from '../types';
 
+/** 고를 수 있는 아침 시작 시각의 범위와 눈금(분). */
+export const DAY_START_MIN = 6 * 60;
+export const DAY_START_MAX = 11 * 60 + 30;
+export const DAY_START_STEP = 30;
+export const DAY_START_DEFAULT = 9 * 60 + 30;
+
+/**
+ * 눈금에 맞춰 범위 안으로 당긴다.
+ *
+ * 숫자가 아닌 값도 받는다. 이 자리에는 예전에 `'normal'` 같은 글자가
+ * 들어 있었고, 저장분을 옮기지 않고 들어오는 길(예전 검사 스크립트)이
+ * 있으면 계산이 통째로 NaN 이 된다 — 그러면 하루 활동 시간이 NaN 이 되고
+ * 계획이 조용히 비어 버린다. 모르는 값은 기본값으로 본다.
+ */
+export const clampDayStart = (min: number): number =>
+  (Number.isFinite(min)
+    ? Math.min(DAY_START_MAX, Math.max(DAY_START_MIN, Math.round(min / DAY_START_STEP) * DAY_START_STEP))
+    : DAY_START_DEFAULT);
+
 /**
  * 하루에 실제로 쓸 수 있는 활동 시간(분).
  *
  * 아침 시작 시각과 속도 취향으로 정한다. 이동·줄서기·쉬는 시간이 들어갈
  * 자리를 남겨야 하므로, 깨어 있는 시간을 그대로 쓰지 않는다.
+ *
+ * 세 칸이던 시절의 값이 기준점이다 — 08:00 에 9시간, 09:30 에 8시간,
+ * 11:00 에 6시간 30분. 실측으로 정해 둔 값이라 그대로 지나가게 두고,
+ * 사이는 직선으로 잇는다.
+ *
+ * **세 점은 한 직선 위에 있지 않다.** 앞 구간은 90분 늦어질 때 60분이
+ * 줄고(기울기 ⅔), 뒤 구간은 90분에 90분이 준다(기울기 1). 늦게 나설수록
+ * 손해가 커지는 모양이고, 실제로도 11시에 나서면 오전이 통째로 없다.
+ * 한 직선으로 뭉개면 11:00 이 예전보다 30분 넉넉해진다.
  */
+const DAY_START_ANCHORS: [min: number, active: number][] = [
+  [8 * 60, 9 * 60],
+  [9 * 60 + 30, 8 * 60],
+  [11 * 60, 6.5 * 60],
+];
+
+/** 앵커 사이는 직선으로, 바깥은 가장 가까운 구간의 기울기를 이어서. */
+function activeBase(start: number): number {
+  const [[m0, a0], [m1, a1], [m2, a2]] = DAY_START_ANCHORS;
+  const lerp = (x: number, xa: number, ya: number, xb: number, yb: number) =>
+    ya + ((x - xa) / (xb - xa)) * (yb - ya);
+  return start <= m1 ? lerp(start, m0, a0, m1, a1) : lerp(start, m1, a1, m2, a2);
+}
+
 export function dailyMinutes(prefs: Preferences): number {
-  const base = { early: 9 * 60, normal: 8 * 60, late: 6.5 * 60 }[prefs.dayStart];
+  const base = Math.max(4 * 60, activeBase(clampDayStart(prefs.dayStart)));
   // pace 1(느긋) ~ 5(빡빡). 3이 기준.
   return Math.round(base * (0.78 + prefs.pace * 0.09));
 }

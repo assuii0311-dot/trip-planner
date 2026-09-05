@@ -3,12 +3,13 @@ import type { Itinerary } from './itinerary';
 import type { Service } from './routing';
 import { MODE_ICON, nextDeparture, servicesBetween } from './routing';
 import { rankItems } from './scoring';
-import { dailyMinutes, isMeal, itemMinutes } from './capacity';
+import { clampDayStart, dailyMinutes, isMeal, itemMinutes } from './capacity';
 import { GRACE_MIN, packDays, type MoveTiming, type PackedDay } from './daypack';
 import { distanceKm, hasCoords, travelMinutes, walkKmOf } from './geo';
 import { addDays } from './caldate';
 
-const DAY_START: Record<Preferences['dayStart'], number> = { early: 8 * 60, normal: 9.5 * 60, late: 11 * 60 };
+/** 취향에 적힌 아침 시작 시각. 30분 눈금이고, 범위를 벗어난 값은 당겨 온다. */
+const dayStartOf = (prefs: Preferences): number => clampDayStart(prefs.dayStart);
 
 /**
  * A slot is a window, not just an order.
@@ -195,7 +196,7 @@ function buildDay(
    */
   const trip = travels.find((t) => t.kind === 'daytrip');
   const tripArrive = segments[0].isDayTrip && trip ? trip.arriveAt : null;
-  const base = DAY_START[prefs.dayStart] + (segments[0].isDayTrip && !tripArrive ? 75 : 0);
+  const base = dayStartOf(prefs) + (segments[0].isDayTrip && !tripArrive ? 75 : 0);
   const start = Math.max(base, arrival ?? 0, tripArrive ?? 0, startAtMin ?? 0);
 
   const specs = spec.slots(start)
@@ -597,7 +598,7 @@ export function buildPlans(input: PlanInput): {
     : null;
 
   const { schedule, overflow, spare, unseen, needDays } = scheduleFromItinerary(
-    input.itinerary, input.days, DAY_START[input.prefs.dayStart],
+    input.itinerary, input.days, dayStartOf(input.prefs),
     needMinOf, dailyMinutes(input.prefs),
     (from, to) => input.moveTiming?.[`${from}>${to}`],
     firstDayMin,
@@ -620,7 +621,7 @@ export function buildPlans(input: PlanInput): {
        * 하루를 다 쓴다 — 모르면서 반나절을 잘라내지 않는다.
        */
       const lastDay = !isLast ? 'full'
-        : endBy !== null && endBy <= DAY_START[input.prefs.dayStart] + 60 ? 'none' : 'full';
+        : endBy !== null && endBy <= dayStartOf(input.prefs) + 60 ? 'none' : 'full';
       if (lastDay === 'none') {
         return {
           date: addDays(input.startDate, i), dayIndex: i + 1, city: s.city,
@@ -692,7 +693,7 @@ function reorderDay(
 
 /** 시각에 맞는 시간대 이름. 순서를 바꾼 뒤 라벨을 다시 붙이는 데 쓴다. */
 function slotAt(min: number, prefs: Preferences): Slot {
-  const start = DAY_START[prefs.dayStart];
+  const start = dayStartOf(prefs);
   if (min >= 22 * 60) return 'night';
   if (min >= 20 * 60 + 15) return 'dinner';
   if (min >= 18 * 60) return 'evening';

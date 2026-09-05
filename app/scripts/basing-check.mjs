@@ -18,7 +18,7 @@ const { fmtDur } = await import('../src/lib/routing.ts');
 const load = async (s) =>
   JSON.parse(await readFile(new URL(`../public/data/spain/cities/${s}.json`, import.meta.url), 'utf8'));
 
-const base = { pace: 3, budget: 'mid', dayStart: 'normal', nightlife: 1, discovery: 2,
+const base = { pace: 3, budget: 'mid', dayStart: 570, nightlife: 1, discovery: 2,
   walkTolerance: 3, companion: 'couple', foodStyles: [], mobility: 'normal',
   photo: 2, transport: ['walk', 'metro'], dayTripAppetite: 2 };
 

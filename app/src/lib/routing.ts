@@ -116,7 +116,10 @@ const hm = (h: number, m = 0) => h * 60 + m;
  *   마드리드~그라나다 360km 3시간 20분 → 0.55 (안테케라 이후 저속)
  */
 const AVE_CORRIDORS: { cities: string[]; minPerKm: number }[] = [
-  { cities: ['madrid', 'zaragoza', 'tarragona', 'barcelona'], minPerKm: 0.34 },
+  // 마드리드~바르셀로나 고속선은 지로나를 지나 피게레스까지 이어진다(2013).
+  // 이 둘이 빠져 있어 그라나다→지로나 같은 구간에 고속철 후보가 아예 없었고,
+  // 렌터카 10시간 52분만 남았다. 환승 계수(0.45)로도 7시간대다.
+  { cities: ['madrid', 'zaragoza', 'tarragona', 'barcelona', 'girona', 'figueres'], minPerKm: 0.34 },
   { cities: ['madrid', 'toledo'], minPerKm: 0.47 },
   { cities: ['madrid', 'segovia'], minPerKm: 0.40 },
   { cities: ['madrid', 'cordoba', 'seville'], minPerKm: 0.36 },
@@ -124,7 +127,13 @@ const AVE_CORRIDORS: { cities: string[]; minPerKm: number }[] = [
   { cities: ['madrid', 'cordoba', 'granada'], minPerKm: 0.55 },
   { cities: ['madrid', 'cuenca', 'valencia'], minPerKm: 0.36 },
   { cities: ['madrid', 'alicante'], minPerKm: 0.38 },
-  { cities: ['madrid', 'ourense', 'santiago'], minPerKm: 0.40 },
+  // 갈리시아 고속선은 오렌세에서 산티아고를 거쳐 라코루냐까지 간다.
+  // 산티아고~라코루냐 55km 를 Avant 가 30분에 잇는데, 빠져 있어 렌터카
+  // 1시간 39분으로 안내됐다.
+  { cities: ['madrid', 'ourense', 'santiago', 'a-coruna'], minPerKm: 0.40 },
+  // 비고 쪽은 오렌세 이후가 느리다. 마드리드~비고 실제 4시간 10분에 맞춘다.
+  { cities: ['ourense', 'santiago', 'vigo'], minPerKm: 0.40 },
+  { cities: ['madrid', 'vigo'], minPerKm: 0.50 },
   { cities: ['barcelona', 'zaragoza', 'cordoba', 'seville'], minPerKm: 0.36 },
   { cities: ['barcelona', 'zaragoza', 'cordoba', 'malaga'], minPerKm: 0.37 },
   { cities: ['barcelona', 'tarragona', 'valencia', 'alicante'], minPerKm: 0.58 },
@@ -351,14 +360,55 @@ function flightService(a: City, b: City, km: number): Service | null {
  * 대표값으로 중앙값을 쓴다. 실제로 몇 시에 타고 몇 시에 닿는지는
  * nextDeparture 가 목록에서 골라 정확히 계산한다.
  */
+/**
+ * 한 종별이 하루에 이만큼은 다녀야 '그 열차로 계획한다' 고 말할 수 있다.
+ * 하루 한두 편뿐인 특급 하나가 구간 전체의 기준이 되면 안 된다.
+ */
+const MIN_RUNS = 3;
+
+/**
+ * 실제 시간표를 서비스 하나로 요약한다.
+ *
+ * ## 예전에는 전체 중앙값을 썼고, 그게 틀렸다
+ *
+ * 한 구간에 성격이 다른 열차가 섞여 다닌다. 바르셀로나~지로나에는
+ * **고속(AVE·AVANT) 27편이 41분**, 완행(MD·REGIONAL) 33편이 79~91분이다.
+ * 전부 섞어 중앙값을 내면 79분이 나온다 — 완행 쪽에 표본이 하나 더 많다는
+ * 이유로. 그래서 앱은 41분짜리 열차가 하루 27편 다니는 구간을
+ * **1시간 19분**이라고 말했고, 그 값이 렌터카(1시간 21분)에게 져서
+ * 화면에는 아예 열차가 나오지도 않았다.
+ *
+ * 중앙값의 문제가 아니라 **서로 다른 상품을 한 숫자로 묶은 것**이 문제다.
+ * 종별로 나눠 각자의 중앙값을 내고, 그중 하루 `MIN_RUNS` 편 이상 다니는
+ * 가장 빠른 종별을 이 구간의 대표로 삼는다.
+ *
+ * 종별 안에서는 최소가 아니라 중앙값을 쓴다. 원본에 바르셀로나~지로나
+ * AVE 20분 같은 값이 섞여 있는데(85km 를 20분에 갈 수 없다) 최소를 쓰면
+ * 그런 것이 기준이 된다.
+ *
+ * 느린 편도 `timetable` 에는 그대로 남긴다. 그 시간대에 완행밖에 없으면
+ * 완행을 타는 것이 맞고, `nextDeparture` 가 실제로 먼저 닿는 편을 고른다.
+ */
 function railService(list: RailDeparture[]): Service {
-  const rides = list.map((r) => r.a - r.d).sort((a, b) => a - b);
-  const ride = rides[Math.floor(rides.length / 2)];
-  const kinds = [...new Set(list.map((r) => r.n))];
-  const fast = kinds.some((k) => /AVE|AVLO|AVANT|EUROMED|ALVIA/i.test(k));
+  const byKind = new Map<string, number[]>();
+  for (const r of list) {
+    const a = byKind.get(r.n) ?? [];
+    a.push(r.a - r.d);
+    byKind.set(r.n, a);
+  }
+  const kinds = [...byKind.entries()]
+    .map(([n, rides]) => {
+      const sorted = rides.sort((x, y) => x - y);
+      return { n, runs: sorted.length, median: sorted[Math.floor(sorted.length / 2)] };
+    })
+    .sort((a, b) => a.median - b.median);
+  const pick = kinds.find((k) => k.runs >= MIN_RUNS) ?? kinds[0];
+  const ride = pick.median;
+  const fast = /AVE|AVLO|AVANT|EUROMED|ALVIA/i.test(pick.n);
+  const slower = kinds.filter((k) => k.n !== pick.n && k.median > pick.median);
   return {
     mode: fast ? 'ave' : 'train',
-    label: kinds.slice(0, 2).join('·'),
+    label: pick.n,
     accessMin: 30,
     rideMin: ride,
     egressMin: 15,
@@ -371,7 +421,9 @@ function railService(list: RailDeparture[]): Service {
     lastDep: Math.max(...list.map((r) => r.d)),
     headwayMin: 0,
     estimated: false,
-    note: `하루 ${list.length}편. Renfe 공개 시간표입니다.`,
+    note: `${pick.n} 하루 ${pick.runs}편 기준`
+      + (slower.length ? ` · 느린 ${slower.map((k) => k.n).join('·')} 도 같은 구간을 다닙니다` : '')
+      + '. Renfe 공개 시간표입니다.',
     timetable: list,
   };
 }
@@ -479,7 +531,21 @@ export function nextDeparture(service: Service, readyAt: number): Departure | nu
    * 있다고 말하는 것은 다르다. 소요 시간도 편마다 다르므로 그 편의 값을 쓴다.
    */
   if (service.timetable && service.timetable.length) {
-    const next = service.timetable.find((r) => r.d >= atStation);
+    /*
+     * 먼저 **떠나는** 편이 아니라 먼저 **닿는** 편을 고른다.
+     *
+     * 예전에는 목록에서 탈 수 있는 첫 편을 그냥 집었다. 그런데 한 구간에는
+     * 고속과 완행이 섞여 다닌다 — 09:56 완행(79분)을 집고 나면, 10:10 에
+     * 떠나 40분 먼저 닿는 고속을 놓친다. 역에서 14분을 더 기다리는 쪽이
+     * 목적지에 40분 일찍 닿는데도 그랬다.
+     *
+     * 사람이 시간표를 볼 때 고르는 기준은 출발이 아니라 도착이다.
+     */
+    let next: RailDeparture | null = null;
+    for (const r of service.timetable) {
+      if (r.d < atStation) continue;
+      if (!next || r.a < next.a || (r.a === next.a && r.d < next.d)) next = r;
+    }
     if (!next) return null;                    // 그날 남은 편이 없다
     const arriveAt = next.a + service.egressMin;
     return {

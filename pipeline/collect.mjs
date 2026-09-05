@@ -15,7 +15,7 @@
 import { mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
 import { createInterface } from 'node:readline/promises';
 import { collectCity, EVENT_RE, parsePrice } from './src/extract.mjs';
-import { enrichItem, popularityByWikidata } from './src/enrich.mjs';
+import { enrichItem, sitelinksByWikidata } from './src/enrich.mjs';
 import { fetchNearby } from './src/wdnearby.mjs';
 import { selectBalanced } from './src/select.mjs';
 import { describe } from './src/practical.mjs';
@@ -225,18 +225,26 @@ for (const [i, city] of selected.entries()) {
   process.stderr.write(`\r[${i + 1}/${selected.length}] ${city.name} 수집 중…`.padEnd(50));
   const cachePath = new URL(`./out/raw/${city.slug}.json`, import.meta.url);
   let items;
-  let popularity;
+  let sitelinks;
   if (!has('refresh')) {
     try {
-      ({ items, popularity } = JSON.parse(await readFile(cachePath, 'utf8')));
+      ({ items, sitelinks } = JSON.parse(await readFile(cachePath, 'utf8')));
     } catch { /* 캐시가 없으면 새로 받는다. */ }
   }
   if (!items) {
     ({ items } = await collectCity(city.title, city.slug, city.slug));
+  }
+  /*
+   * 언어판 수는 따로 캐시한다. 예전 캐시에는 등급(`popularity`)만 들어 있어
+   * 원값을 되살릴 수 없다 — 그럴 때는 문서 긁기는 그대로 두고 이 부분만
+   * 다시 받는다. 등급으로 원값을 되짚는 짓은 하지 않는다(3 인지 6 인지
+   * 알 수 없다).
+   */
+  if (!sitelinks) {
     const ids = [...new Set(items.map((it) => it.wikidata).filter(Boolean))];
-    popularity = await popularityByWikidata(ids);
+    sitelinks = await sitelinksByWikidata(ids);
     await mkdir(new URL('./out/raw/', import.meta.url), { recursive: true });
-    await writeFile(cachePath, JSON.stringify({ items, popularity }));
+    await writeFile(cachePath, JSON.stringify({ items, sitelinks }));
   }
 
   // 가격은 캐시에 이미 파싱된 값이 들어 있다. 파서를 고쳐도 다시 크롤링하지
@@ -247,7 +255,7 @@ for (const [i, city] of selected.entries()) {
 
   const cap = city.isHub ? CAP.hub : CAP.satellite;
   const places = items.filter((it) => !EVENT_RE.test(`${it.name} ${it.descEn}`) && isVisitable(it));
-  const enriched = selectBalanced(places.map((it) => enrichItem(it, popularity)), cap, city.isHub)
+  const enriched = selectBalanced(places.map((it) => enrichItem(it, sitelinks)), cap, city.isHub)
     .map((it) => {
       const override = ko[it.id] ?? {};
       return {
@@ -265,6 +273,8 @@ for (const [i, city] of selected.entries()) {
         hours: it.hours,
         bestSlots: it.bestSlots,
         indoor: it.indoor,
+        /** 위키백과 언어판 수(원값). 순위의 `fame` 이 이것을 로그로 편다. */
+        sitelinks: it.sitelinks ?? null,
         popularity: it.popularity,
         energy: override.energy ?? it.energy,
         tags: it.tags,
@@ -332,16 +342,31 @@ for (const [i, city] of selected.entries()) {
       }
       filled.set(city.slug, extra.length);
 
-      // 소도시는 반경 5km 안에 볼거리가 없을 수 있다.
-      // 포옌사처럼 여전히 모자라면 근처 마을까지 포함해 한 번 더 넓힌다.
+      /*
+       * 소도시는 반경 5km 안에 볼거리가 없을 수 있다.
+       * 포옌사처럼 여전히 모자라면 근처 마을까지 포함해 한 번 더 넓힌다.
+       *
+       * **이것도 캐시한다.** 예전에는 이 한 번만 캐시를 안 했다. 위키데이터
+       * 근접 검색은 돌릴 때마다 결과가 조금씩 달라지므로, 다시 수집할 때마다
+       * 소도시의 볼거리 목록이 소리 없이 바뀌었다. 순위를 손보는 중에
+       * 발밑이 흔들리면 무엇 때문에 성적이 변했는지 알 수 없다.
+       */
       if (enriched.filter(isSight).length < sightTarget) {
-        const wide = await fetchNearby(city, {
-          radiusKm: city.isHub ? 20 : 18,
-          minSitelinks: 2,
-          exclude: new Set(enriched.flatMap((e) => [e.nameEn, e.name])),
-          otherCities: cityNames(city.nameEn),
-          limit: sightTarget * 2,
-        });
+        const widePath = new URL(`./out/raw/${city.slug}-wide.json`, import.meta.url);
+        let wide;
+        if (!has('refresh')) {
+          try { wide = JSON.parse(await readFile(widePath, 'utf8')); } catch { /* 캐시 없음 */ }
+        }
+        if (!wide) {
+          wide = await fetchNearby(city, {
+            radiusKm: city.isHub ? 20 : 18,
+            minSitelinks: 2,
+            exclude: new Set(enriched.flatMap((e) => [e.nameEn, e.name])),
+            otherCities: cityNames(city.nameEn),
+            limit: sightTarget * 2,
+          });
+          await writeFile(widePath, JSON.stringify(wide));
+        }
         for (const it of wide) {
           const override = ko[it.id] ?? {};
           enriched.push({ ...it, ...override, city: city.slug });
