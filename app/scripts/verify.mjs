@@ -1236,6 +1236,92 @@ console.log('\n■ 7-b. 2단계 — 아침 시작 시각이 30분 눈금인가')
   await ctx.close();
 }
 
+console.log('\n■ 7-c. 기기 간 옮기기 — 내보내기·가져오기');
+{
+  /*
+   * 이 앱에는 서버도 계정도 없다. 저장분은 localStorage 에 있고 그것은
+   * 기기·브라우저마다 따로다. **파일이 기기를 옮기는 유일한 길**이라,
+   * 이 길이 막히면 아이패드에서 짠 계획을 폰으로 들고 나갈 수 없다.
+   */
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 900 }, acceptDownloads: true });
+  const page = await ctx.newPage();
+  watch(page, allErrors, '[옮기기]');
+  const dialogs = [];
+  page.on('dialog', (d) => { dialogs.push(d.message()); void d.accept(); });
+
+  await build(page, {
+    cities: [['마드리드', '마드리드'], ['안달루시아', '세비야']],
+    from: '2026-05-04', to: '2026-05-10',
+    airports: ['MAD', 'MAD'], times: ['15:00', '13:00'],
+  });
+
+  /* ── 내보내기 ── */
+  // 발치의 접힌 칸이다. 화면을 덜 잡아먹게 접어 두었으므로 열고 나서 본다.
+  const transfer = page.locator('details.guide', { hasText: '다른 기기로 옮기기' }).first();
+  if ((await transfer.getAttribute('open')) === null) { await transfer.click(); await page.waitForTimeout(400); }
+  const [dl] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('button', { hasText: '계획 내보내기' }).first().click(),
+  ]);
+  const fname = dl.suggestedFilename();
+  /*
+   * 이름은 반드시 ASCII 여야 한다. 브라우저는 <a download> 에 한글이 들어가면
+   * 이름을 통째로 버리고 'download' 로 저장한다 — 확장자까지 사라져서
+   * 가져오기가 파일을 못 알아본다(내 지도 KML 에서 실제로 겪었다).
+   */
+  check('내보낸 파일 이름이 ASCII 다', /^[\x20-\x7E]+\.json$/.test(fname), fname);
+  const saved = JSON.parse(await readFile(await dl.path(), 'utf8'));
+  check('고른 도시가 파일에 들어 있다', (saved.basics?.cities ?? []).length === 2,
+    (saved.basics?.cities ?? []).join(' · '));
+  check('담은 것도 함께 나간다', Object.keys(saved.priorities ?? {}).length > 0,
+    `${Object.keys(saved.priorities ?? {}).length}곳`);
+
+  const tmp = new URL('../../pipeline/out/shots/', import.meta.url);
+  const good = new URL('transfer-good.json', tmp);
+  await writeFile(good, JSON.stringify(saved));
+
+  const citiesNow = async () => (await page.evaluate(() => {
+    try { return JSON.parse(localStorage.getItem('trip-planner.v1.spain') ?? '{}').basics?.cities ?? []; }
+    catch { return []; }
+  }));
+  const before = await citiesNow();
+  // 바깥 설명 카드가 아니라 결과 줄 자체를 본다 — 안 그러면 무엇이 나왔는지 안 보인다.
+  const msg = () => page.locator('.transfer-msg');
+
+  /* ── 알아볼 수 없는 파일: 조용히 아무 일도 안 일어나면 안 된다 ── */
+  const junk = new URL('transfer-junk.json', tmp);
+  await writeFile(junk, 'this is not json at all');
+  dialogs.length = 0;
+  await page.locator('input[type=file]').setInputFiles(junk.pathname);
+  await page.waitForTimeout(900);
+  check('덮어쓰기 전에 물어본다', dialogs.some((d) => /덮어씁니다/.test(d)), dialogs[0] ?? '안 물어봄');
+  check('못 읽는 파일은 화면에 말한다', await msg().isVisible().catch(() => false),
+    (await msg().innerText().catch(() => '(아무것도 안 나옴)')).replace(/\n/g, ' ').slice(0, 60));
+  check('못 읽는 파일로 계획이 날아가지 않는다',
+    JSON.stringify(await citiesNow()) === JSON.stringify(before), (await citiesNow()).join(' · '));
+
+  /* ── 다른 나라 파일: 도시 slug 가 나라 안에서만 뜻이 있다 ── */
+  const other = new URL('transfer-other.json', tmp);
+  await writeFile(other, JSON.stringify({ ...saved, basics: { ...saved.basics, country: 'japan' } }));
+  await page.locator('input[type=file]').setInputFiles(other.pathname);
+  await page.waitForTimeout(900);
+  const otherText = (await msg().innerText().catch(() => '')).replace(/\n/g, ' ');
+  check('다른 나라 계획은 받지 않는다', /계획 파일입니다/.test(otherText), otherText.slice(0, 70));
+  check('거절해도 계획이 날아가지 않는다',
+    JSON.stringify(await citiesNow()) === JSON.stringify(before), (await citiesNow()).join(' · '));
+
+  /* ── 제대로 된 파일: 왕복이 되는가 ── */
+  await page.locator('input[type=file]').setInputFiles(good.pathname);
+  await page.waitForTimeout(1200);
+  check('내보낸 파일을 도로 가져올 수 있다',
+    JSON.stringify(await citiesNow()) === JSON.stringify(saved.basics.cities),
+    (await citiesNow()).join(' · '));
+  check('가져왔다고 화면에 말한다',
+    /가져왔습니다/.test((await msg().innerText().catch(() => '')).replace(/\n/g, ' ')));
+
+  await ctx.close();
+}
+
 console.log('\n■ 8. 고장났을 때 — 하얀 화면 대신 빠져나갈 길');
 {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });
@@ -1834,16 +1920,27 @@ console.log('\n■ 10. 아이패드 — 골라도 계속 고를 수 있는가');
   check('첫 도시를 고른 뒤에도 계속 고를 수 있다',
     picked.join() === '1,2,3,4', `${names.slice(0, 4).join('·')} → ${picked.join(' → ')}곳`);
 
-  // 아래까지 스크롤해도 카드가 계속 눌리는가(붙박이 막대에 가리지 않는가).
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-  await page.waitForTimeout(500);
-  const last = page.locator('.city-main').last();
-  const lb = await last.boundingBox();
-  const covered = lb ? await page.evaluate(([x, y]) => {
-    const el = document.elementFromPoint(x, y);
-    return el ? !el.closest('.city-main') : true;
-  }, [lb.x + lb.width / 2, lb.y + 10]) : true;
-  check('맨 아래 카드가 막대에 가리지 않는다', !covered);
+  /*
+   * 맨 아래까지 스크롤해도 붙박이 막대가 본문을 덮지 않는가.
+   *
+   * 예전에는 페이지 끝으로 스크롤한 뒤 '마지막 도시 카드' 가 눌리는지 봤다.
+   * 그것은 **마지막 카드가 페이지의 맨 아래에 있다** 는 우연에 기댄 방식이라,
+   * 목록 아래에 칸을 하나 더 붙이자 카드가 화면 위(`y = -139`)로 밀려 나가
+   * 앱은 멀쩡한데 검사가 실패했다.
+   *
+   * 그렇다고 카드를 화면 안으로 끌어오면(`scrollIntoViewIfNeeded`) 이번에는
+   * 브라우저가 막대를 피해 스크롤해 버려 **막대를 200px 로 키워도 안 걸렸다.**
+   *
+   * 재려는 것은 '본문이 막대 아래로 들어가지 않는가' 이므로 그것을 그대로
+   * 잰다 — 페이지 끝에서 막대 윗변과 본문 아랫변의 거리. 음수면 겹친 것이다.
+   */
+  const gap = await page.evaluate(() => {
+    window.scrollTo(0, document.body.scrollHeight);
+    const bar = document.querySelector('.bottombar')?.getBoundingClientRect();
+    const main = document.querySelector('main')?.getBoundingClientRect();
+    return bar && main ? Math.round(bar.top - main.bottom) : NaN;
+  });
+  check('맨 아래까지 내려도 본문이 막대에 가리지 않는다', gap >= 0, `${gap}px`);
   await ctx.close();
 }
 
