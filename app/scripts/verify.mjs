@@ -67,7 +67,8 @@ const setValue = (el, v) => {
 };
 
 /** 한 여행을 1단계부터 끝까지 만든다. */
-async function build(page, { cities, from, to, airports, times, courses = true }) {
+/** @param stopAt 3 이면 3단계까지 간다. 2 를 주면 취향 화면에서 멈춘다. */
+async function build(page, { cities, from, to, airports, times, courses = true, stopAt = 3 }) {
   await page.goto(base, { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('.city-card', { timeout: 25000 });
   for (const [region, city] of cities) {
@@ -98,7 +99,9 @@ async function build(page, { cities, from, to, airports, times, courses = true }
     await page.getByRole('button', { name: /^(다음|계획 세우기|이 계획으로 진행)$/ }).click();
     await page.waitForTimeout(1300);
   };
-  await next(); await next();                       // → 3단계
+  await next();                                     // → 2단계
+  if (stopAt <= 2) return next;
+  await next();                                     // → 3단계
   if (courses) {
     await page.waitForSelector('.course', { timeout: 25000 });
     for (const head of await page.locator('main > .theme-group > .city-head > .theme-head').all()) {
@@ -1053,6 +1056,59 @@ console.log('\n■ 7. 3·4단계에서 직접 손보기 — 통합 목록 · 일
   await page.locator('.bulk-btn', { hasText: '보통' }).click(); await page.waitForTimeout(1300);
   check('다시 담으면 안내가 사라지고 열린다',
     (await page.locator('.bar-why').count()) === 0 && !(await goBtn.isDisabled()));
+  /*
+   * 3단계: '고민 중' 표시.
+   *
+   * 담지도 버리지도 않은 것을 붙잡아 두는 자리다. 담아 두면 계획 일수가
+   * 부풀고, 안 담으면 2천 개 목록에서 다시 찾아야 한다. 그래서 **어디에도
+   * 영향을 주지 않는** 표시를 따로 뒀다 — 그 '영향이 없다' 를 여기서 지킨다.
+   */
+  {
+    // 접힌 칸(묶음·필수) 안에도 같은 줄이 들어 있다. 화면에 보이는 것만 센다.
+    const daysBefore = await page.locator('.days-value').first().innerText();
+    const pickedBefore = await page.locator('.city-panel .item input[type=checkbox]:checked:visible').count();
+    check('3단계 줄마다 고민 중 표시가 있다', (await page.locator('.ponder-btn:visible').count()) > 0,
+      `${await page.locator('.ponder-btn:visible').count()}줄`);
+    /*
+     * **아직 담지 않은** 줄에서 눌러야 한다.
+     *
+     * 처음에는 그냥 첫 줄에서 눌렀는데, 그 줄이 이미 담긴 것이면 '담기에
+     * 영향을 준다' 는 고장이 화면에 드러나지 않는다 — 되돌려 시험해 보니
+     * 실제로 안 걸렸다. 안 담긴 줄을 눌러야 담김 개수가 움직이는 것이 보인다.
+     */
+    const btn = page.locator('.city-panel .item:visible')
+      .filter({ has: page.locator('input[type=checkbox]:not(:checked)') })
+      .locator('.ponder-btn').first();
+    check('아직 담지 않은 줄에서 시험한다', (await btn.count()) > 0);
+    await btn.click(); await page.waitForTimeout(500);
+    check('누르면 그 줄에 표시가 남는다', (await page.locator('.item.is-pondering:visible').count()) === 1,
+      `${await page.locator('.item.is-pondering:visible').count()}줄`);
+    check('담은 개수가 그대로다',
+      (await page.locator('.city-panel .item input[type=checkbox]:checked:visible').count()) === pickedBefore,
+      `${pickedBefore}곳`);
+    check('도시 일수가 그대로다',
+      (await page.locator('.days-value').first().innerText()) === daysBefore, daysBefore.replace(/\n/g, ' '));
+
+    const filter = page.locator('button', { hasText: /고민 중만 보기/ }).first();
+    check('고민 중만 보기가 생긴다', await filter.count() > 0);
+    await filter.click(); await page.waitForTimeout(600);
+    check('고민 중만 보기가 실제로 거른다',
+      (await page.locator('.city-panel .item:visible').count()) === 1,
+      `${await page.locator('.city-panel .item:visible').count()}줄`);
+    await page.locator('button', { hasText: '고민 중 해제' }).first().click();
+    await page.waitForTimeout(500);
+
+    // 새로고침해도 남아야 한다 — 표시해 두는 것이 목적이므로 사라지면 뜻이 없다.
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('main > .theme-group > .city-head > .theme-head', { timeout: 25000 });
+    const head = page.locator('main > .theme-group > .city-head > .theme-head').first();
+    if ((await head.getAttribute('aria-expanded')) !== 'true') { await head.click(); await page.waitForTimeout(700); }
+    await page.waitForSelector('.city-panel .item:visible', { timeout: 25000 });
+    check('새로고침해도 고민 중이 남는다',
+      (await page.locator('.item.is-pondering:visible').count()) === 1,
+      `${await page.locator('.item.is-pondering:visible').count()}줄`);
+  }
+
   await page.screenshot({ path: new URL('07-step3.png', shots).pathname, fullPage: true });
 
   /*
@@ -1117,11 +1173,69 @@ console.log('\n■ 7. 3·4단계에서 직접 손보기 — 통합 목록 · 일
     !(await page.locator('main').innerText()).includes(`${c0[c0.length - 1]} 일정`),
     c1.join(' · '));
   // 마지막 한 도시는 뺄 수 없어야 한다 — 여행이 없어진다.
+  /*
+   * 4단계: 구글 지도에 저장.
+   *
+   * 구글 지도의 '목록' 에는 한 번에 넣는 길이 없다(가져오기도 API 도 없다).
+   * 그래서 좌표가 박힌 링크를 일자 순서로 늘어놓는다 — 누르고 저장 두 번.
+   * 이름만으로 링크를 만들면 지도가 엉뚱한 곳을 찍으므로 **좌표**여야 한다.
+   */
+  {
+    const open = page.locator('button', { hasText: /구글 지도에 저장/ }).first();
+    check('4단계에 구글 지도에 저장이 있다', (await open.count()) > 0,
+      (await open.count()) ? await open.innerText() : '없음');
+    await open.click(); await page.waitForTimeout(500);
+    const links = await page.locator('.maps-save a').evaluateAll((els) => els.map((e) => e.href));
+    check('일정마다 지도 링크가 붙는다', links.length > 0, `${links.length}개`);
+    check('모두 구글 지도 주소다', links.every((h) => /google\.com\/maps/.test(h)),
+      links[0] ?? '');
+    check('이름이 아니라 좌표로 연다', links.every((h) => /query=-?\d+(\.\d+)?,-?\d+/.test(h)),
+      links.find((h) => !/query=-?\d+(\.\d+)?,-?\d+/.test(h)) ?? '전부 좌표');
+    const n = Number((await open.innerText()).match(/\((\d+)곳\)/)?.[1] ?? 0);
+    check('머리줄의 곳 수가 실제 줄 수와 같다', n === links.length, `${n} / ${links.length}`);
+  }
+
   await page.screenshot({ path: new URL('07-step4.png', shots).pathname, fullPage: true });
   await ctx.close();
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+console.log('\n■ 7-b. 2단계 — 아침 시작 시각이 30분 눈금인가');
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });
+  const page = await ctx.newPage();
+  watch(page, allErrors, '[아침]');
+  await page.goto(base, { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('.city-card', { timeout: 25000 });
+  await build(page, {
+    cities: [['마드리드', '마드리드']],
+    from: '2026-05-04', to: '2026-05-08',
+    airports: ['MAD', 'MAD'], times: ['15:00', '13:00'],
+    stopAt: 2,
+  });
+  /*
+   * 예전에는 08:00 · 09:30 · 11:00 세 칸뿐이었다. 간격이 1시간 30분이라
+   * '9시에 나선다' 를 고를 수가 없었다.
+   */
+  const details = page.locator('details.guide', { hasText: '세부 설정' }).first();
+  if ((await details.getAttribute('open')) === null) { await details.click(); await page.waitForTimeout(400); }
+  const sel = page.locator('select[aria-label="하루 시작 시각"]');
+  check('하루 시작 시각을 고르는 자리가 있다', (await sel.count()) === 1);
+  const opts = await sel.locator('option').allInnerTexts();
+  check('30분 눈금이다', opts.length >= 10 && opts.includes('09:00') && opts.includes('09:30'),
+    `${opts.length}칸 · ${opts.slice(0, 4).join(' ')} … ${opts[opts.length - 1]}`);
+  const hintOf = async () => (await page.locator('label.field', { hasText: '숙소에서 나서는' }).innerText());
+  await sel.selectOption(String(9 * 60));
+  await page.waitForTimeout(400);
+  const at9 = await hintOf();
+  await sel.selectOption(String(10 * 60));
+  await page.waitForTimeout(400);
+  const at10 = await hintOf();
+  check('30분을 옮기면 하루 활동 시간이 실제로 달라진다', at9 !== at10,
+    `${at9.replace(/\n/g, ' ')} ↔ ${at10.replace(/\n/g, ' ')}`);
+  await ctx.close();
+}
+
 console.log('\n■ 8. 고장났을 때 — 하얀 화면 대신 빠져나갈 길');
 {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 900 } });

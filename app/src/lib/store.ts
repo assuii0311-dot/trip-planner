@@ -1,6 +1,7 @@
 import type { Basics, Preferences, Priorities, ThemeId, TripState } from '../types';
 import { AIRPORTS } from './airports';
 import { addDays, todayISO } from './caldate';
+import { DAY_START_DEFAULT, clampDayStart } from './capacity';
 
 /**
  * 저장 자리는 나라마다 따로다.
@@ -58,7 +59,7 @@ export function defaultState(): TripState {
     themes: { ...DEFAULT_THEMES },
     pace: 3,
     budget: 'mid',
-    dayStart: 'normal',
+    dayStart: DAY_START_DEFAULT,
     nightlife: 1,
     discovery: 2,
     walkTolerance: 3,
@@ -69,7 +70,7 @@ export function defaultState(): TripState {
     transport: ['walk', 'metro'],
     dayTripAppetite: 2,
   };
-  return { version: 2, step: 1, basics, prefs, priorities: {}, chosenPlan: null, savedPlans: [], baseOverrides: {}, courses: {}, modePicks: {}, lodging: {}, cityOrder: [], cityDays: {}, dayOrder: {}, moveTiming: {} };
+  return { version: 2, step: 1, basics, prefs, priorities: {}, chosenPlan: null, savedPlans: [], baseOverrides: {}, courses: {}, modePicks: {}, lodging: {}, cityOrder: [], cityDays: {}, dayOrder: {}, moveTiming: {}, pondering: {} };
 }
 
 /**
@@ -88,6 +89,18 @@ export function defaultState(): TripState {
 function airportForCity(slug: string | null | undefined): string | null {
   if (!slug) return null;
   return AIRPORTS.find((a) => a.city === slug)?.iata ?? null;
+}
+
+/**
+ * 아침 시작 시각이 세 칸(`early`·`normal`·`late`)에서 분 단위로 바뀌었다.
+ * 예전 값을 그때 뜻하던 시각으로 옮긴다 — 취향은 다시 물어보지 않는다.
+ */
+const LEGACY_DAY_START: Record<string, number> = { early: 8 * 60, normal: 9 * 60 + 30, late: 11 * 60 };
+
+function dayStartOf(v: unknown): number {
+  if (typeof v === 'number' && Number.isFinite(v)) return clampDayStart(v);
+  if (typeof v === 'string' && v in LEGACY_DAY_START) return LEGACY_DAY_START[v];
+  return DAY_START_DEFAULT;
 }
 
 function migrate(parsed: TripState): TripState {
@@ -109,8 +122,15 @@ function migrate(parsed: TripState): TripState {
       arrivalTime: parsed.basics?.arrivalTime ?? null,
       departureTime: parsed.basics?.departureTime ?? null,
     },
-    prefs: { ...base.prefs, ...parsed.prefs, themes: { ...base.prefs.themes, ...parsed.prefs?.themes } },
+    prefs: {
+      ...base.prefs,
+      ...parsed.prefs,
+      themes: { ...base.prefs.themes, ...parsed.prefs?.themes },
+      dayStart: dayStartOf(parsed.prefs?.dayStart),
+    },
     priorities: parsed.priorities ?? {},
+    // 표시일 뿐이라 잃어도 계획은 멀쩡하지만, 굳이 버릴 이유도 없다.
+    pondering: parsed.pondering ?? {},
     /*
      * 코스 id 가 테마 강조(balanced/focusA/focusB)에서 분량(full/normal/
      * taste)으로 바뀌었다. 옛 id 는 뜻이 대응되지 않으므로 버린다 —

@@ -16,7 +16,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { buildItinerary } from '../src/lib/itinerary.ts';
-import { isMeal, itemMinutes, dailyMinutes } from '../src/lib/capacity.ts';
+import { isMeal, itemMinutes, dailyMinutes, clampDayStart, DAY_START_DEFAULT } from '../src/lib/capacity.ts';
 import { rankAll, RANK_FLOOR } from '../src/lib/rank.ts';
 import { buildPlans } from '../src/lib/planner.ts';
 import { setIslandRail } from '../src/lib/routing.ts';
@@ -35,7 +35,7 @@ const itemsOf = (slug) => {
 };
 const prefs = {
   themes: { history: 2, art: 2, landmark: 2, nature: 2, food: 2, nightlife: 1, activity: 1, shopping: 1 },
-  pace: 3, budget: 'mid', dayStart: 'normal', nightlife: 1, discovery: 2, walkTolerance: 3,
+  pace: 3, budget: 'mid', dayStart: 570, nightlife: 1, discovery: 2, walkTolerance: 3,
   companion: 'couple', foodStyles: [], mobility: 'normal', photo: 2,
   transport: ['walk', 'metro'], dayTripAppetite: 2,
 };
@@ -400,6 +400,36 @@ console.log('\n=== 타는 구간에 모두 안내가 있는가 ===');
   check(`${runs3}가지 조합에서 안내가 같은 것을 담는다`, thin === 0, `${thin}가지`);
   check(`${runs3}가지 조합에서 근교에 오는 편이 적힌다`, back === 0, `${back}가지`);
   check(`${runs3}가지 조합에서 근교 도착 전 일정이 없다`, early === 0, `${early}가지`);
+}
+
+/* ── 아침 시작 시각이 30분 눈금으로 갈리는가 ─────────────────────── */
+console.log('\n=== 아침 시작 시각 ===');
+{
+  /*
+   * 예전에는 08:00 · 09:30 · 11:00 세 칸뿐이었다. 간격이 1시간 30분이라
+   * '9시에 나선다' 를 고를 수 없었다. 30분 눈금으로 바꾸면서 지켜야 할 것:
+   *
+   *  1. 예전에 고를 수 있던 세 값에서는 **답이 그대로**여야 한다
+   *  2. 30분마다 실제로 달라져야 한다 — 눈금만 늘고 계산이 같으면 뜻이 없다
+   *  3. 예전 글자값이 들어와도 NaN 이 되면 안 된다. 하루 활동 시간이 NaN 이
+   *     되면 계획이 조용히 빈다
+   */
+  const hours = (m) => dailyMinutes({ ...prefs, dayStart: m });
+  for (const [min, want, label] of [[8 * 60, 540, '08:00'], [9 * 60 + 30, 480, '09:30'], [11 * 60, 390, '11:00']]) {
+    // pace 3 이면 계수가 1.05 다. 예전 세 칸의 기준값과 같은지 본다.
+    const got = Math.round(want * 1.05);
+    check(`${label} 은 예전과 같은 하루 활동`, hours(min) === got, `${hours(min)}분 (예전 ${got}분)`);
+  }
+  const steps = [];
+  for (let m = 6 * 60; m <= 11 * 60 + 30; m += 30) steps.push(hours(m));
+  const strictlyDown = steps.every((v, i) => i === 0 || v < steps[i - 1]);
+  check('30분마다 하루 활동이 실제로 줄어든다', strictlyDown, `${steps[0]}분 → ${steps[steps.length - 1]}분 · ${steps.length}칸`);
+  check('예전 글자값이 들어와도 계산이 깨지지 않는다',
+    Number.isFinite(dailyMinutes({ ...prefs, dayStart: 'normal' })) && clampDayStart('normal') === DAY_START_DEFAULT,
+    `'normal' → ${clampDayStart('normal')}분`);
+  check('눈금을 벗어난 값은 범위 안으로 당겨진다',
+    clampDayStart(3 * 60) === 6 * 60 && clampDayStart(23 * 60) === 11 * 60 + 30 && clampDayStart(9 * 60 + 20) === 9 * 60 + 30,
+    `03:00→${clampDayStart(180)} · 23:00→${clampDayStart(1380)} · 09:20→${clampDayStart(560)}`);
 }
 
 const failed = results.filter((r) => !r.ok);

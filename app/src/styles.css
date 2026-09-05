@@ -1529,3 +1529,32 @@ a.pick:active { transform: none; }
   color: var(--accent); font-weight: 600; text-decoration: none;
 }
 .primary-link:hover, .primary-link:focus-visible { text-decoration: underline; }
+
+/*
+  고민 중 — 담지도 버리지도 않은 것의 표시.
+
+  담기와 헷갈리면 안 되므로 체크박스 자리에는 넣지 않고, 줄 왼쪽에 띠만
+  둔다. 손가락으로 누르는 것이라 44px 를 확보한다(안드로이드 검사가 본다).
+*/
+/* 왼쪽 띠는 inset 그림자로 그린다. border 로 그리면 줄 전체가 3px 밀린다. */
+.item.is-pondering { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.ponder-btn {
+  border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+  cursor: pointer; font-family: inherit;
+  min-height: 44px; padding: 0 12px; margin: -11px 0;
+}
+.ponder-btn.is-on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* 구글 지도 저장 목록 — 손가락으로 연달아 누르는 줄이라 44px 를 준다. */
+.maps-save { list-style: none; margin: 0; padding: 0; }
+.maps-save li {
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.maps-save li:last-child { border-bottom: none; }
+.maps-save .t { font-size: 12px; color: var(--muted); width: 44px; flex: none; }
+.maps-save a {
+  flex: 1; min-height: 44px; display: flex; align-items: center;
+  font-size: 14px; color: var(--text); text-decoration: none;
+}
+.maps-save a:active { color: var(--accent); }

@@ -28,7 +28,7 @@ export function ItemMeta({ item, badge }: { item: Item; badge?: string }) {
  * 체크를 풀면 0(제외)이 되어 계획에서 빠진다.
  */
 export function ItemRow({
-  item, city, priorities, onSet, selectable, badge,
+  item, city, priorities, onSet, selectable, badge, pondering, onPonder,
 }: {
   item: Item;
   city?: City;
@@ -37,10 +37,14 @@ export function ItemRow({
   selectable: boolean;
   /** 줄마다 붙이는 구분자. 테마별 접힌 칸을 없앤 대신 여기에 표기한다. */
   badge?: string;
+  /** '고민 중' 으로 표시해 뒀는가. 표시일 뿐 계획에는 영향이 없다. */
+  pondering?: boolean;
+  /** 없으면 토글을 그리지 않는다(4·5단계처럼 고를 자리가 아닌 화면). */
+  onPonder?: (id: string) => void;
 }) {
   const star = priorities[item.id] ?? 0;
   return (
-    <div className="item">
+    <div className={pondering ? 'item is-pondering' : 'item'}>
       {selectable ? (
         <input
           type="checkbox"
@@ -85,7 +89,22 @@ export function ItemRow({
           </div>
         )}
         <div style={{ marginTop: 8 }}>
-          <a className="tag" style={{ textDecoration: 'none' }} href={mapsPlaceUrl(item, city)} target="_blank" rel="noreferrer">
+          {/*
+            고민 중 — 담지도 버리지도 않은 것을 붙잡아 두는 자리.
+            담아 두면 계획 일수가 부풀고, 안 담으면 2천 개 목록에서 다시
+            찾아야 한다. 그래서 **어디에도 영향을 주지 않는 표시**를 따로 둔다.
+          */}
+          {onPonder && (
+            <button
+              type="button"
+              className={pondering ? 'tag ponder-btn is-on' : 'tag ponder-btn'}
+              aria-pressed={pondering ?? false}
+              onClick={() => onPonder(item.id)}
+            >
+              {pondering ? '🤔 고민 중' : '고민 중으로 표시'}
+            </button>
+          )}
+          <a className="tag" style={{ textDecoration: 'none', marginLeft: onPonder ? 6 : 0 }} href={mapsPlaceUrl(item, city)} target="_blank" rel="noreferrer">
             지도에서 보기 ↗
           </a>
           {/* 후기 본문은 저장하지 않는다. 저작권·약관 때문이기도 하고,

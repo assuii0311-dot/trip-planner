@@ -207,6 +207,19 @@ export default function App() {
     });
   const setPriorities = (next: Priorities) => setState((s) => ({ ...s, priorities: next }));
 
+  /**
+   * '고민 중' 표시를 켜고 끈다.
+   *
+   * 담기(`priorities`)와 완전히 따로 둔다 — 이 값은 순위·계획·일수 어디에도
+   * 들어가지 않는다. 담을지 정하지 못한 것을 2천 개 목록에서 다시 찾지
+   * 않아도 되게 붙잡아 두는 것이 전부다.
+   */
+  const togglePonder = (id: string) => setState((s) => {
+    const next = { ...(s.pondering ?? {}) };
+    if (next[id]) delete next[id]; else next[id] = true;
+    return { ...s, pondering: next };
+  });
+
   const goto = (step: number) => {
     mark(`단계 이동 → ${step}`);
     setState((s) => {
@@ -672,6 +685,7 @@ export default function App() {
                 usableDays={airportWindow?.usableDays}
                 firstDayStart={airportWindow?.firstDayStart ?? null}
                 ui={state.ui ?? {}}
+                pondering={state.pondering ?? {}} onPonder={togglePonder}
                 onSet={setPriority} onBulk={setPriorities} onCourse={chooseCourse}
                 onDays={setCityDays} onDropCity={dropCity}
                 onCourseAll={(next) => setState((st) => ({

@@ -17,7 +17,7 @@ setIslandRail(idx.islands ?? []);
 const cities = idx.cities;
 const itemsOf = (s) => { try { return JSON.parse(readFileSync(here(`../public/data/spain/cities/${s}.json`), 'utf8')); } catch { return []; } };
 const prefs = { themes:{history:2,art:2,landmark:2,nature:2,food:2,nightlife:1,activity:1,shopping:1},
-  pace:3,budget:'mid',dayStart:'normal',nightlife:1,discovery:2,walkTolerance:3,companion:'couple',
+  pace:3,budget:'mid',dayStart:570,nightlife:1,discovery:2,walkTolerance:3,companion:'couple',
   foodStyles:[],mobility:'normal',photo:2,transport:['walk','metro'],dayTripAppetite:2 };
 const BUDGET = dailyMinutes(prefs);
 const name = (s) => cities.find((c) => c.slug === s)?.name ?? s;

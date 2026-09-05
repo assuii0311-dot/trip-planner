@@ -37,7 +37,7 @@ function randomPrefs(r: () => number, themes: Record<ThemeId, number>): Preferen
     themes,
     pace: 1 + Math.floor(r() * 5),
     budget: pick(['low', 'mid', 'high'] as const, r),
-    dayStart: pick(['early', 'normal', 'late'] as const, r),
+    dayStart: pick([480, 570, 660] as const, r),
     nightlife: Math.floor(r() * 4),
     discovery: Math.floor(r() * 4),
     walkTolerance: 1 + Math.floor(r() * 5),

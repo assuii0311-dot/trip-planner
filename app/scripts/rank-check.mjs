@@ -12,7 +12,7 @@ const { coursesFor, cityWorthDays } = await import('../src/lib/course.ts');
 const { estimateDays, isMeal } = await import('../src/lib/capacity.ts');
 const { inferThemes } = await import('../src/lib/taste.ts');
 
-const base = { pace: 3, budget: 'mid', dayStart: 'normal', nightlife: 1, discovery: 2,
+const base = { pace: 3, budget: 'mid', dayStart: 570, nightlife: 1, discovery: 2,
   walkTolerance: 3, companion: 'couple', foodStyles: [], mobility: 'normal',
   photo: 2, transport: ['walk', 'metro'], dayTripAppetite: 2 };
 

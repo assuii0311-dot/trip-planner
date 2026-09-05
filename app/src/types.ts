@@ -197,7 +197,14 @@ export interface Preferences {
   themes: Record<ThemeId, number>;
   pace: number;
   budget: Budget;
-  dayStart: 'early' | 'normal' | 'late';
+  /**
+   * 하루를 시작하는 시각(0시부터의 분). 30분 눈금.
+   *
+   * 예전에는 `'early' | 'normal' | 'late'` 세 칸이었다. 08:00 · 09:30 ·
+   * 11:00 뿐이라 '9시에 나선다' 를 고를 수가 없었다 — 세 칸의 간격이
+   * 1시간 30분이라 어느 쪽을 골라도 실제와 한 시간 가까이 어긋났다.
+   */
+  dayStart: number;
   nightlife: number;
   discovery: number;
   walkTolerance: number;
@@ -348,6 +355,16 @@ export interface TripState {
    * 특수한 사정(예약 시각, 누구와 만나기로 한 시각)은 앱이 알 수 없다.
    */
   dayOrder: Record<string, string[]>;
+  /**
+   * 3단계에서 '고민 중' 으로 표시해 둔 것.
+   *
+   * **아무 데도 영향을 주지 않는다.** 순위·계획·일수 어디에도 들어가지
+   * 않고, 목록에서 다시 찾기 위한 표시일 뿐이다. 담을지 말지 정하지 못한
+   * 것을 붙잡아 두는 자리다 — 담아 두면 계획이 부풀고, 안 담으면 2천 개
+   * 목록에서 다시 찾아야 한다.
+   */
+  pondering?: Record<string, true>;
+
   /**
    * 사용자가 정한 도시 간 이동 시점. `"출발도시>도착도시"` → 아침/오후/저녁.
    * 비어 있으면 규칙대로 자동으로 고른다.
