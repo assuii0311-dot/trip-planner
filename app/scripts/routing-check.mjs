@@ -185,5 +185,68 @@ console.log('\n=== 축이 달라도 고속철 환승이 후보로 나오는가 =
   }
 }
 
+/* ── 전 구간 훑기: 고른 편이 정말 최선인가 ───────────────────────── */
+/*
+ * 두 번 같은 모양으로 틀렸다.
+ *
+ *   그라나다 → 지로나 : 렌터카 10시간 52분  (후보를 못 만들어서)
+ *   말라가  → 그라나다 : 09:30 출발 18:15 도착 (고르는 숫자가 대기를 빼서)
+ *
+ * 원인은 달랐지만 증상은 같다 — 아침에 나서 저녁에 닿는 안을 '가장 빠른
+ * 것' 이라 부르고 화면에 올렸다. 한 구간씩 알려질 때마다 고치면 세 번째가
+ * 온다. 그래서 구간을 하나씩 보지 않고 **전부** 본다.
+ *
+ * 지키는 것 하나: 어느 구간, 어느 시각에 나서든, 앱이 고른 편이 그때 갈 수
+ * 있는 가장 이른 도착보다 크게 늦지 않는다. 렌터카는 언제든 떠날 수 있으므로
+ * 이 한 줄이 '몇 시간을 역에서 기다리는 안' 과 '하루를 차 안에서 보내는 안'
+ * 을 둘 다 막는다.
+ */
+console.log('\n=== 전 구간 훑기 — 고른 편이 그때의 최선과 얼마나 벌어지는가 ===');
+{
+  const { bestFrom } = await import('../src/lib/routing.ts');
+  /** 근교 규칙(렌터카를 되도록 피함)이 허용하는 여유. routing.ts 의 AVOID_MARGIN. */
+  const SLACK = 30;
+  const READY = [7 * 60, 9 * 60 + 30, 12 * 60, 15 * 60 + 30, 19 * 60];
+  const slugs = index.cities.map((c) => c.slug);
+
+  let n = 0;
+  const off = [];   // 최선과 벌어진 경우
+  for (const a of slugs) {
+    for (const b of slugs) {
+      if (a === b) continue;
+      const svc = servicesBetween(city(a), city(b));
+      for (const ready of READY) {
+        const runs = svc.map((x) => nextDeparture(x, ready)).filter(Boolean);
+        if (!runs.length) continue;
+        const best = runs.reduce((p, q) => (q.arriveAt < p.arriveAt ? q : p));
+        // 앱이 실제로 쓰는 두 규칙 그대로.
+        for (const [rule, picked] of [
+          ['이동', bestFrom(svc, ready)],
+          ['근교', bestFrom(svc, ready, { avoid: 'car' })],
+        ]) {
+          if (!picked) continue;
+          const d = nextDeparture(picked, ready);
+          if (!d) continue;
+          n++;
+          const gap = d.arriveAt - best.arriveAt;
+          const limit = rule === '근교' ? SLACK : 0;
+          if (gap > limit) {
+            off.push({ a, b, ready, rule, gap, picked: picked.label, best: best.service.label });
+          }
+        }
+      }
+    }
+  }
+  off.sort((x, y) => y.gap - x.gap);
+  const worst = off.length ? off[0].gap : 0;
+  console.log(`  ${n}가지 (구간 × 나서는 시각 × 규칙) 확인 · 한도를 넘은 것 ${off.length}건 · 가장 벌어진 것 ${worst}분`);
+  for (const o of off.slice(0, 8)) {
+    console.log(`    ✗ ${city(o.a).name}→${city(o.b).name} ${fmtHm(o.ready)} 나섬 [${o.rule}]`
+      + ` — 고른 것 ${o.picked} 가 최선(${o.best})보다 ${fmtDur(o.gap)} 늦다`);
+  }
+  if (off.length) bad += off.length;
+  else console.log('  ✓ 어느 구간도 최선보다 크게 늦은 편을 고르지 않는다');
+}
+
 console.log(bad ? `\n✗ ${bad}건 어긋남` : '\n✓ 교통 엔진 정상');
 process.exit(bad ? 1 : 0);

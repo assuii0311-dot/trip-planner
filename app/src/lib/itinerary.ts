@@ -1,7 +1,7 @@
 import type { City, Item, Preferences } from '../types';
 import type { Service } from './routing';
-import { fastest, servicesBetween } from './routing';
-import { estimateDays } from './capacity';
+import { bestFrom, fastest, nextDeparture, servicesBetween } from './routing';
+import { clampDayStart, estimateDays } from './capacity';
 import { chooseBases, explainBase, DAY_TRIP_MAX_MIN } from './basecity';
 
 /**
@@ -44,8 +44,16 @@ export interface Hop {
   to: City;
   /** 시간 효율 순 대안. 첫 번째가 기본. */
   options: Service[];
-  /** 사용자가 고른 수단. 없으면 options[0]. */
+  /** 사용자가 고른 수단. 없으면 그 시각에 가장 일찍 닿는 것. */
   chosen: Service;
+  /**
+   * 나서서 닿을 때까지 실제로 드는 시간(분) — **대기 포함**.
+   *
+   * 예전에는 날 계산이 `chosen.totalMin` 을 썼다. 그것은 대기를 뺀 값이라,
+   * 하루 세 편뿐인 구간을 '2시간 7분' 으로 세어 놓고 화면에는 8시간 45분
+   * 이라고 적었다. 세는 숫자와 보여 주는 숫자가 같아야 한다.
+   */
+  doorToDoorMin: number;
 }
 
 export interface Itinerary {
@@ -239,11 +247,37 @@ export function assignLodging(
   const isBase = new Set(bases.map((b) => b.slug));
   const nameOf = (slug: string) => ordered.find((c) => c.slug === slug)?.name ?? slug;
 
-  /** 근교에 무엇을 타고 가는가. 고른 것이 있으면 그것, 없으면 가장 빠른 편. */
-  const dayTripService = (city: City, home: City, m?: { minutes: number; mode: string }) => {
-    const list = servicesBetween(city, home, m, weekday);
+  /**
+   * 근교 왕복에 드는 시간.
+   *
+   * ## 방향을 지킨다 — 이것이 고친 것
+   *
+   * 가는 길과 오는 길은 방향이 다르고, 실제 시간표도 다르다. 예전에는
+   * `servicesBetween(city, home)` — 실은 **오는** 방향 하나만 만들어 놓고
+   * `totalMin * 2` 로 셌다. 어림 배차만 쓰던 때는 두 방향이 같은 값이라
+   * 티가 나지 않았지만, 실제 시간표를 보게 된 뒤로는 다른 값이 된다.
+   * 그라나다↔세비야가 오는 쪽 3시간 25분, 가는 쪽 3시간 35분이다.
+   *
+   * ## 여기서는 대기를 넣지 않는다 — 알면서 두는 것
+   *
+   * 이 숫자는 '몇 시에 나서는 하루' 가 아니라 **그 근교가 왕복 얼마짜리인가**
+   * 이다. 당일치기가 될 만한 거리인지 재고(`DAY_TRIP_MAX_MIN`), 하루 예산에
+   * 들어가는지 보는 데 쓴다. 그리고 이 앱의 하루 모델은 이 값을 **절반씩
+   * 나눠** 네 군데에 쓴다(`roundTripMin / 2`). 한쪽 대기만 얹으면 그 절반이
+   * 반대 방향 시간으로도 새어 든다.
+   *
+   * 화면에 뜨는 출발·도착 시각은 `planner` 가 실제 시간표로 따로 계산한다
+   * (`bestFrom` · `nextDeparture`). 그래서 이 어림이 시각을 틀리게 하지
+   * 않는다. 대기를 예산에까지 반영하려면 왕복을 반으로 접지 말고 가는 편·
+   * 오는 편을 따로 들고 다녀야 하는데, 그건 하루 모델을 바꾸는 일이다.
+   */
+  const dayTripRound = (city: City, home: City, m?: { minutes: number; mode: string }) => {
     const wanted = picks[`${home.slug}>${city.slug}`] ?? picks[`${city.slug}>${home.slug}`];
-    return list.find((o) => o.mode === wanted) ?? list[0] ?? fastest(city, home, m);
+    const outList = servicesBetween(home, city, m, weekday);
+    const out = outList.find((o) => o.mode === wanted) ?? outList[0] ?? fastest(home, city, m);
+    const backList = servicesBetween(city, home, m, weekday);
+    const back = backList.find((o) => o.mode === out.mode) ?? backList[0] ?? out;
+    return Math.round(out.totalMin + back.totalMin);
   };
 
   const stops: Stop[] = ordered.map((city) => {
@@ -263,8 +297,8 @@ export function assignLodging(
        * 바꿔도 왕복 시간이 그대로였고, 화면이 말하는 것과 계산이 어긋났다.
        */
       dayTripMin: base
-        ? Math.round(dayTripService(city, ordered.find((c) => c.slug === base)!,
-          measured.get(mkey(city.slug, base))).totalMin * 2)
+        ? dayTripRound(city, ordered.find((c) => c.slug === base)!,
+          measured.get(mkey(city.slug, base)))
         : 0,
       why: sc ? explainBase(sc, sleep, base ? nameOf(base) : undefined) : '',
     };
@@ -290,6 +324,8 @@ export function buildHops(
   returnTo?: City,
   /** 0=일요일. 주면 그 요일에 실제로 다니는 편만 본다. */
   weekday: number | null = null,
+  /** 아침에 나서는 시각(분). 대기까지 넣어 고르려면 필요하다. */
+  readyAt: number = 9 * 60 + 30,
 ): Hop[] {
   const sleeping = stops.filter((s) => s.sleep).map((s) => s.city);
   if (returnTo && sleeping.length && sleeping[sleeping.length - 1].slug !== returnTo.slug) {
@@ -301,8 +337,17 @@ export function buildHops(
     const to = sleeping[i];
     const options = servicesBetween(from, to, measured.get(mkey(from.slug, to.slug)), weekday);
     const wanted = picks[`${from.slug}>${to.slug}`];
-    const chosen = options.find((o) => o.mode === wanted) ?? options[0];
-    hops.push({ from, to, options, chosen });
+    /*
+     * 대기까지 넣어 고른다. `options[0]` 은 대기를 뺀 순서의 첫 번째라,
+     * 편이 드문 구간에서 몇 시간을 역에서 보내는 안을 '가장 빠른 것' 이라
+     * 부르곤 했다.
+     */
+    const chosen = bestFrom(options, readyAt, { prefer: wanted }) ?? options[0];
+    const dep = nextDeparture(chosen, readyAt);
+    hops.push({
+      from, to, options, chosen,
+      doorToDoorMin: dep ? dep.doorToDoorMin : chosen.totalMin,
+    });
   }
   return hops;
 }
@@ -367,6 +412,11 @@ export function buildItinerary(
    * 렌터카 2시간 26분 구간이 생긴다. 실제로는 둘 다 마드리드에서 다녀온다.
    * 거점을 먼저 정하면 그런 구간이 아예 만들어지지 않는다.
    */
+  /*
+   * 편을 고를 때 쓰는 '나서는 시각'. 사용자가 정한 하루 시작 시각이다.
+   * 늦게 나서는 사람은 아침 편을 놓치므로, 고르는 것 자체가 달라진다.
+   */
+  const readyAt = clampDayStart(prefs.dayStart);
   const placed = assignLodging(cities, itemDaysOf, measured, opts.lodging, [startSlug, endSlug],
     opts.picks ?? {}, opts.weekday ?? null);
   const baseCities = placed.filter((s) => s.sleep).map((s) => s.city);
@@ -392,11 +442,11 @@ export function buildItinerary(
   const back = startSlug && startSlug === endSlug
     ? ordered.find((c) => c.slug === startSlug)
     : undefined;
-  const hops = buildHops(stops, measured, opts.picks, back, opts.weekday ?? null);
+  const hops = buildHops(stops, measured, opts.picks, back, opts.weekday ?? null, readyAt);
 
-  const transitMin = hops.reduce((a, h) => a + h.chosen.totalMin, 0);
+  const transitMin = hops.reduce((a, h) => a + h.doorToDoorMin, 0);
   const travelDays = hops.reduce((a, h) => (
-    a + (h.chosen.totalMin >= 480 ? 1 : h.chosen.totalMin >= 240 ? 0.5 : 0)
+    a + (h.doorToDoorMin >= 480 ? 1 : h.doorToDoorMin >= 240 ? 0.5 : 0)
   ), 0);
   const stayDays = stops.reduce((a, s) => a + (s.sleep ? s.itemDays : Math.max(s.itemDays, 1)), 0);
 

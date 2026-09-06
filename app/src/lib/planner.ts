@@ -1,7 +1,7 @@
 import type { Item, Plan, PlanDay, PlanEntry, PlanStyle, PlanTravel, Preferences, Priorities, Slot, ThemeId, TravelOption } from '../types';
 import type { Itinerary } from './itinerary';
 import type { Service } from './routing';
-import { MODE_ICON, nextDeparture, servicesBetween } from './routing';
+import { bestFrom, MODE_ICON, nextDeparture, servicesBetween } from './routing';
 import { rankItems } from './scoring';
 import { clampDayStart, dailyMinutes, isMeal, itemMinutes } from './capacity';
 import { GRACE_MIN, packDays, type MoveTiming, type PackedDay } from './daypack';
@@ -259,9 +259,41 @@ function buildDay(
    * 근교에서 거점으로 돌아오는 편. 저녁을 먹으러 돌아오는 자리에 붙어 있다.
    * 예전에는 이 시각이 화면 어디에도 없어, 몇 시 차를 타야 하는지 알 수 없었다.
    */
-  const home = entries.find((e) => e.returnLeg);
-  if (home && trip) {
-    trip.back = { leaveAt: home.startMin - home.travelMin, arriveAt: home.startMin };
+  if (trip) {
+    const daySeg = segments.find((x) => x.isDayTrip);
+    const half = Math.round((daySeg?.roundTripMin ?? 0) / 2);
+    const home = entries.find((e) => e.returnLeg);
+    /*
+     * 몇 시에 근교를 뜨려 하는가.
+     *
+     * 거점에서 저녁을 먹는 날은 그 자리에 맞춘다. 거점 일정이 하나도 안
+     * 잡힌 날 — 저녁·밤 후보가 비어 `continue` 로 넘어간 날 — 은 그날
+     * 마지막 일정이 끝나는 대로다. 예전에는 이 두 번째 경우에 `back` 이
+     * 통째로 비었다. 돌아오지 않는 것이 아닌데 화면에는 오는 편이 없었다.
+     */
+    const last = entries.length
+      ? entries[entries.length - 1].startMin + entries[entries.length - 1].item.durationMin
+      : trip.arriveAt;
+    const wantLeave = home ? home.startMin - home.travelMin : last;
+
+    /*
+     * 그 시각에 실제로 떠나는 편을 찾는다. 가는 편과 같은 수단을 먼저 보고,
+     * 막차가 끊겼으면 그때 남아 있는 것 중 가장 일찍 닿는 것으로 돌아온다.
+     * 수단이 달라지면 이름을 함께 적는다 — 없는 열차를 타러 가지 않도록.
+     */
+    const opts = slot.backOptions ?? [];
+    const same = opts.find((o) => o.mode === trip.chosen.mode);
+    const pick = (same && nextDeparture(same, wantLeave) ? same : null)
+      ?? bestFrom(opts, wantLeave) ?? null;
+    const d = pick ? nextDeparture(pick, wantLeave) : null;
+    trip.back = d
+      ? {
+        leaveAt: d.leaveAt,
+        arriveAt: d.arriveAt,
+        ...(pick && pick.mode !== trip.chosen.mode ? { label: pick.label } : {}),
+      }
+      // 시간표를 모르는 구간은 조사해 둔 왕복 시간의 절반으로 어림한다.
+      : { leaveAt: wantLeave, arriveAt: wantLeave + half };
   }
 
   return {
@@ -351,6 +383,14 @@ export interface DayPlanSlot {
   returnAfter: 'afternoon' | 'dinner';
   /** 근교를 다녀오는 날 무엇을 타고 가는가. */
   dayTripMode?: { icon: string; label: string; minutes: number };
+  /**
+   * 근교에서 거점으로 **돌아오는** 편의 후보들.
+   *
+   * 가는 편과 같은 목록이 아니다. 방향마다 시간표가 다르고, 저녁에는 이미
+   * 막차가 끊긴 수단이 있다. 예전에는 돌아오는 시각을 왕복 시간의 절반으로
+   * 어림해 적었다 — 가는 편은 실제 시간표를 보면서 오는 편은 지어냈다.
+   */
+  backOptions?: Service[];
 }
 
 const toOption = (s: Service): TravelOption => ({
@@ -431,15 +471,22 @@ export function scheduleFromItinerary(
       const readyAt = m.timing === 'evening' ? 19 * 60
         : m.timing === 'midday' ? 15 * 60 + 30
           : dayStartMin;
-      const dep = nextDeparture(hop.chosen, readyAt);
+      /*
+       * 시점을 바꾸면 탈 수 있는 편이 달라진다. 아침에 가장 빠른 수단이
+       * 저녁에도 그렇다는 법이 없다 — 하루 세 편짜리 구간이라면 특히.
+       * 그러므로 그 시각으로 다시 고른다. 사용자가 고른 수단은 그대로 둔다.
+       */
+      const chosen = bestFrom(hop.options, readyAt,
+        { prefer: pickOf(`${hop.from.slug}>${hop.to.slug}`) }) ?? hop.chosen;
+      const dep = nextDeparture(chosen, readyAt);
       const alive = hop.options.filter((o) => nextDeparture(o, readyAt) !== null);
       travels.push({
         from: hop.from.slug,
         to: hop.to.slug,
-        chosen: toOption(hop.chosen),
+        chosen: toOption(chosen),
         leaveAt: dep?.leaveAt ?? readyAt,
         departAt: dep?.departAt ?? readyAt,
-        arriveAt: dep?.arriveAt ?? readyAt + hop.chosen.totalMin,
+        arriveAt: dep?.arriveAt ?? readyAt + chosen.totalMin,
         waitMin: dep?.waitMin ?? 0,
         options: alive.map(toOption),
         unavailable: hop.options.filter((o) => !alive.includes(o)).map((o) => o.label),
@@ -451,6 +498,7 @@ export function scheduleFromItinerary(
 
     const trip = segments.find((x) => x.isDayTrip);
     let ride: Service | undefined;
+    let backOptions: Service[] | undefined;
     if (trip && trip.base) {
       const from = cityOf.get(trip.base);
       const to = cityOf.get(trip.city);
@@ -461,7 +509,17 @@ export function scheduleFromItinerary(
          */
         const svc = servicesBetween(from, to, undefined, weekday);
         const wanted = pickOf(`${trip.base}>${trip.city}`);
-        ride = svc.find((o) => o.mode === wanted) ?? svc.find((x) => x.mode !== 'car') ?? svc[0];
+        /*
+         * 예전에는 `svc.find((x) => x.mode !== 'car')` 였다. 짐을 두고 다녀오는
+         * 길이라 렌터카를 밀지 않겠다는 뜻이었는데, 그 '무조건' 이 말라가 →
+         * 그라나다에서 09:30 에 나서 18:15 에 닿는 안을 골랐다 — 하루 세 편뿐인
+         * AVANT 를 6시간 38분 기다리는 안이었다. 렌터카·버스·일반열차는 모두
+         * 두 시간대였다. 이제 실제로 닿는 시각으로 견주고, 렌터카는 그 안에서만
+         * 피한다.
+         */
+        ride = bestFrom(svc, dayStartMin, { prefer: wanted, avoid: 'car' }) ?? svc[0];
+        // 돌아오는 길은 방향이 반대다. 시간표도 막차도 다르다.
+        backOptions = servicesBetween(to, from, undefined, weekday);
         if (ride) {
           // 근교는 아침 일찍 나선다. 하루 시작 시각부터 편을 찾는다.
           const dep = nextDeparture(ride, dayStartMin);
@@ -498,6 +556,7 @@ export function scheduleFromItinerary(
       dayTripMode: trip && ride
         ? { icon: MODE_ICON[ride.mode], label: ride.label, minutes: ride.totalMin }
         : undefined,
+      backOptions: backOptions ?? undefined,
     };
   };
 

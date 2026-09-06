@@ -19,11 +19,21 @@ import { buildItinerary } from '../src/lib/itinerary.ts';
 import { isMeal, itemMinutes, dailyMinutes, clampDayStart, DAY_START_DEFAULT } from '../src/lib/capacity.ts';
 import { rankAll, RANK_FLOOR } from '../src/lib/rank.ts';
 import { buildPlans } from '../src/lib/planner.ts';
-import { setIslandRail } from '../src/lib/routing.ts';
+import { setIslandRail, servicesBetween, nextDeparture, fmtHm, fmtDur } from '../src/lib/routing.ts';
+import { setRailTable } from '../src/lib/rail.ts';
 
 const here = (p) => new URL(p, import.meta.url);
 const idx = JSON.parse(readFileSync(here('../public/data/spain/index.json'), 'utf8'));
 setIslandRail(idx.islands ?? []);
+/*
+ * 실제 시간표를 얹는다.
+ *
+ * 예전에는 이걸 얹지 않고 돌렸다. 그래서 엔진 검사는 **언제나 어림잡은
+ * 배차 간격**만 봤고, 시간표에서 오는 고장은 하나도 볼 수 없었다.
+ * 말라가~그라나다(하루 세 편)가 그 사각이었다 — 09:30 에 나서 18:15 에
+ * 닿는 안을 골라 놓고도 검사는 전부 통과했다.
+ */
+setRailTable(JSON.parse(readFileSync(here('../public/data/spain/rail.json'), 'utf8')));
 const cities = idx.cities;
 const itemCache = new Map();
 const itemsOf = (slug) => {
@@ -49,12 +59,15 @@ const check = (name, ok, detail = '') => {
   if (!ok) console.log(`  ✗ ${name} — ${detail}`);
 };
 
-function once(slugs, days) {
+/** 편을 고르는 기준 시각. prefs.dayStart 와 같아야 한다. */
+const READY_AT = clampDayStart(prefs.dayStart);
+
+function once(slugs, days, lodging = {}) {
   const sel = slugs.map((s) => cities.find((c) => c.slug === s)).filter(Boolean);
   if (sel.length !== slugs.length) return null;
   const items = slugs.flatMap(itemsOf);
   const a = process.hrtime.bigint();
-  const itin = buildItinerary(sel, [], prefs, null, null, cities, {});
+  const itin = buildItinerary(sel, [], prefs, null, null, cities, { lodging });
   const plans = buildPlans({
     items, itinerary: itin, startDate: '2026-05-04', days,
     prefs, priorities: {}, dayOrder: {}, firstDayStart: null, lastDayEnd: null,
@@ -389,7 +402,7 @@ console.log('\n=== 타는 구간에 모두 안내가 있는가 ===');
             if (why3.length < 4) why3.push(`${tag} → ${[...r.missMove, ...r.missTrip].join(',')}`);
           }
           if (r.thin.length) { thin++; if (why3.length < 4) why3.push(`${tag} 얇음 ${r.thin.join(',')}`); }
-          if (r.noBack.length) { back++; if (why3.length < 4) why3.push(`${tag} 오는편없음 ${r.noBack.join(',')}`); }
+          if (r.noBack.length) { back++; if (why3.length < 9) why3.push(`${tag} 오는편없음 ${r.noBack.join(',')}`); }
           if (r.early.length) { early++; if (why3.length < 4) why3.push(`${tag} 도착전일정 ${r.early.join(',')}`); }
         }
       }
@@ -398,11 +411,116 @@ console.log('\n=== 타는 구간에 모두 안내가 있는가 ===');
   check(`${runs3}가지 조합에서 타는 구간이 모두 안내된다`, miss === 0,
     `${miss}가지${why3.length ? ` — ${why3.join(' / ')}` : ''}`);
   check(`${runs3}가지 조합에서 안내가 같은 것을 담는다`, thin === 0, `${thin}가지`);
-  check(`${runs3}가지 조합에서 근교에 오는 편이 적힌다`, back === 0, `${back}가지`);
+  check(`${runs3}가지 조합에서 근교에 오는 편이 적힌다`, back === 0, `${back}가지 — ${why3.filter((x)=>x.includes('오는편없음')).join(' / ')}`);
   check(`${runs3}가지 조합에서 근교 도착 전 일정이 없다`, early === 0, `${early}가지`);
 }
 
 /* ── 아침 시작 시각이 30분 눈금으로 갈리는가 ─────────────────────── */
+/*
+ * 화면에 뜬 이동이 정말 그때의 최선인가.
+ *
+ * `routing-check` 의 훑기는 **규칙**(`bestFrom`)을 지킨다. 이것은 **배선**을
+ * 지킨다 — 규칙이 멀쩡해도 부르는 자리가 예전 방식으로 돌아가면 그대로
+ * 되살아나기 때문이다. 실제로 그랬다.
+ *
+ *   근교 고르기 : `svc.find((x) => x.mode !== 'car')`   ← 대기를 안 봤다
+ *   구간 고르기 : `options[0]`                          ← 대기를 안 봤다
+ *
+ * 말라가에서 그라나다로 09:30 에 나서 18:15 에 닿는 안이 그렇게 나왔다.
+ * 하루 세 편뿐인 AVANT 를 6시간 38분 기다리는 안이었다.
+ */
+console.log('\n=== 화면에 뜬 이동이 그때의 최선인가 ===');
+{
+  /** routing.ts 의 AVOID_MARGIN. 근교에서 렌터카를 피해 주는 여유. */
+  const SLACK = 30;
+  const SETS = [
+    ['malaga', 'granada'],            // 이번에 보고된 구간
+    ['malaga', 'granada', 'seville'],
+    ['madrid', 'toledo', 'segovia'],
+    ['barcelona', 'girona', 'figueres'],
+    ['seville', 'cordoba', 'jerez'],
+    ['madrid', 'granada'],
+    ['bilbao', 'san-sebastian'],
+    ['valencia', 'peniscola'],
+  ];
+  /*
+   * 숙박을 그대로 둔 것과, 뒤 도시를 당일치기로 돌린 것을 **둘 다** 본다.
+   *
+   * 처음에는 기본 배치만 봤다. 그런데 말라가+그라나다는 기본으로는 둘 다
+   * 자는 도시가 되어 근교 경로를 아예 타지 않는다 — 검사가 통과하는데
+   * 고장은 그대로 있었다. 보고된 화면이 바로 그 근교 경로였다.
+   */
+  const layouts = (set) => [
+    {},
+    ...set.slice(1).map((c) => ({ [c]: 'daytrip' })),
+  ];
+
+  let seen = 0;
+  let trips = 0;
+  let noBack = 0;
+  const off = [];
+  const hopOff = [];
+  for (const set of SETS) {
+    for (const lodging of layouts(set)) {
+      for (const days of [3, 5, 8]) {
+        const r = once(set, days, lodging);
+        if (!r) continue;
+
+        /*
+         * ① 거점 사이 이동을 고르는 자리(itinerary.buildHops). 화면은 그 뒤에
+         *    시각에 맞춰 다시 고르므로, 여기가 틀려도 화면에는 안 보인다 —
+         *    대신 **날 계산**이 틀어진다. 그러니 여기서 따로 본다.
+         */
+        for (const h of r.itin.hops) {
+          const d = nextDeparture(h.chosen, READY_AT);
+          const runs = h.options.map((x) => nextDeparture(x, READY_AT)).filter(Boolean);
+          if (!d || !runs.length) continue;
+          const best = runs.reduce((p, q) => (q.arriveAt < p.arriveAt ? q : p));
+          if (d.arriveAt - best.arriveAt > 0) {
+            hopOff.push(`${h.from.name}→${h.to.name} — 고른 것 ${h.chosen.label}`
+              + ` 가 최선(${best.service.label})보다 ${fmtDur(d.arriveAt - best.arriveAt)} 늦다`);
+          }
+        }
+
+        // ② 화면에 실제로 뜨는 이동.
+        for (const plan of r.plans.plans) {
+          for (const day of plan.days) {
+            for (const t of day.travels ?? []) {
+              const from = cities.find((c) => c.slug === t.from);
+              const to = cities.find((c) => c.slug === t.to);
+              if (!from || !to) continue;
+              if (t.kind === 'daytrip') { trips++; if (!t.back) noBack++; }
+              const svc = servicesBetween(from, to);
+              const runs = svc.map((x) => nextDeparture(x, t.leaveAt)).filter(Boolean);
+              if (!runs.length) continue;
+              seen++;
+              const best = runs.reduce((p, q) => (q.arriveAt < p.arriveAt ? q : p));
+              const gap = t.arriveAt - best.arriveAt;
+              if (gap > SLACK) {
+                off.push(`${from.name}→${to.name} ${set.join('+')} ${days}일 [${t.kind}]`
+                  + ` ${fmtHm(t.leaveAt)} 나서 ${fmtHm(t.arriveAt)} 도착`
+                  + ` — 최선(${best.service.label} ${fmtHm(best.arriveAt)})보다 ${fmtDur(gap)} 늦다`);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  check(`화면의 이동 ${seen}건이 모두 그때의 최선과 ${SLACK}분 안이다`, off.length === 0,
+    `${off.length}건 — ${off.slice(0, 3).join(' / ')}`);
+  if (!off.length) console.log(`  ✓ ${seen}건 확인 · 최선보다 크게 늦은 안내 없음`);
+
+  check('날 계산이 쓰는 구간도 그때의 최선이다', hopOff.length === 0,
+    `${hopOff.length}건 — ${hopOff.slice(0, 3).join(' / ')}`);
+
+  /*
+   * 근교를 다녀오는 날에는 오는 편이 반드시 적힌다.
+   * 저녁 후보가 비어 `continue` 로 넘어간 날에 이것이 통째로 비어 있었다.
+   */
+  check(`근교 ${trips}건에 모두 오는 편이 적힌다`, noBack === 0, `${noBack}건 비었다`);
+}
+
 console.log('\n=== 아침 시작 시각 ===');
 {
   /*

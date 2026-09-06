@@ -266,8 +266,14 @@ export interface PlanTravel {
   kind: 'move' | 'daytrip';
   /** 짐을 옮기는 이동이면 하루의 어디에서 옮기는가. 근교 왕복이면 null. */
   timing: 'morning' | 'midday' | 'evening' | null;
-  /** 근교 왕복이면 돌아오는 편. 짐을 옮기는 이동에는 없다. */
-  back: { leaveAt: number; arriveAt: number } | null;
+  /**
+   * 근교 왕복이면 돌아오는 편. 짐을 옮기는 이동에는 없다.
+   *
+   * `label` 은 가는 편과 **다른** 수단으로 돌아올 때만 채운다 — 막차가
+   * 끊겨 버스나 렌터카로 돌아와야 하는 날이 있다. 말없이 같은 수단인 척
+   * 하면, 없는 열차를 타러 역으로 가게 된다.
+   */
+  back: { leaveAt: number; arriveAt: number; label?: string } | null;
 }
 
 export interface PlanDay {

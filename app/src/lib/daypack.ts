@@ -183,7 +183,9 @@ export function packDays(
   if (!sleeping.length) return { days, given, moveMin: 0, unseen };
 
   const hopMin = new Map<string, number>();
-  for (const h of itin.hops) hopMin.set(`${h.from.slug}>${h.to.slug}`, h.chosen.totalMin);
+  // 대기까지 넣은 값이다. `chosen.totalMin` 은 역에서 보내는 시간을 빼므로,
+  // 편이 드문 구간의 하루를 실제보다 헐겁게 잡았다.
+  for (const h of itin.hops) hopMin.set(`${h.from.slug}>${h.to.slug}`, h.doorToDoorMin);
   const tripsOf = (slug: string): Stop[] => itin.stops.filter((x) => !x.sleep && x.base === slug);
 
   /** 지금 채우고 있는 날. */
