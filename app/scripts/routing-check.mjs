@@ -248,5 +248,39 @@ console.log('\n=== 전 구간 훑기 — 고른 편이 그때의 최선과 얼�
   else console.log('  ✓ 어느 구간도 최선보다 크게 늦은 편을 고르지 않는다');
 }
 
+/* ── 자정을 넘겨 닿는 이동 ─────────────────────────────────────────── */
+/*
+ * `fmtHm` 은 1440분으로 나눈 나머지를 쓴다. 그래서 자정을 넘겨 닿으면
+ * "09:30 숙소 출발 · 00:09 도착" — 떠나기 전에 닿는 것처럼 보인다.
+ * 계산은 맞는데 화면이 다른 말을 하는, 이 저장소가 되풀이해 온 모양이다.
+ */
+console.log('\n=== 자정을 넘겨 닿으면 그렇다고 말하는가 ===');
+{
+  const { fmtDayHm, bestFrom } = await import('../src/lib/routing.ts');
+  const slugs = index.cities.map((c) => c.slug);
+  const late = [];
+  for (const a of slugs) {
+    for (const b of slugs) {
+      if (a === b) continue;
+      const svc = servicesBetween(city(a), city(b));
+      const d = nextDeparture(bestFrom(svc, 9 * 60 + 30) ?? svc[0], 9 * 60 + 30);
+      if (d && d.arriveAt >= 1440) late.push({ a, b, arr: d.arriveAt, label: d.service.label });
+    }
+  }
+  console.log(`  아침에 나서 자정을 넘기는 구간 ${late.length}건`);
+  for (const x of late) {
+    const shown = fmtDayHm(x.arr);
+    const ok = shown.includes('다음 날');
+    if (!ok) bad++;
+    console.log(`    ${city(x.a).name}→${city(x.b).name} ${x.label} · 화면 표시 "${shown}" ${ok ? '✓' : '✗ 자정을 넘긴다고 말하지 않는다'}`);
+  }
+  // 이 검사가 실제로 무언가를 지키는지 — 넘기는 구간이 하나도 없으면 검사가 아니다.
+  if (!late.length) { console.log('  ✗ 자정을 넘기는 구간이 하나도 없어 이 검사는 아무것도 지키지 못한다'); bad++; }
+  const same = fmtDayHm(23 * 60 + 59);
+  const ok2 = !same.includes('다음 날');
+  if (!ok2) bad++;
+  console.log(`  같은 날 23:59 는 그냥 "${same}" ${ok2 ? '✓' : '✗'}`);
+}
+
 console.log(bad ? `\n✗ ${bad}건 어긋남` : '\n✓ 교통 엔진 정상');
 process.exit(bad ? 1 : 0);

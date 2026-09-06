@@ -5,7 +5,7 @@ import { carNotes, carPlanOf } from '../lib/car';
 import { lodgingLinks, lodgingPlan } from '../lib/lodging';
 import { cityMove, transitTip } from '../lib/citymove';
 import type { AirportInfo } from '../lib/airporttime';
-import { fmtDur, fmtHm } from '../lib/routing';
+import { fmtDayHm, fmtDur, fmtHm } from '../lib/routing';
 import { mapsPlaceUrl } from '../lib/deeplinks';
 import { ItemDetail } from '../components/ItemDetail';
 import { ItemPhoto } from '../components/ItemPhoto';
@@ -692,7 +692,7 @@ function ScheduleImpact({ leg, slowerMin }: {
   const pushed = day.entries.filter((e) => e.startMin < newArrive + 30);
   return (
     <p className="car-impact">
-      {day.date} 도착이 {fmtHm(travel.arriveAt)} → <b>{fmtHm(newArrive)}</b>.
+      {day.date} 도착이 {fmtDayHm(travel.arriveAt)} → <b>{fmtDayHm(newArrive)}</b>.
       {pushed.length === 0
         ? ' 그날 일정은 그대로 들어갑니다.'
         : ` 그날 앞쪽 ${pushed.length}곳(${pushed.map((e) => e.item.name).join(', ')})이 밀립니다.`}
@@ -749,15 +749,15 @@ function TravelBlock({
           <div className="travel-when">
             {isTrip ? (
               <>
-                가는 편 {fmtHm(travel.leaveAt)} 출발 · {fmtHm(travel.arriveAt)} 도착
+                가는 편 {fmtHm(travel.leaveAt)} 출발 · {fmtDayHm(travel.arriveAt)} 도착
                 {travel.back
-                  ? ` · 오는 편 ${fmtHm(travel.back.leaveAt)} 출발 · ${fmtHm(travel.back.arriveAt)} 도착`
+                  ? ` · 오는 편 ${fmtDayHm(travel.back.leaveAt)} 출발 · ${fmtDayHm(travel.back.arriveAt)} 도착`
                     + (travel.back.label ? ` (${travel.back.label} — 가는 편의 막차가 끊깁니다)` : '')
                   : ` · 오는 편은 저녁 일정에 맞춰 ${fmtDur(c.totalMin)}`}
               </>
             ) : (
               <>
-                {fmtHm(travel.leaveAt)} 숙소 출발 · {fmtHm(travel.departAt)} 탑승 · {fmtHm(travel.arriveAt)} 도착
+                {fmtHm(travel.leaveAt)} 숙소 출발 · {fmtDayHm(travel.departAt)} 탑승 · {fmtDayHm(travel.arriveAt)} 도착
               </>
             )}
           </div>
