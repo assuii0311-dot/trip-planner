@@ -95,7 +95,7 @@ node pipeline/repopulate-popularity.mjs spain         # 언어판 수를 받아 
 
 ```bash
 cd app
-npx tsx scripts/verify.mjs        # 228건. 가장 넓다
+npx tsx scripts/verify.mjs        # 230건. 가장 넓다
 npx tsx scripts/country-check.mjs # 나라가 서로 안 섞이는가
 npx tsx scripts/smoke.mjs         # 1~5단계 한 바퀴
 npx tsx scripts/edge.mjs          # 경계값
@@ -112,7 +112,14 @@ WebKit 은 메모리를 많이 쓴다. 여러 개를 한 명령에 몰아 돌리
 ### 고칠 때의 규칙
 
 새 검사를 넣었으면 **고친 것을 되돌려 그 검사가 실제로 걸리는지 확인한다.**
-안 걸리는 검사는 검사가 아니다. 이 저장소의 고장은 대부분 '조용히 잘못된'
+안 걸리는 검사는 검사가 아니다.
+
+**진짜 데이터를 읽게 한다.** `planner-check` 는 오래 `rail.json` 을 얹지
+않고 돌았다. 어림 배차만 보니 '하루 세 편' 이라는 것이 존재하지 않았고,
+시간표에서 오는 고장은 한 건도 볼 수 없었다 → [docs/32](docs/32-choosing-with-a-clock.md)
+
+**검사가 죽지 않게 한다.** 없을 수도 있는 것을 `.click()` 하면 예외로 죽고,
+그 뒤의 검사가 통째로 안 돈다. 실패하는 검사보다 나쁘다. 이 저장소의 고장은 대부분 '조용히 잘못된'
 것들이었다 — 화면이 멈추거나, 담은 도시가 사라지거나, 날짜가 하루 밀리거나.
 
 ## 배포

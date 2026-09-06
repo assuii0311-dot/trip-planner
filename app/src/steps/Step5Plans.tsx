@@ -752,6 +752,7 @@ function TravelBlock({
                 가는 편 {fmtHm(travel.leaveAt)} 출발 · {fmtHm(travel.arriveAt)} 도착
                 {travel.back
                   ? ` · 오는 편 ${fmtHm(travel.back.leaveAt)} 출발 · ${fmtHm(travel.back.arriveAt)} 도착`
+                    + (travel.back.label ? ` (${travel.back.label} — 가는 편의 막차가 끊깁니다)` : '')
                   : ` · 오는 편은 저녁 일정에 맞춰 ${fmtDur(c.totalMin)}`}
               </>
             ) : (

@@ -541,16 +541,57 @@ console.log('\n■ 1. 기본 흐름 — 3개 도시 11일 (공항 지정)');
       (await day1.locator('.badge', { hasText: '순서 바꿈' }).count()) === 1);
   }
 
-  // 대안 설명·펼치기
-  await page.locator('.entry-alts > summary').first().click();
-  await page.waitForTimeout(400);
-  const alt = page.locator('.alt').first();
-  if (await alt.count()) {
-    check('대안에 한 줄 설명이 있다', (await alt.locator('.alt-sum').count()) > 0);
-    await alt.locator('.alt-more > summary').click(); await page.waitForTimeout(400);
-    const detail = await alt.locator('.alt-detail').innerText();
-    check('대안 상세가 펼쳐진다', detail.length > 30, detail.replace(/\n/g, ' ').slice(0, 60));
-    check('대안 상세에 실무 정보가 있다', /소요|요금|예약|휴관/.test(detail));
+  /*
+   * 대안 설명·펼치기
+   *
+   * 예전에는 `.entry-alts > summary` 를 곧바로 눌렀다. 그런데 이 자리까지
+   * 오면서 도시를 빼고 되돌리고 순서를 바꾸고 숙박을 당일치기로 돌린
+   * 뒤라, 담은 것이 전부 일정에 들어가 **대안이 하나도 없는 상태**가 될 수
+   * 있다. 그러면 누를 것이 없어 30초 뒤 예외로 죽는다 — 검사가 실패하는
+   * 것이 아니라 **뒤의 170여 건이 아예 돌지 않는다.** 그게 더 나쁘다.
+   *
+   * 그래서 조건을 만들어서 본다. 일정 하나를 빼면 그것이 다시 후보로
+   * 돌아가므로, 같은 도시의 다른 일정에 대안이 생겨야 한다. 이러면 앞의
+   * 조작이 무엇을 남기든 대안 화면을 반드시 지나간다.
+   */
+  const altSummary = () => page.locator('.entry-alts > summary');
+  if (await altSummary().count() === 0) {
+    const drop = page.locator('.entry-drop').first();
+    if (await drop.count()) { await drop.click(); await page.waitForTimeout(1200); }
+  }
+  const hasAlt = await altSummary().count() > 0;
+  check('일정을 빼면 그 자리에 대안이 생긴다', hasAlt,
+    hasAlt ? '' : '대안이 하나도 없다');
+  if (hasAlt) {
+    await altSummary().first().click();
+    await page.waitForTimeout(400);
+    const alt = page.locator('.alt').first();
+    if (await alt.count()) {
+      check('대안에 한 줄 설명이 있다', (await alt.locator('.alt-sum').count()) > 0);
+      await alt.locator('.alt-more > summary').click(); await page.waitForTimeout(400);
+      const detail = await alt.locator('.alt-detail').innerText();
+      check('대안 상세가 펼쳐진다', detail.length > 30, detail.replace(/\n/g, ' ').slice(0, 60));
+      check('대안 상세에 실무 정보가 있다', /소요|요금|예약|휴관/.test(detail));
+    }
+  }
+  /*
+   * 5단계 지도로 넘어가기 전에, 계획에 **이동이 하나라도 있게** 해 둔다.
+   *
+   * 여기까지 오면서 순서를 바꾸고 숙박을 당일치기로 돌린 탓에, 세 도시가
+   * 거점 하나에 모두 붙어 버릴 수 있다. 그러면 짐을 옮기는 구간이 없고,
+   * 왕복이 한도를 넘는 근교는 당일치기에서 빠지므로 **지도에 그릴 선이
+   * 하나도 남지 않는다.** 실제로 그라나다↔세비야 왕복이 6시간 54분 한도를
+   * 4분 차이로 넘나들면서 이 검사가 통과했다 안 했다 했다.
+   *
+   * 지도 검사가 그 4분에 매달리게 두지 않는다. 당일치기로 잡힌 도시가
+   * 있으면 하나를 '짐 옮기기' 로 되돌려, 반드시 이동이 있는 상태로 만든다.
+   */
+  {
+    const move = page.getByRole('button', { name: '짐 옮기기' });
+    if (await move.count()) { await move.first().click(); await page.waitForTimeout(1400); }
+    // 짐을 옮기는 구간이 있으려면 자는 도시가 둘 이상이어야 한다.
+    const sleeps = await page.getByRole('button', { name: '짐 안 옮기기' }).count();
+    check('지도로 가기 전에 이동이 있는 계획이다', sleeps >= 2, `자는 도시 ${sleeps}곳`);
   }
   await page.screenshot({ path: new URL('02-step4.png', shots).pathname });
 

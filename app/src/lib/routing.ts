@@ -594,7 +594,69 @@ export function departuresFrom(services: Service[], readyAt: number): Departure[
     .sort((a, b) => a.arriveAt - b.arriveAt);
 }
 
-/** 이동 시간 효율만 본 최선. 동선 계산의 기준값이다. */
+/**
+ * 렌터카를 피해 주는 여유(분).
+ *
+ * 근교는 짐을 거점에 두고 다녀오는 길이라 하루짜리 렌트가 번거롭다. 그래서
+ * 예전에는 **무조건** 렌터카가 아닌 것을 골랐다. 그 '무조건' 이 6시간 38분을
+ * 기다리게 만들었다. 피해 주되, 이만큼까지만 피한다.
+ */
+const AVOID_MARGIN = 30;
+
+/**
+ * 이 시각에 나선다고 할 때 **실제로 가장 일찍 닿는** 방법.
+ *
+ * ## 왜 `options[0]` 이면 안 되는가
+ *
+ * `servicesBetween` 는 대기를 뺀 `totalMin` 으로 줄을 세운다. 대기는 몇 시에
+ * 나서느냐에 달렸으니 수단 자체의 성질이 아니다 — 그 판단 자체는 맞다.
+ * 문제는 **고르는 자리마다 그 줄의 첫 번째를 집었다**는 것이다. 그래 놓고
+ * 보여 줄 때만 `nextDeparture` 로 대기를 넣어 계산했다. 고를 때 쓴 숫자와
+ * 살아 낼 숫자가 서로 달랐다.
+ *
+ * 하루에 몇 편 없는 구간에서 그 차이가 통째로 드러난다. 말라가~그라나다
+ * 직통 AVANT 는 하루 세 편이다(09:20 · 16:38 · 20:20). 09:30 에 나서면
+ * 09:20 을 이미 놓쳐 다음이 16:38 이다.
+ *
+ *   탑승 82분 · totalMin 2시간 7분  ← 이 숫자로 골랐다
+ *   09:30 출발 → 18:15 도착 (8시간 45분)  ← 이 숫자로 보여 줬다
+ *
+ * 렌터카·버스·일반열차는 모두 두 시간대였는데도 그랬다. 고르는 것과 보여
+ * 주는 것이 같은 시계를 봐야 한다.
+ *
+ * @param prefer 사용자가 직접 고른 수단. 아직 다니면 그것이 우선이다.
+ * @param avoid  될 수 있으면 피할 수단. `AVOID_MARGIN` 안에서만 피한다.
+ */
+export function bestFrom(
+  options: Service[],
+  readyAt: number,
+  opts: { prefer?: string; avoid?: Mode } = {},
+): Service | null {
+  const runs = options
+    .map((s) => ({ s, d: nextDeparture(s, readyAt) }))
+    .filter((x): x is { s: Service; d: Departure } => x.d !== null)
+    // 닿는 시각이 같으면 문앞~문앞이 짧은 쪽. 그것도 같으면 원래 순서.
+    .sort((x, y) => x.d.arriveAt - y.d.arriveAt || x.d.doorToDoorMin - y.d.doorToDoorMin);
+  if (!runs.length) return null;
+
+  const picked = opts.prefer ? runs.find((x) => x.s.mode === opts.prefer) : undefined;
+  if (picked) return picked.s;
+
+  const best = runs[0];
+  if (opts.avoid && best.s.mode === opts.avoid) {
+    const other = runs.find((x) => x.s.mode !== opts.avoid);
+    if (other && other.d.arriveAt - best.d.arriveAt <= AVOID_MARGIN) return other.s;
+  }
+  return best.s;
+}
+
+/**
+ * 이동 시간 효율만 본 최선.
+ *
+ * 시계가 없는 자리에서만 쓴다 — 도시 차례를 정하는 거리 행렬처럼, '몇 시에
+ * 나서는가' 가 아직 없는 곳이다. 나설 시각을 알 수 있는 자리에서는 반드시
+ * `bestFrom` 을 쓴다. 위의 말라가~그라나다가 그것을 섞어 쓴 대가였다.
+ */
 export function fastest(
   a: City, b: City, measured?: { minutes: number; mode: string }, weekday: number | null = null,
 ): Service {
