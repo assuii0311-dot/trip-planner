@@ -83,7 +83,26 @@ export interface Service {
 /** 실제로 몇 시에 타고 몇 시에 닿는지. */
 export interface Departure {
   service: Service;
-  /** 숙소에서 나서는 시각(분). */
+  /**
+   * 숙소에서 나서는 시각(분).
+   *
+   * 탈 것에 맞춘다 — `departAt - accessMin`. 나설 수 있게 된 시각보다
+   * 이르지는 않다.
+   *
+   * ## 예전에 무엇이 잘못됐나
+   *
+   * 언제나 `readyAt` 이었다. 그래서 다음 편이 몇 시간 뒤여도 '지금 나서라'
+   * 고 했다. 사용자가 보내 준 화면이 이렇다.
+   *
+   *   그라나다 → 바르셀로나
+   *   09:00 숙소 출발 · 13:40 탑승 · 16:18 도착      7시간 18분
+   *   국내선 항공 · 공항에서 대기 145분
+   *   4.9시간 거리라 아침에 옮겨 바르셀로나를 길게 씁니다
+   *
+   * 09:00 에 숙소를 나서서 13:40 비행기를 타라는 말이다. 수속에 드는 135분을
+   * 빼도 **145분을 공항에 앉아 있으라**는 안내였고, 머리 숫자(7시간 18분)와
+   * 사유 줄(4.9시간)이 서로 다른 말을 했다. 11:25 에 나서면 될 일이다.
+   */
   leaveAt: number;
   /** 탈것이 출발하는 시각(분). */
   departAt: number;
@@ -521,6 +540,26 @@ export function servicesBetween(
  *
  * @param readyAt 숙소에서 나설 수 있는 가장 이른 시각(분).
  */
+/**
+ * 정해진 출발 시각에 맞춰 '언제 나서는가' 를 되돌린다.
+ *
+ * 나서는 시각은 탈 것이 정한다 — 수속 시간만큼 앞서 나선다. 그보다 일찍
+ * 나설 이유가 없다. 나설 수 있게 된 시각(`readyAt`)보다 이르게는 못 가므로
+ * 거기서 자른다. 잘렸다는 것은 그만큼은 정말로 기다린다는 뜻이라 `waitMin`
+ * 에 남는다.
+ */
+function depart(service: Service, readyAt: number, departAt: number, arriveAt: number): Departure {
+  const leaveAt = Math.max(readyAt, departAt - service.accessMin);
+  return {
+    service,
+    leaveAt,
+    departAt,
+    arriveAt,
+    waitMin: Math.max(0, departAt - (leaveAt + service.accessMin)),
+    doorToDoorMin: arriveAt - leaveAt,
+  };
+}
+
 export function nextDeparture(service: Service, readyAt: number): Departure | null {
   // 역·공항에 닿는 시각. 이보다 이르게는 탈 수 없다.
   const atStation = readyAt + service.accessMin;
@@ -548,14 +587,7 @@ export function nextDeparture(service: Service, readyAt: number): Departure | nu
     }
     if (!next) return null;                    // 그날 남은 편이 없다
     const arriveAt = next.a + service.egressMin;
-    return {
-      service,
-      leaveAt: readyAt,
-      departAt: next.d,
-      arriveAt,
-      waitMin: next.d - atStation,
-      doorToDoorMin: arriveAt - readyAt,
-    };
+    return depart(service, readyAt, next.d, arriveAt);
   }
 
   let departAt: number;
@@ -571,16 +603,8 @@ export function nextDeparture(service: Service, readyAt: number): Departure | nu
     if (departAt > service.lastDep) return null;   // 막차가 끊겼다
   }
 
-  const waitMin = departAt - atStation;
   const arriveAt = departAt + service.rideMin + service.egressMin;
-  return {
-    service,
-    leaveAt: readyAt,
-    departAt,
-    arriveAt,
-    waitMin,
-    doorToDoorMin: arriveAt - readyAt,
-  };
+  return depart(service, readyAt, departAt, arriveAt);
 }
 
 /**
