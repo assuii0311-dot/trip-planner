@@ -735,6 +735,8 @@ function TravelBlock({
    * 왕복이므로 편도의 두 배를 쓴다.
    */
   const total = isTrip ? c.totalMin * 2 : travel.arriveAt - travel.leaveAt;
+  /** 머리 숫자와 같은 값. 사유 줄과 시점 판단이 이것을 쓴다. */
+  const moveMin = travel.arriveAt - travel.leaveAt;
   /** 근교에 나가 있는 전체 시간. 타는 시간과는 다른 뜻이라 작게 따로 적는다. */
   const away = isTrip && travel.back ? travel.back.arriveAt - travel.leaveAt : null;
   return (
@@ -758,6 +760,9 @@ function TravelBlock({
             ) : (
               <>
                 {fmtHm(travel.leaveAt)} 숙소 출발 · {fmtDayHm(travel.departAt)} 탑승 · {fmtDayHm(travel.arriveAt)} 도착
+                {travel.freeBeforeMin >= 45 && (
+                  <> · <b>{fmtDur(travel.freeBeforeMin)}</b> 늦게 나섭니다 — 그때까지 {cityName(travel.from)}를 더 볼 수 있습니다</>
+                )}
               </>
             )}
           </div>
@@ -795,7 +800,12 @@ function TravelBlock({
         <span className="timing-label">언제 옮길까요</span>
         <div className="timing-btns">
           {MOVE_TIMINGS.map((t) => {
-            const why = timingBlocked(t, c.totalMin);
+            /*
+             * 화면에 뜬 그 이동 시간으로 판단한다. 예전에는 `c.totalMin`
+             * — 대기를 뺀 값 — 이라, 머리 숫자가 7시간 18분인데 사유 줄은
+             * 4.9시간이라고 적혔다. 한 화면이 두 말을 했다.
+             */
+            const why = timingBlocked(t, moveMin);
             return (
               <button
                 key={t} type="button"
@@ -812,7 +822,7 @@ function TravelBlock({
         </div>
       </div>
       )}
-      {!isTrip && <p className="timing-why">{whyTiming(now, c.totalMin, cityName(travel.to))}</p>}
+      {!isTrip && <p className="timing-why">{whyTiming(now, moveMin, cityName(travel.to))}</p>}
 
       {travel.options.length > 1 && (
         <details className="travel-alts">

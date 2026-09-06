@@ -62,15 +62,16 @@ const check = (name, ok, detail = '') => {
 /** 편을 고르는 기준 시각. prefs.dayStart 와 같아야 한다. */
 const READY_AT = clampDayStart(prefs.dayStart);
 
-function once(slugs, days, lodging = {}) {
+function once(slugs, days, lodging = {}, dayStart = prefs.dayStart) {
   const sel = slugs.map((s) => cities.find((c) => c.slug === s)).filter(Boolean);
   if (sel.length !== slugs.length) return null;
   const items = slugs.flatMap(itemsOf);
   const a = process.hrtime.bigint();
-  const itin = buildItinerary(sel, [], prefs, null, null, cities, { lodging });
+  const use = { ...prefs, dayStart };
+  const itin = buildItinerary(sel, [], use, null, null, cities, { lodging });
   const plans = buildPlans({
     items, itinerary: itin, startDate: '2026-05-04', days,
-    prefs, priorities: {}, dayOrder: {}, firstDayStart: null, lastDayEnd: null,
+    prefs: use, priorities: {}, dayOrder: {}, firstDayStart: null, lastDayEnd: null,
   });
   return { ms: Number(process.hrtime.bigint() - a) / 1e6, plans, itin };
 }
@@ -519,6 +520,56 @@ console.log('\n=== 화면에 뜬 이동이 그때의 최선인가 ===');
    * 저녁 후보가 비어 `continue` 로 넘어간 날에 이것이 통째로 비어 있었다.
    */
   check(`근교 ${trips}건에 모두 오는 편이 적힌다`, noBack === 0, `${noBack}건 비었다`);
+
+  /*
+   * 화면이 몇 시에 나서라고 하는가.
+   *
+   * 사용자가 보내 준 화면.
+   *
+   *   그라나다 → 바르셀로나
+   *   09:00 숙소 출발 · 13:40 탑승 · 16:18 도착      7시간 18분
+   *   국내선 항공 · 공항에서 대기 145분
+   *
+   * 09:00 에 나서서 13:40 비행기를 타라는 말이었다. 수속 135분을 빼도 145분을
+   * 공항에 앉아 있으라는 안내다.
+   *
+   * 위의 '화면에 뜬 이동이 그때의 최선인가' 는 이것을 못 잡는다 — **고른 편은
+   * 맞았기 때문이다.** 그 시각에 가장 일찍 닿는 것이 실제로 항공이다. 틀린
+   * 것은 어느 편이냐가 아니라 몇 시에 나서라고 하느냐였다. 그래서 따로 본다.
+   *
+   * 하루 시작 시각도 09:00 으로 바꿔 가며 본다 — 보고된 화면이 그것이었다.
+   */
+  {
+    const early = [];
+    let seen2 = 0;
+    for (const set of [['granada', 'barcelona'], ['malaga', 'granada'], ['madrid', 'girona'],
+      ['tarragona', 'seville'], ['barcelona', 'cordoba']]) {
+      for (const start of [9 * 60, 9 * 60 + 30, 11 * 60]) {
+        const r = once(set, 6, {}, start);
+        if (!r) continue;
+        for (const plan of r.plans.plans) {
+          for (const day of plan.days) {
+            for (const t of day.travels ?? []) {
+              const from = cities.find((c) => c.slug === t.from);
+              const to = cities.find((c) => c.slug === t.to);
+              if (!from || !to) continue;
+              const svc = servicesBetween(from, to).find((x) => x.mode === t.chosen.mode);
+              if (!svc) continue;
+              seen2++;
+              const slack = (t.departAt - t.leaveAt) - svc.accessMin;
+              if (slack > 0) {
+                early.push(`${from.name}→${to.name} (하루 시작 ${fmtHm(start)}) ${t.chosen.label}`
+                  + ` — ${fmtHm(t.leaveAt)} 나서 ${fmtHm(t.departAt)} 탑승,`
+                  + ` 수속 ${svc.accessMin}분을 빼도 ${slack}분을 그냥 기다린다`);
+              }
+            }
+          }
+        }
+      }
+    }
+    check(`화면의 이동 ${seen2}건이 탈 것에 맞춰 나선다`, early.length === 0,
+      `${early.length}건 — ${early.slice(0, 2).join(' / ')}`);
+  }
 }
 
 console.log('\n=== 아침 시작 시각 ===');

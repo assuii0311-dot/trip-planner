@@ -282,5 +282,55 @@ console.log('\n=== 자정을 넘겨 닿으면 그렇다고 말하는가 ===');
   console.log(`  같은 날 23:59 는 그냥 "${same}" ${ok2 ? '✓' : '✗'}`);
 }
 
+/* ── 탈 것에 맞춰 나서는가 ─────────────────────────────────────────── */
+/*
+ * 사용자가 보내 준 화면.
+ *
+ *   그라나다 → 바르셀로나
+ *   09:00 숙소 출발 · 13:40 탑승 · 16:18 도착      7시간 18분
+ *   국내선 항공 · 공항에서 대기 145분
+ *
+ * 09:00 에 나서서 13:40 비행기를 타라는 말이다. 수속 135분을 빼도 145분을
+ * 공항에 앉아 있으라는 안내였다. 11:25 에 나서면 될 일이다.
+ *
+ * 앞의 '전 구간 훑기' 는 **어느 편을 고르는가** 만 봤다. 고른 편은 맞았다
+ * (그 시각에 가장 일찍 닿는 것이 항공이다). 그런데 **몇 시에 나서라고 하는가**
+ * 는 아무도 안 봤다. 그래서 이 검사를 따로 둔다.
+ *
+ * 지키는 것: 숙소를 나서고 탈 것에 오르기까지는 그 수단의 수속 시간을
+ * 넘지 않는다. 넘는다면 그만큼 더 자도 되는데 깨운 것이다.
+ */
+console.log('\n=== 탈 것에 맞춰 나서는가 (공항·역에 일찍 데려다 놓지 않는가) ===');
+{
+  const { bestFrom } = await import('../src/lib/routing.ts');
+  const READY = [7 * 60, 9 * 60, 9 * 60 + 30, 12 * 60, 15 * 60 + 30, 19 * 60];
+  const slugs = index.cities.map((c) => c.slug);
+  let n = 0;
+  const off = [];
+  for (const a of slugs) {
+    for (const b of slugs) {
+      if (a === b) continue;
+      const svc = servicesBetween(city(a), city(b));
+      for (const ready of READY) {
+        const pick = bestFrom(svc, ready);
+        if (!pick) continue;
+        const d = nextDeparture(pick, ready);
+        if (!d) continue;
+        n++;
+        const early = (d.departAt - d.leaveAt) - pick.accessMin;
+        if (early > 0) {
+          off.push(`${city(a).name}→${city(b).name} ${fmtHm(ready)} 나설 수 있음 · ${pick.label}`
+            + ` — ${fmtHm(d.leaveAt)} 나서 ${fmtHm(d.departAt)} 탑승, 수속 ${pick.accessMin}분을 빼도 ${early}분을 그냥 기다린다`);
+        }
+      }
+    }
+  }
+  off.sort((x, y) => (Number(y.match(/(\d+)분을 그냥/)?.[1] ?? 0)) - (Number(x.match(/(\d+)분을 그냥/)?.[1] ?? 0)));
+  console.log(`  ${n}가지 확인 · 일찍 데려다 놓는 것 ${off.length}건`);
+  for (const o of off.slice(0, 6)) console.log(`    ✗ ${o}`);
+  if (off.length) bad += off.length;
+  else console.log('  ✓ 어느 구간도 탈 것보다 일찍 나서게 하지 않는다');
+}
+
 console.log(bad ? `\n✗ ${bad}건 어긋남` : '\n✓ 교통 엔진 정상');
 process.exit(bad ? 1 : 0);

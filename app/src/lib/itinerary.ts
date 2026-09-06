@@ -344,9 +344,17 @@ export function buildHops(
      */
     const chosen = bestFrom(options, readyAt, { prefer: wanted }) ?? options[0];
     const dep = nextDeparture(chosen, readyAt);
+    /*
+     * 날 계산에는 **나설 수 있게 된 때부터** 닿을 때까지를 쓴다.
+     *
+     * `dep.doorToDoorMin` 은 실제로 나서는 때부터 재므로 이보다 짧다 — 편이
+     * 늦으면 그만큼 앞이 비기 때문이다. 그 빈 앞을 계획이 아직 채우지는
+     * 않으므로, 여기서는 짧은 쪽을 믿지 않는다. 헐겁게 세어 하루를 넘치게
+     * 만드는 것보다 낫다.
+     */
     hops.push({
       from, to, options, chosen,
-      doorToDoorMin: dep ? dep.doorToDoorMin : chosen.totalMin,
+      doorToDoorMin: dep ? dep.arriveAt - readyAt : chosen.totalMin,
     });
   }
   return hops;

@@ -1955,6 +1955,7 @@ console.log('\n■ 12. 이동 안내 — 타는 것은 모두 같은 모양으�
       /숙소 출발/.test(when) && /탑승/.test(when) && /도착/.test(when), when.replace(/\n/g, ' '));
     check('짐 옮기는 이동에는 이동 시점을 묻는다',
       (await move.locator('.timing-row').count()) === 1);
+
   }
 
   // 예전의 한 줄짜리 배지는 사라졌는가

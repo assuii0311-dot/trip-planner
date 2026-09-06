@@ -251,6 +251,15 @@ export interface PlanTravel {
   departAt: number;
   arriveAt: number;
   waitMin: number;
+  /**
+   * 나설 수 있게 된 때부터 실제로 나서기까지 비는 시간(분).
+   *
+   * 다음 편이 늦으면 그만큼 앞이 빈다. 예전에는 이 시간을 공항·역에서
+   * 앉아 보내라고 했다(`09:00 숙소 출발 · 13:40 탑승`). 이제는 늦게 나서고,
+   * 비는 앞을 **떠나는 도시에서 쓸 수 있다고 화면에 적는다.** 계획이 그
+   * 시간을 채워 주지는 않으므로, 적어도 있다는 것은 말해야 한다.
+   */
+  freeBeforeMin: number;
   /** 시간 효율 순 대안. chosen 을 포함한다. */
   options: TravelOption[];
   /** 그날 막차가 끊겨 갈 수 없는 수단들. */
