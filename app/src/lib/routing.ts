@@ -669,6 +669,19 @@ export const fmtHm = (min: number): string => {
   return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 };
 
+/**
+ * 시각 — 자정을 넘기면 그렇다고 말한다.
+ *
+ * `fmtHm` 은 1440분으로 나눈 나머지를 쓴다. 그래서 자정을 넘겨 닿는 이동이
+ * "09:30 숙소 출발 · 00:09 도착" 으로 떴다. **떠나기 전에 닿는 것처럼**
+ * 보인다. 카다케스↔카디스(렌터카 14시간 39분)가 실제로 그랬다.
+ *
+ * 하루에 몇 편 없는 구간을 고르는 것과 같은 실수다 — 계산은 맞는데 화면이
+ * 다른 말을 한다.
+ */
+export const fmtDayHm = (min: number): string =>
+  (min >= 1440 ? `다음 날 ${fmtHm(min)}` : fmtHm(min));
+
 export const fmtDur = (min: number): string => {
   const m = Math.max(0, Math.round(min));
   const h = Math.floor(m / 60);
